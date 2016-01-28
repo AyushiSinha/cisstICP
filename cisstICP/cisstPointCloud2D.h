@@ -51,23 +51,23 @@ public:
 
 
   // Point Set I/O
-  static int WritePointsToFile(vctDynamicVector<vct2> &points, std::string &filePath);
-  static int ReadPointsFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
-  static int AppendPointsFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
+  static int WritePointCloudToFile(vctDynamicVector<vct2> &points, std::string &filePath);
+  static int ReadPointCloudFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
+  static int AppendPointCloudFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
 
-  int WritePointsToFile(std::string &filePath)
+  int WritePointCloudToFile(std::string &filePath)
   {
-    WritePointsToFile(points, filePath);
+    WritePointCloudToFile(points, filePath);
   }
 
-  int ReadPointsFromFile(std::string &filePath)
+  int ReadPointCloudFromFile(std::string &filePath)
   {
-    ReadPointsFromFile(points, filePath);
+    ReadPointCloudFromFile(points, filePath);
   }
 
-  int AppendPointsFromFile(std::string &filePath)
+  int AppendPointCloudFromFile(std::string &filePath)
   {
-    AppendPointsFromFile(points, filePath);
+    AppendPointCloudFromFile(points, filePath);
   }
 
 };

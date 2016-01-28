@@ -32,7 +32,7 @@
 //  
 // ****************************************************************************
 #include "wrapper_dlib.h"
-#include "cisstAlgorithmDirICP_Kent.h"
+#include "algDirICP_GIMLOP.h"
 
 #include <assert.h>
 #undef NDEBUG       // enable debug in release mode
@@ -47,7 +47,7 @@ namespace
 {
   // Global variables
   //  (referenced from global functions)
-  cisstAlgorithmDirICP_Kent *Kent_dlib = NULL;
+  algDirICP_GIMLOP *Kent_dlib = NULL;
 
   // Global functions
   //  (needed for function pointers)
@@ -86,7 +86,7 @@ namespace
 //--- Non-Globals ---//
 
 // Constructor
-wrapper_dlib::wrapper_dlib()  // cisstAlgorithmDirICP_Kent *kent )
+wrapper_dlib::wrapper_dlib()  // algDirICP_GIMLOP *kent )
   : maxIter(40), //maxIter( 20 ),
   //tol_df( 1.0e-6 ),
   gradientNormThresh( 1.0e-3 )
@@ -98,7 +98,7 @@ wrapper_dlib::wrapper_dlib()  // cisstAlgorithmDirICP_Kent *kent )
 
 // passing a pointer to the algorithm is necessary if this library is being
 //  used with multiple Kent algorithms simultaneously (even if single threaded)
-vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, cisstAlgorithmDirICP_Kent *kent)
+vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
 {
   // initialize global pointer to algorithm
   Kent_dlib = kent;

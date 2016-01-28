@@ -348,7 +348,7 @@ void RegisterP2P_LSQ_CovEst(
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD failed" << std::endl;
+      std::cout << "ERROR: Compute SVD failed" << std::endl;
       assert(0);
     }
 
@@ -517,7 +517,7 @@ void RegisterP2P_TLS(
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD failed" << std::endl;
+      std::cout << "ERROR: Compute SVD failed" << std::endl;
       assert(0);
     }
 
@@ -698,7 +698,7 @@ void RegisterP2P_TLS(
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD failed" << std::endl;
+      std::cout << "ERROR: Compute SVD failed" << std::endl;
       assert(0);
     }
 
@@ -883,7 +883,7 @@ void RegisterP2P_WTLS(
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD failed" << std::endl;
+      std::cout << "ERROR: Compute SVD failed" << std::endl;
       assert(0);
     }
 
@@ -925,7 +925,7 @@ void RegisterP2P_WTLS(
 //  solved via an iterative linear scheme based on Jacobian
 void RegisterP2P_Normals_TLS()
 {
-  std::cerr << "Method not implemented" << std::endl;
+  std::cout << "Method not implemented" << std::endl;
   exit(EXIT_FAILURE);
 }
 
@@ -993,7 +993,7 @@ void RegisterP2P_IterLSQ(const vctDynamicVector<vct3> &x, const vctDynamicVector
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD Economy failed" << std::endl;
+      std::cout << "ERROR: Compute SVD Economy failed" << std::endl;
     }
 
     // compute least squares parameter estimate
@@ -1099,7 +1099,7 @@ void RegisterP2P_Normals_IterLSQ(const vctDynamicVector<vct3> &x, const vctDynam
     }
     catch (...)
     {
-      std::cerr << "ERROR: Compute SVD Economy failed" << std::endl;
+      std::cout << "ERROR: Compute SVD Economy failed" << std::endl;
     }
 
     // compute least squares parameter estimate
@@ -1247,7 +1247,7 @@ vctRot3 SolveRotation_ArunsMethod(vct3x3 &H)
   }
   catch (...)
   {
-    std::cerr << std::endl
+    std::cout << std::endl
       << "=====> ERROR: Compute SVD of H matrix failed in ComputeRotation_SVD()" << std::endl << std::endl;
     assert(0);
   }
@@ -1271,7 +1271,7 @@ vctRot3 SolveRotation_ArunsMethod(vct3x3 &H)
     ////  nmrSVD returns singular values in descending order
     //if (S.Element(2) > 0.001 && S.Element(2) / S.Element(0) > 0.001)
     //{
-    //  std::cerr << std::endl
+    //  std::cout << std::endl
     //    << "=====> WARNING: Arun's method failed; determinant of R is -1 and there exist no singular value ~= 0" << std::endl
     //    << "                Largetst singular value: " << S.Element(0) << " Smallest singular value : " << S.Element(2) << std::endl << std::endl;
     //}

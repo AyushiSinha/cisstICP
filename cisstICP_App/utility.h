@@ -40,12 +40,6 @@
 #include "cisstMesh.h"
 #include "cisstICP.h"
 
-
-
-enum ICPAlgType { AlgType_StdICP, AlgType_IMLP, AlgType_RobustICP, AlgType_IMLPRegCov };
-
-enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_vMFG, DirAlgType_Kent, DirAlgType_vonMisesPrj };
-
 void CreateDir(const std::string &dir);
 
 void transform_write(vctFrm3 &t, std::string &filename);
@@ -239,7 +233,7 @@ void DrawFisherSample(
   std::ifstream &randnStream,
   double k, const vct3 &mean, vct3 &n);
 
-void DrawKentSample(
+void DrawGIMLOPSample(
   std::ifstream &randnStream,
   double k, double B, const vct3 &mean,
   const vctFixedSizeMatrix<double, 3, 2> &L, vct3 &n);
@@ -252,7 +246,7 @@ void WriteToFile_Cov(
   std::string &filePath);
 
 void WriteToFile_L(
-  const vctDynamicVector<vctFixedSizeMatrix<double, 3, 2>> &L,
+  const vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &L,
   std::string &filePath);
 
 vctRot3 XProdRotation(const vct3 &a, const vct3 &b);

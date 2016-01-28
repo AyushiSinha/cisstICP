@@ -57,7 +57,7 @@
 //         Ninv = R*inv(D)
 int Ellipsoid_OBB_Intersection_Solver::Test_Ellipsoid_OBB_Intersection( 
                                            const vct3 &v, 
-                                           const cisstBoundingBox &OBB, const vctFrm3 &Fobb,
+                                           const BoundingBox &OBB, const vctFrm3 &Fobb,
                                            double NodeErrorBound,
                                            const  vct3x3 &N,
                                            double Dmin )
@@ -355,7 +355,7 @@ int Ellipsoid_OBB_Intersection_Solver::Test_Ellipsoid_OBB_Intersection(
   //}
 
   // should never arrive here
-    std::cerr << "ERROR: execution should never arrive here" << std::endl;
+    std::cout << "ERROR: execution should never arrive here" << std::endl;
   assert(0);
   return 0;
 }
@@ -462,7 +462,7 @@ bool Ellipsoid_OBB_Intersection_Solver::IntersectionSphereFace(
       break;
     }
   default:
-    std::cerr << "Code Error!" << std::endl;
+    std::cout << "Code Error!" << std::endl;
     assert(0);
   }
 
@@ -535,7 +535,7 @@ bool Ellipsoid_OBB_Intersection_Solver::IntersectionSphereFace(
   }
 
   // should never reach here
-  std::cerr << "Code Error!" << std::endl;
+  std::cout << "Code Error!" << std::endl;
   assert(0);
   return false;
 #else

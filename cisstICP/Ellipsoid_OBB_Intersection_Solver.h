@@ -34,7 +34,7 @@
 #ifndef _Ellipsoid_OBB_Intersection_Solver_h
 #define _Ellipsoid_OBB_Intersection_Solver_h
 
-#include "cisstCovTreeNode.h"
+#include "PDTreeNode.h"
 #include <cisstVector.h>
 
 
@@ -43,7 +43,7 @@ class Ellipsoid_OBB_Intersection_Solver
 public:
 
   int Test_Ellipsoid_OBB_Intersection( const vct3 &v, 
-                                       const cisstBoundingBox &OBB, const vctFrm3 &Fobb,
+                                       const BoundingBox &OBB, const vctFrm3 &Fobb,
                                        double NodeErrorBound,
                                        const  vct3x3 &N,
                                        double Dmin );

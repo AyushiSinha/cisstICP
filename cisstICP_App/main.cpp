@@ -39,8 +39,7 @@
 #include <cisstVector.h>
 #include "utility.h"
 
-
-// Test Routines
+// Registration Tests
 #include "testICP.h"
 #include "testICPNormals.h"
 
@@ -48,22 +47,21 @@
 int main(void)
 {	
 
-  //-- Single Runs --//
+  //-- Registration Test Runs --//
 
   bool TargetShapeAsMesh = true;
   ICPAlgType algType;
   algType = AlgType_StdICP;
   //algType = AlgType_IMLP;
-  //algType = AlgType_RobustICP;
   testICP(TargetShapeAsMesh, algType);
 
-  //bool TargetShapeAsMesh = true;
-  //ICPDirAlgType dirAlgType;
-  ////dirAlgType = DirAlgType_StdICP;
-  ////dirAlgType = DirAlgType_vMFG;
-  ////dirAlgType = DirAlgType_Kent;
-  //dirAlgType = DirAlgType_vonMisesPrj;
-  //testICPNormals(TargetShapeAsMesh, dirAlgType);
+  TargetShapeAsMesh = true;
+  ICPDirAlgType dirAlgType;
+  //dirAlgType = DirAlgType_StdICP;
+  dirAlgType = DirAlgType_IMLOP;
+  //dirAlgType = DirAlgType_GIMLOP;
+  //dirAlgType = DirAlgType_PIMLOP;
+  testICPNormals(TargetShapeAsMesh, dirAlgType);
 
   return 0;
 }

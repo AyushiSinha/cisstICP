@@ -36,7 +36,7 @@
 #define cisstEdge2D_h
 
 #include <cisstVector.h>
-#include "cisstPointProjectionRoutines.h"
+#include "PointProjectionRoutines.h"
 
 class cisstEdge2D
 {

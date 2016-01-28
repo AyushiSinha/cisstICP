@@ -34,10 +34,19 @@
 #include "utilities.h"
 
 #include <algorithm>
+#include <limits>
+
 #include "cisstNumerical.h"
 #include "Wm5NoniterativeEigen3x3.h"  // WildMagic5
 
-#include <direct.h>;  // for getcwd
+// getcwd
+#include <errno.h>
+#ifdef _WIN32
+  #include <direct.h>;  // for _getcwd
+  #define getcwd _getcwd
+#else
+  #include <unistd.h>
+#endif
 
 //#define ENABLE_UTILITIES_DEBUG
 
@@ -45,36 +54,115 @@
 // get current working directory
 std::string getcwd_str()
 {
-  const size_t chunkSize = 255;
-  const int maxChunks = 10240; // 2550 KiBs of current path are more than enough
+  const size_t chunkSize = 512;
 
   char stackBuffer[chunkSize]; // Stack buffer for the "normal" case
-  if (_getcwd(stackBuffer, sizeof(stackBuffer)) != NULL)
-    return stackBuffer;
-  if (errno != ERANGE)
+  if (getcwd(stackBuffer, sizeof(stackBuffer)) == NULL)
   {
-    // It's not ERANGE, so we don't know how to handle it
-    throw std::runtime_error("Cannot determine the current path.");
-    // Of course you may choose a different error reporting method
-  }
-  // Ok, the stack buffer isn't long enough; fallback to heap allocation
-  for (int chunks = 2; chunks<maxChunks; chunks++)
-  {
-    // With boost use scoped_ptr; in C++0x, use unique_ptr
-    // If you want to be less C++ but more efficient you may want to use realloc
-    std::auto_ptr<char> cwd(new char[chunkSize*chunks]);
-    if (_getcwd(cwd.get(), chunkSize*chunks) != NULL)
-      return cwd.get();
     if (errno != ERANGE)
     {
       // It's not ERANGE, so we don't know how to handle it
       throw std::runtime_error("Cannot determine the current path.");
-      // Of course you may choose a different error reporting method
     }
   }
-  throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
+  return stackBuffer;
 }
 
+//std::string getcwd_str()
+//{
+//  const size_t chunkSize = 255;
+//  const int maxChunks = 10240; // 2550 KiBs of current path are more than enough
+//
+//  char stackBuffer[chunkSize]; // Stack buffer for the "normal" case
+//  if (getcwd(stackBuffer, sizeof(stackBuffer)) != NULL)
+//    return stackBuffer;
+//  if (errno != ERANGE)
+//  {
+//    // It's not ERANGE, so we don't know how to handle it
+//    throw std::runtime_error("Cannot determine the current path.");
+//  }
+//  // Ok, the stack buffer isn't long enough; fallback to heap allocation
+//  for (int chunks = 2; chunks<maxChunks; chunks++)
+//  {
+//    // With boost use scoped_ptr; in C++0x, use unique_ptr
+//    // If you want to be less C++ but more efficient you may want to use realloc
+//    std::auto_ptr<char> cwd(new char[chunkSize*chunks]);
+//    if (_getcwd(cwd.get(), chunkSize*chunks) != NULL)
+//      return cwd.get();
+//    if (errno != ERANGE)
+//    {
+//      // It's not ERANGE, so we don't know how to handle it
+//      throw std::runtime_error("Cannot determine the current path.");
+//    }
+//  }
+//  throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
+//}
+//#else
+//  #include <unistd.h>
+//  // get current working directory
+//  std::string getcwd_str()
+//  {
+//    char buffer[512];
+//    std::string s_cwd;
+//    // TODO: free cwd?
+//    char *cwd = getcwd(buffer, sizeof(buffer));
+//    if (cwd)
+//    {
+//      s_cwd = cwd;
+//    }
+//
+//    return s_cwd;
+//  }
+//#endif
+
+
+// compute a noise covariance matrix having different noise
+//  magnitude in-plane vs. out-of-plane for the given plane norm
+vct3x3 ComputePointCovariance(const vct3 &norm, double normPrllVar, double normPerpVar)
+{
+  vct3x3 M, M0;
+  vctRot3 R;
+  vct3 z(0.0, 0.0, 1.0);
+
+  // set eigenvalues of noise covariance
+  //  set plane perpendicular noise component along z-axis
+  M0.SetAll(0.0);
+  M0.Element(0, 0) = normPerpVar;
+  M0.Element(1, 1) = normPerpVar;
+  M0.Element(2, 2) = normPrllVar;
+
+  // find rotation to align normal vector with the z-axis
+  vct3 xProd = vctCrossProduct(norm, z);
+  if (xProd.Norm() <= 1e-6)  // protect from divide by zero
+  { // norm is already oriented with z-axis
+    R = vctRot3::Identity();
+  }
+  else
+  {
+    // the norm of the cross product is the same for angles of x deg & x+180 deg
+    //  between two vectors => use dot product to determine the angle
+    //   NOTE: the angle corresponding to the cross product axis is always > 0;
+    //         acos of the dot product gives the correct form
+    //   NOTE: the problem with using norm of cross product isn't that we aren't
+    //         going the right direction, but rather that we don't rotate far enough
+    //         if A & B are seperated by more than 90 degrees.  I.e. if angular
+    //         seperation between A & B is 100 degrees, then asin(norm(AxB)) gives
+    //         the same angle as if A & B are seperated by 80 degrees => the
+    //         separation angle is ambiguous using the norm of cross product.
+    vct3 ax = xProd.Normalized();
+    double an = acos(vctDotProduct(norm, z));
+    //double an = asin(t.Norm());
+    vctAxAnRot3 R_AxAn(ax, an);
+    R = vctRot3(R_AxAn);  
+  }
+
+  // compute noise covariance M of this sample and its decomposition:
+  //    M = U*S*V'
+  // rotate to align normal with z-axis, apply noise covariance, rotate back
+  M = R.Transpose()*M0*R;
+
+  return M;
+}
 
 void ComputeCovEigenDecomposition_NonIter(const vct3x3 &M, vct3 &eigenValues, vct3x3 &eigenVectors)
 {
@@ -323,7 +411,6 @@ void ComputeCovEigenValues_Trig(const vct3x3 &M, vct3 &eigenValues)
     + M.Element(1, 2) * M.Element(1, 2);
 
   if (p1 <= std::numeric_limits<double>::epsilon() * 10.0)
-    //if (p1 == 0.0)    
   {
     // M is diagonal
     eig1 = M.Element(0, 0);

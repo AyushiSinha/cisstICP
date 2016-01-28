@@ -10,17 +10,17 @@
 #include "utility.h"
 #include "cisstICP.h"
 #include "cisstMesh.h"
-#include "cisstCovTree_Mesh.h"
-#include "cisstCovTree_PointCloud.h"
+#include "cisstPointCloud.h"
+#include "PDTree_Mesh.h"
+#include "PDTree_PointCloud.h"
 
-#include "cisstAlgorithmICP_StdICP_Mesh.h"
-#include "cisstAlgorithmICP_IMLP_Mesh.h"
-#include "cisstAlgorithmICP_RobustICP_Mesh.h"
+#include "algICP_StdICP_Mesh.h"
+#include "algICP_IMLP_Mesh.h"
 
-#include "cisstAlgorithmICP_StdICP_PointCloud.h"
-#include "cisstAlgorithmICP_IMLP_PointCloud.h"
-#include "cisstAlgorithmICP_RobustICP_PointCloud.h"
+#include "algICP_StdICP_PointCloud.h"
+#include "algICP_IMLP_PointCloud.h"
 
+enum ICPAlgType { AlgType_StdICP, AlgType_IMLP };
 
 void Callback_TrackRegPath_testICP( cisstICP::CallbackArg &arg, void *userData )
 {
@@ -62,7 +62,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   int    nThresh = 5;       // Cov Tree Params
   double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "../ICP_TestData/";
+  std::string workingDir = "../test_data/";
   std::string outputDir =  "LastRun/";
 
   std::string saveMeshPath =          workingDir + outputDir + "SaveMesh";
@@ -74,7 +74,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   //std::string saveLPath =             workingDir + outputDir + "SaveSampleL";
 
   cisstMesh         mesh;
-  cisstCovTreeBase*         pTree;
+  PDTreeBase*         pTree;
   vctDynamicVector<vct3>    samples;
   vctDynamicVector<vct3>    sampleNorms;
   vctDynamicVector<vct3>    noisySamples;
@@ -126,33 +126,34 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   // load mesh
   CreateMesh( mesh, loadMeshPath, &saveMeshPath );
 
-  // Create target shape from mesh (as a covariance tree)
+  // Create target shape from mesh (as a PD tree)
   if (TargetShapeAsMesh)
   {
-    // build covariance tree on the mesh directly
+    // build PD tree on the mesh directly
     //  Note: defines measurement noise to be zero
-    printf("Building mesh covariance tree .... ");
-    pTree = new cisstCovTree_Mesh(mesh, nThresh, diagThresh);
+    printf("Building mesh PD tree .... ");
+    pTree = new PDTree_Mesh(mesh, nThresh, diagThresh);
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
   else
   {
-    // build Point Cloud covariance tree from mesh
+    // build Point Cloud PD tree from mesh
     // (uses triangle center points as the point cloud)
-    //  Note: the mesh constructor for the point cloud covariance tree
+    //  Note: the mesh constructor for the point cloud PD tree
     //        assumes the specified noise in direction perpendicular to surface
     //        and sets the in-plane noise based on the triangle size in order
     //        to allow for greater freedom of match anywhere along the triangle surface
     //        even though each triangle surface is represented by only one point.
-    printf("Building point cloud covariance tree .... ");
-    cisstCovTree_PointCloud *pPointCloudTree;
-    pPointCloudTree = new cisstCovTree_PointCloud(mesh, nThresh, diagThresh, PointCloudNoisePerpPlane);
+    printf("Building point cloud PD tree .... ");
+    cisstPointCloud pointCloud(mesh, PointCloudNoisePerpPlane);
+    PDTree_PointCloud *pPointCloudTree;
+    pPointCloudTree = new PDTree_PointCloud(pointCloud, nThresh, diagThresh);
     pTree = pPointCloudTree;
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
-    printf(" Point Cloud Noise Model:\n  perp-plane variance = %f\n  in-plane variance = %f (avg)\n\n", 
-      PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
+    //printf(" Point Cloud Noise Model:\n  perp-plane variance = %f\n  in-plane variance = %f (avg)\n\n", 
+    //  PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
   }
 
   // Random Numbers: Normal RV's
@@ -216,7 +217,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
   mesh.LoadMeshFile( loadMeshFile );
   cisstICP::MeshSave(mesh, saveMeshFile);
-  pTree = new cisstCovTree_PointCloud(mesh, nThresh, diagThresh);
+  pTree = new PDTree_PointCloud(mesh, nThresh, diagThresh);
   printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   cisstICP::SamplesLoad( noisySamples, loadNoisySamplesFile );
   cisstICP::SamplesSave( noisySamples, saveNoisySamplesFile );
@@ -267,20 +268,20 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
 
   // ICP Algorithm
-  cisstAlgorithmICP *pICPAlg = NULL;
+  algICP *pICPAlg = NULL;
   switch (algType)
   {
   case AlgType_StdICP:
     {
       if (TargetShapeAsMesh)
       { // target shape is a mesh
-        cisstCovTree_Mesh *pTreeMesh = dynamic_cast<cisstCovTree_Mesh*>(pTree);
-        pICPAlg = new cisstAlgorithmICP_StdICP_Mesh(pTreeMesh, noisySamples);
+        PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+        pICPAlg = new algICP_StdICP_Mesh(pTreeMesh, noisySamples);
       }
       else
       { // target shape is a point cloud
-        cisstCovTree_PointCloud *pTreePointCloud = dynamic_cast<cisstCovTree_PointCloud*>(pTree);
-        pICPAlg = new cisstAlgorithmICP_StdICP_PointCloud(pTreePointCloud, noisySamples);
+        PDTree_PointCloud *pTreePointCloud = dynamic_cast<PDTree_PointCloud*>(pTree);
+        pICPAlg = new algICP_StdICP_PointCloud(pTreePointCloud, noisySamples);
       }
       break;
     }
@@ -288,9 +289,9 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
     {
       if (TargetShapeAsMesh)
       { // target shape is a mesh
-        cisstCovTree_Mesh *pTreeMesh = dynamic_cast<cisstCovTree_Mesh*>(pTree);
-        cisstAlgorithmICP_IMLP_Mesh *pAlg;
-        pAlg = new cisstAlgorithmICP_IMLP_Mesh(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov);
+        PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+        algICP_IMLP_Mesh *pAlg;
+        pAlg = new algICP_IMLP_Mesh(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov);
         // set sample noise model
         //pAlg->SetSampleCovariances( sampleNoiseCov );
         // set mesh noise model to zero noise
@@ -306,76 +307,17 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
       }
       else
       { // target shape is a point cloud
-        cisstCovTree_PointCloud *pTreePointCloud = dynamic_cast<cisstCovTree_PointCloud*>(pTree);
-        cisstAlgorithmICP_IMLP_PointCloud *pAlg;
-        pAlg = new cisstAlgorithmICP_IMLP_PointCloud(pTreePointCloud, noisySamples, sampleNoiseCov, sampleNoiseCov);
+        PDTree_PointCloud *pTreePointCloud = dynamic_cast<PDTree_PointCloud*>(pTree);
+        algICP_IMLP_PointCloud *pAlg;
+        pAlg = new algICP_IMLP_PointCloud(pTreePointCloud, noisySamples, sampleNoiseCov, sampleNoiseCov);
         // set sample noise model
         //pAlg->SetSampleCovariances( sampleNoiseCov );
         pICPAlg = pAlg;
-        // NOTE: (covariance tree noise model was already defined
+        // NOTE: (PD tree noise model was already defined
         //       by the point cloud cov tree constructor)
       }
       break;
     }
-  case AlgType_RobustICP:
-  {
-    // Compute D from mesh resolution
-    std::cout << std::endl << "Computing Avg Neighbor Distance for RobustICP... ";
-    double D = ComputeAvgNeighborDistance(mesh);
-    //double D = 1.79662;
-    double D0max = 1000.0;  // large value
-    std::cout << D << std::endl << std::endl;
-
-    if (TargetShapeAsMesh)
-    { // target shape is a mesh
-      cisstCovTree_Mesh *pTreeMesh = dynamic_cast<cisstCovTree_Mesh*>(pTree);
-      pICPAlg = new cisstAlgorithmICP_RobustICP_Mesh(
-        pTreeMesh, noisySamples, D, D0max);
-    }
-    else
-    { // target shape is a point cloud
-      cisstCovTree_PointCloud *pTreePointCloud = dynamic_cast<cisstCovTree_PointCloud*>(pTree);
-      pICPAlg = new cisstAlgorithmICP_RobustICP_PointCloud(
-        pTreePointCloud, noisySamples, D, D0max);
-    }
-    break;
-  }
-  //case AlgType_IMLPRegCov:
-  //  {
-  //    cisstAlgorithmICP_IMLPRegCov::AlgType algSubType;
-  //    algSubType = cisstAlgorithmICP_IMLPRegCov::RegCov3A;
-
-  //    if (TargetShapeAsMesh)
-  //    { // target shape is a mesh
-  //      cisstCovTree_Mesh *pTreeMesh = dynamic_cast<cisstCovTree_Mesh*>(pTree);
-  //      cisstAlgorithmICP_IMLPRegCov_Mesh *pAlg;
-  //      pAlg = new cisstAlgorithmICP_IMLPRegCov_Mesh( pTreeMesh, &ICP, algSubType );
-  //      // set sample noise model
-  //      pAlg->SetSampleCovariances( sampleNoiseCov );
-  //      // set mesh to zero noise
-  //      mesh.TriangleCov.SetSize( mesh.NumTriangles() );
-  //      mesh.TriangleCovEig.SetSize( mesh.NumTriangles() );
-  //      mesh.TriangleCov.SetAll( vct3x3(0.0) );
-  //      mesh.TriangleCovEig.SetAll( vct3(0.0) );
-  //      pTreeMesh->ComputeNodeNoiseModels();
-  //      //double noiseSDInPlane = 0.5;
-  //      //double noiseSDPerpPlane = 1.0;
-  //      //SetMeshTriangleCovariances( mesh, noiseSDInPlane, noiseSDPerpPlane );
-  //      pICPAlg = pAlg;
-  //    }
-  //    else
-  //    { // target shape is a point cloud
-  //      cisstCovTree_PointCloud *pTreePointCloud = dynamic_cast<cisstCovTree_PointCloud*>(pTree);
-  //      cisstAlgorithmICP_IMLPRegCov_PointCloud *pAlg;
-  //      pAlg = new cisstAlgorithmICP_IMLPRegCov_PointCloud( pTreePointCloud, &ICP, algSubType );
-  //      // set sample noise model
-  //      //  (target noise model was already defined from the mesh
-  //      //   by the point cloud cov tree constructor)
-  //      pAlg->SetSampleCovariances( sampleNoiseCov );
-  //      pICPAlg = pAlg;
-  //    }
-  //    break;
-  //  }
   default:
     {
       std::cout << "ERROR: unknown algorithm type" << std::endl;

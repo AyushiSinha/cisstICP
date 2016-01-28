@@ -36,16 +36,16 @@
 
 
 // Load points from file
-int cisstPointCloud2D::ReadPointsFromFile(
+int cisstPointCloud2D::ReadPointCloudFromFile(
   vctDynamicVector<vct2> &pts,
   std::string &filePath)
 {
   pts.SetSize(0);
-  return AppendPointsFromFile(pts, filePath);
+  return AppendPointCloudFromFile(pts, filePath);
 }
 
 // Append points from file
-int cisstPointCloud2D::AppendPointsFromFile(
+int cisstPointCloud2D::AppendPointCloudFromFile(
   vctDynamicVector<vct2> &pts,
   std::string &filePath)
 {
@@ -68,7 +68,7 @@ int cisstPointCloud2D::AppendPointsFromFile(
   std::ifstream fs(filePath.c_str());
   if (!fs.is_open())
   {
-    std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
+    std::cout << "ERROR: failed to open file: " << filePath << std::endl;
     assert(0);
     return -1;
   }
@@ -79,7 +79,7 @@ int cisstPointCloud2D::AppendPointsFromFile(
   itemsRead = std::sscanf(line.c_str(), "POINTS %u", &numPoints);
   if (itemsRead != 1)
   {
-    std::cerr << "ERROR: expected POINTS header at line: " << line << std::endl;
+    std::cout << "ERROR: expected POINTS header at line: " << line << std::endl;
     assert(0);
     return -1;
   }
@@ -92,7 +92,7 @@ int cisstPointCloud2D::AppendPointsFromFile(
     itemsRead = std::sscanf(line.c_str(), "%f %f", &f1, &f2);
     if (itemsRead != 2)
     {
-      std::cerr << "ERROR: expeced a point value at line: " << line << std::endl;
+      std::cout << "ERROR: expeced a point value at line: " << line << std::endl;
       assert(0);
       return -1;
     }
@@ -103,7 +103,7 @@ int cisstPointCloud2D::AppendPointsFromFile(
   }
   if (fs.bad() || fs.fail() || pointCount != numPoints)
   {
-    std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
+    std::cout << "ERROR: read pts from file failed; last line read: " << line << std::endl;
     assert(0);
     return -1;
   }
@@ -115,7 +115,7 @@ int cisstPointCloud2D::AppendPointsFromFile(
 }
 
 // Write points to file
-int cisstPointCloud2D::WritePointsToFile(
+int cisstPointCloud2D::WritePointCloudToFile(
   vctDynamicVector<vct2> &pts,
   std::string &filePath)
 {
@@ -132,7 +132,7 @@ int cisstPointCloud2D::WritePointsToFile(
   std::ofstream fs(filePath.c_str());
   if (!fs.is_open())
   {
-    std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
+    std::cout << "ERROR: failed to open file: " << filePath << std::endl;
     assert(0);
     return -1;
   }

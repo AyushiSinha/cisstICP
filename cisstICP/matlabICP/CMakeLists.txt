@@ -47,44 +47,44 @@ if (cisst_FOUND_AS_REQUIRED)
       # )    
   # ENDIF (X86_MODE)  
   
-  # WildMagic5 Mathematics Library
-  find_path (WM5_BASE_DIR
-    NAMES wm5path.txt
-    PATHS "C:/software/WildMagic5"
-    )
-  if (IS_DIRECTORY ${WM5_BASE_DIR})
-    # Release:
-    find_path (WM5_LIB_PATH
-      NAMES Wm5Core.lib
-      #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
-      HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Release"
-      )    
-    find_library( WM5_CORE_LIB Wm5Core.lib PATHS ${WM5_LIB_PATH})
-    find_library( WM5_MATH_LIB Wm5Mathematics.lib PATHS ${WM5_LIB_PATH})
-    # # Debug:
+  # # WildMagic5 Mathematics Library
+  # find_path (WM5_BASE_DIR
+    # NAMES wm5path.txt
+    # PATHS "C:/software/WildMagic5"
+    # )
+  # if (IS_DIRECTORY ${WM5_BASE_DIR})
+    # # Release:
     # find_path (WM5_LIB_PATH
-      # NAMES Wm5CoreD.lib
+      # NAMES Wm5Core.lib
       # #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
-      # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Debug"
+      # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Release"
       # )    
-    # find_library( WM5_CORE_LIB Wm5CoreD.lib PATHS ${WM5_LIB_PATH})
-    # find_library( WM5_MATH_LIB Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH})    
-    # # # find_library( WM5_CORE_LIB_DEBUG Wm5CoreD.lib PATHS ${WM5_LIB_PATH_DEBUG})
-    # # # find_library( WM5_MATH_LIB_DEBUG Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH_DEBUG})        
-    # # # # Debug:
-    # # # find_library( WM5MATH_LIB Wm5MathematicsD.lib Wm5CoreD.lib
-      # # # HINTS "C:/software/WildMagic5/SDK/Library/v120/x64/Debug"
-      # # # )
+    # find_library( WM5_CORE_LIB Wm5Core.lib PATHS ${WM5_LIB_PATH})
+    # find_library( WM5_MATH_LIB Wm5Mathematics.lib PATHS ${WM5_LIB_PATH})
+    # # # Debug:
+    # # find_path (WM5_LIB_PATH
+      # # NAMES Wm5CoreD.lib
+      # # #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
+      # # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Debug"
+      # # )    
+    # # find_library( WM5_CORE_LIB Wm5CoreD.lib PATHS ${WM5_LIB_PATH})
+    # # find_library( WM5_MATH_LIB Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH})    
+    # # # # find_library( WM5_CORE_LIB_DEBUG Wm5CoreD.lib PATHS ${WM5_LIB_PATH_DEBUG})
+    # # # # find_library( WM5_MATH_LIB_DEBUG Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH_DEBUG})        
+    # # # # # Debug:
+    # # # # find_library( WM5MATH_LIB Wm5MathematicsD.lib Wm5CoreD.lib
+      # # # # HINTS "C:/software/WildMagic5/SDK/Library/v120/x64/Debug"
+      # # # # )
       
-    find_path( WM5_LIB_INCLUDE
-      NAMES "Wm5NoniterativeEigen3x3.h"
-      PATHS
-      HINTS ${WM5_BASE_DIR}"/SDK/Include"
-      #HINTS "C:/software/WildMagic5/SDK/Include"
-      DOC  ""
-      )
-    include_directories(${WM5_LIB_INCLUDE})  
-  endif (IS_DIRECTORY ${WM5_BASE_DIR})
+    # find_path( WM5_LIB_INCLUDE
+      # NAMES "Wm5NoniterativeEigen3x3.h"
+      # PATHS
+      # HINTS ${WM5_BASE_DIR}"/SDK/Include"
+      # #HINTS "C:/software/WildMagic5/SDK/Include"
+      # DOC  ""
+      # )
+    # include_directories(${WM5_LIB_INCLUDE})  
+  # endif (IS_DIRECTORY ${WM5_BASE_DIR})
   
   
   #=== ICP LIBRARY ===
@@ -93,7 +93,6 @@ if (cisst_FOUND_AS_REQUIRED)
   #  otherwise use the cisstICPCombined library which includes all dependencies
   #  compiled in release mode
   find_library(cisstICP_LIB cisstICP)
-  #find_library(cisstICP_LIB cisstICPCombined)
   find_path(cisstICP_LIB_INCLUDE 
     NAMES cisstICP.h
     HINTS "../../cisstICP"
@@ -134,40 +133,39 @@ if (cisst_FOUND_AS_REQUIRED)
   #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-all-symbols")  
 
   
-  # ---- mexAlgDirICP_vMFG_Mesh ---- #
+  # ---- mexAlgDirICP_IMLOP_Mesh ---- #
   
-  add_library( mexAlgDirICP_vMFG_Mesh SHARED
-    cisstAlgorithmDirICP_vMFG_Mesh_MexInterface.cpp
-    cisstAlgorithmDirICP_vMFG_Mesh_MexInterface.h
-    cisstAlgorithmDirICP_vMFG_Mesh_MexInterface.def
+  add_library( mexAlgDirICP_IMLOP_Mesh SHARED
+    mexInterface_AlgDirICP_IMLOP_Mesh.cpp
+    mexInterface_AlgDirICP_IMLOP_Mesh.h
+    mexInterface_AlgDirICP_IMLOP_Mesh.def
     ${MEX_BASE_FILES}
     )
   include_directories(
-    ${mexAlgDirICP_vMFG_Mesh_SOURCE_DIR}
+    ${mexAlgDirICP_IMLOP_Mesh_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )
-  target_link_libraries (mexAlgDirICP_vMFG_Mesh
+  target_link_libraries (mexAlgDirICP_IMLOP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}
     )
-  cisst_target_link_libraries ( mexAlgDirICP_vMFG_Mesh
+  cisst_target_link_libraries ( mexAlgDirICP_IMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_vMFG_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_IMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_vMFG_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_IMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -175,40 +173,39 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)
   
   
-  # ---- mexAlgDirICP_Kent_Mesh ---- #
+  # ---- mexAlgDirICP_GIMLOP_Mesh ---- #
   
-  add_library( mexAlgDirICP_Kent_Mesh SHARED
-    cisstAlgorithmDirICP_Kent_Mesh_MexInterface.cpp
-    cisstAlgorithmDirICP_Kent_Mesh_MexInterface.h
-    cisstAlgorithmDirICP_Kent_Mesh_MexInterface.def
+  add_library( mexAlgDirICP_GIMLOP_Mesh SHARED
+    mexInterface_AlgDirICP_GIMLOP_Mesh.cpp
+    mexInterface_AlgDirICP_GIMLOP_Mesh.h
+    mexInterface_AlgDirICP_GIMLOP_Mesh.def
     ${MEX_BASE_FILES}
     )
   include_directories(
-    ${mexAlgDirICP_Kent_Mesh_SOURCE_DIR}
+    ${mexAlgDirICP_GIMLOP_Mesh_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )
-  target_link_libraries (mexAlgDirICP_Kent_Mesh
+  target_link_libraries (mexAlgDirICP_GIMLOP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}
     )
-  cisst_target_link_libraries ( mexAlgDirICP_Kent_Mesh
+  cisst_target_link_libraries ( mexAlgDirICP_GIMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_Kent_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_GIMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_Kent_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_GIMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -216,40 +213,39 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)
   
   
-  # ---- mexAlgDirICP_vonMisesPrj_Mesh ---- #
+  # ---- mexAlgDirICP_PIMLOP_Mesh ---- #
   
-  add_library( mexAlgDirICP_vonMisesPrj_Mesh SHARED
-    cisstAlgorithmDirICP_vonMisesPrj_Mesh_MexInterface.cpp
-    cisstAlgorithmDirICP_vonMisesPrj_Mesh_MexInterface.h
-    cisstAlgorithmDirICP_vonMisesPrj_Mesh_MexInterface.def
+  add_library( mexAlgDirICP_PIMLOP_Mesh SHARED
+    mexInterface_AlgDirICP_PIMLOP_Mesh.cpp
+    mexInterface_AlgDirICP_PIMLOP_Mesh.h
+    mexInterface_AlgDirICP_PIMLOP_Mesh.def
     ${MEX_BASE_FILES}
     )
   include_directories(
-    ${mexAlgDirICP_vonMisesPrj_Mesh_SOURCE_DIR}
+    ${mexAlgDirICP_PIMLOP_Mesh_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )
-  target_link_libraries (mexAlgDirICP_vonMisesPrj_Mesh
+  target_link_libraries (mexAlgDirICP_PIMLOP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}
     )
-  cisst_target_link_libraries ( mexAlgDirICP_vonMisesPrj_Mesh
+  cisst_target_link_libraries ( mexAlgDirICP_PIMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_vonMisesPrj_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_PIMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlgDirICP_vonMisesPrj_Mesh
+    SET_TARGET_PROPERTIES( mexAlgDirICP_PIMLOP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -260,9 +256,9 @@ if (cisst_FOUND_AS_REQUIRED)
   # ---- mexAlgICP_StdICP_Mesh ---- #
   
   add_library( mexAlgICP_StdICP_Mesh SHARED
-    cisstAlgorithmICP_StdICP_Mesh_MexInterface.cpp
-    cisstAlgorithmICP_StdICP_Mesh_MexInterface.h
-    cisstAlgorithmICP_StdICP_Mesh_MexInterface.def 
+    mexInterface_AlgICP_StdICP_Mesh.cpp
+    mexInterface_AlgICP_StdICP_Mesh.h
+    mexInterface_AlgICP_StdICP_Mesh.def 
     ${MEX_BASE_FILES}
     )  
   include_directories(
@@ -273,9 +269,8 @@ if (cisst_FOUND_AS_REQUIRED)
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}    
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}    
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}    
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlgDirICP_StdICP_Mesh 
@@ -308,9 +303,9 @@ if (cisst_FOUND_AS_REQUIRED)
   
   add_library( mexAlgDirICP_StdICP_Mesh SHARED
     #stdint.h   # not needed for Visual Studio 2010 and later
-    cisstAlgorithmDirICP_StdICP_Mesh_MexInterface.cpp
-    cisstAlgorithmDirICP_StdICP_Mesh_MexInterface.h
-    cisstAlgorithmDirICP_StdICP_Mesh_MexInterface.def 
+    mexInterface_AlgDirICP_StdICP_Mesh.cpp
+    mexInterface_AlgDirICP_StdICP_Mesh.h
+    mexInterface_AlgDirICP_StdICP_Mesh.def 
     ${MEX_BASE_FILES}
     )  
   include_directories(
@@ -320,10 +315,9 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgDirICP_StdICP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}    
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}   
+    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug  
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}   
     )    
   # IF (X86_MODE)
     # target_link_libraries( mexAlgDirICP_StdICP_Mesh 
@@ -352,47 +346,46 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)
 	
 
-  # ---- mexAlgCovTree_MLP_Mesh ---- #
+  # ---- mexAlgPDTree_MLP_Mesh ---- #
   
-  add_library( mexAlgCovTree_MLP_Mesh SHARED
+  add_library( mexAlgPDTree_MLP_Mesh SHARED
     #stdint.h   # not needed for Visual Studio 2010 and later
-    cisstAlgorithmCovTree_MLP_Mesh_MexInterface.cpp
-    cisstAlgorithmCovTree_MLP_Mesh_MexInterface.h
-    cisstAlgorithmCovTree_MLP_Mesh_MexInterface.def    
+    mexInterface_AlgPDTree_MLP_Mesh.cpp
+    mexInterface_AlgPDTree_MLP_Mesh.h
+    mexInterface_AlgPDTree_MLP_Mesh.def    
     ${MEX_BASE_FILES}
     )  
   include_directories(
-    ${mexAlg_CovTree_MLP_Mesh_SOURCE_DIR}
+    ${mexAlg_PDTree_MLP_Mesh_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )  
-  target_link_libraries (mexAlgCovTree_MLP_Mesh
+  target_link_libraries (mexAlgPDTree_MLP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}
     )
   # IF (X86_MODE)
-    # target_link_libraries( mexAlgCovTree_MLP_Mesh 
+    # target_link_libraries( mexAlgPDTree_MLP_Mesh 
       # ${GSL_LIB}
       # ${GSL_CBLAS_LIB}
       # )
   # ENDIF (X86_MODE)
-  cisst_target_link_libraries ( mexAlgCovTree_MLP_Mesh
+  cisst_target_link_libraries ( mexAlgPDTree_MLP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlgCovTree_MLP_Mesh
+    SET_TARGET_PROPERTIES( mexAlgPDTree_MLP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )   
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlgCovTree_MLP_Mesh
+    SET_TARGET_PROPERTIES( mexAlgPDTree_MLP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -400,47 +393,46 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)      
   
   
-  # ---- mexAlgCovTree_CP_Mesh ---- #
+  # ---- mexAlgPDTree_CP_Mesh ---- #
   
-  add_library( mexAlgCovTree_CP_Mesh SHARED
+  add_library( mexAlgPDTree_CP_Mesh SHARED
     #stdint.h   # not needed for Visual Studio 2010 and later
-    cisstAlgorithmCovTree_CP_Mesh_MexInterface.cpp
-    cisstAlgorithmCovTree_CP_Mesh_MexInterface.h
-    cisstAlgorithmCovTree_CP_Mesh_MexInterface.def    
+    mexInterface_AlgPDTree_CP_Mesh.cpp
+    mexInterface_AlgPDTree_CP_Mesh.h
+    mexInterface_AlgPDTree_CP_Mesh.def    
     ${MEX_BASE_FILES}
     )  
   include_directories(
-    ${mexAlg_CovTree_CP_Mesh_SOURCE_DIR}
+    ${mexAlg_PDTree_CP_Mesh_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )  
-  target_link_libraries (mexAlgCovTree_CP_Mesh
+  target_link_libraries (mexAlgPDTree_CP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}
     )
   # IF (X86_MODE)
-    # target_link_libraries( mexAlgCovTree_CP_Mesh 
+    # target_link_libraries( mexAlgPDTree_CP_Mesh 
       # ${GSL_LIB}
       # ${GSL_CBLAS_LIB}
       # )
   # ENDIF (X86_MODE)
-  cisst_target_link_libraries ( mexAlgCovTree_CP_Mesh
+  cisst_target_link_libraries ( mexAlgPDTree_CP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlgCovTree_CP_Mesh
+    SET_TARGET_PROPERTIES( mexAlgPDTree_CP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )   
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlgCovTree_CP_Mesh
+    SET_TARGET_PROPERTIES( mexAlgPDTree_CP_Mesh
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -448,47 +440,46 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)     
   
   
-  # ---- mexAlg2D_DirCovTree_CP_Edges ---- #
+  # ---- mexAlg2D_DirPDTree_CP_Edges ---- #
   
-  add_library( mexAlg2D_DirCovTree_CP_Edges SHARED
+  add_library( mexAlg2D_DirPDTree_CP_Edges SHARED
     #stdint.h   # not needed for Visual Studio 2010 and later
-    cisstAlgorithm2D_DirCovTree_CP_Edges_MexInterface.cpp
-    cisstAlgorithm2D_DirCovTree_CP_Edges_MexInterface.h
-    cisstAlgorithm2D_DirCovTree_CP_Edges_MexInterface.def    
+    mexInterface_Alg2D_DirPDTree_CP_Edges.cpp
+    mexInterface_Alg2D_DirPDTree_CP_Edges.h
+    mexInterface_Alg2D_DirPDTree_CP_Edges.def    
     ${MEX_BASE_FILES}
     )  
   include_directories(
-    ${mexAlg2D_DirCovTree_CP_Edges_SOURCE_DIR}
+    ${mexAlg2D_DirPDTree_CP_Edges_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )  
-  target_link_libraries (mexAlg2D_DirCovTree_CP_Edges
+  target_link_libraries (mexAlg2D_DirPDTree_CP_Edges
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}    
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}  
+    #${WM5_MATH_LIB}
+    #${WM5_CORE_LIB}  
     )
   # IF (X86_MODE)
-    # target_link_libraries( mexAlg2D_DirCovTree_CP_Edges 
+    # target_link_libraries( mexAlg2D_DirPDTree_CP_Edges 
       # ${GSL_LIB}
       # ${GSL_CBLAS_LIB}
       # )
   # ENDIF (X86_MODE)
-  cisst_target_link_libraries ( mexAlg2D_DirCovTree_CP_Edges
+  cisst_target_link_libraries ( mexAlg2D_DirPDTree_CP_Edges
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlg2D_DirCovTree_CP_Edges
+    SET_TARGET_PROPERTIES( mexAlg2D_DirPDTree_CP_Edges
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )   
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlg2D_DirCovTree_CP_Edges
+    SET_TARGET_PROPERTIES( mexAlg2D_DirPDTree_CP_Edges
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -496,47 +487,46 @@ if (cisst_FOUND_AS_REQUIRED)
   ENDIF (X86_MODE)    
   
   
-  # ---- mexAlg2D_DirCovTree_vonMises_Edges ---- #
+  # ---- mexAlg2D_DirPDTree_vonMises_Edges ---- #
   
-  add_library( mexAlg2D_DirCovTree_vonMises_Edges SHARED
+  add_library( mexAlg2D_DirPDTree_vonMises_Edges SHARED
     #stdint.h   # not needed for Visual Studio 2010 and later
-    cisstAlgorithm2D_DirCovTree_vonMises_Edges_MexInterface.cpp
-    cisstAlgorithm2D_DirCovTree_vonMises_Edges_MexInterface.h
-    cisstAlgorithm2D_DirCovTree_vonMises_Edges_MexInterface.def    
+    mexInterface_Alg2D_DirPDTree_vonMises_Edges.cpp
+    mexInterface_Alg2D_DirPDTree_vonMises_Edges.h
+    mexInterface_Alg2D_DirPDTree_vonMises_Edges.def    
     ${MEX_BASE_FILES}
     )  
   include_directories(
-    ${mexAlg2D_DirCovTree_vonMises_Edges_SOURCE_DIR}
+    ${mexAlg2D_DirPDTree_vonMises_Edges_SOURCE_DIR}
     ${cisstICP_LIB_INCLUDE}
     )  
-  target_link_libraries (mexAlg2D_DirCovTree_vonMises_Edges
+  target_link_libraries (mexAlg2D_DirPDTree_vonMises_Edges
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
     #${WM5_MATH_LIB_DEBUG}    
-    ${WM5_MATH_LIB}
-    ${WM5_CORE_LIB}  
+    #${WM5_CORE_LIB}  
     )
   # IF (X86_MODE)
-    # target_link_libraries( mexAlg2D_DirCovTree_vonMises_Edges 
+    # target_link_libraries( mexAlg2D_DirPDTree_vonMises_Edges 
       # ${GSL_LIB}
       # ${GSL_CBLAS_LIB}
       # )
   # ENDIF (X86_MODE)
-  cisst_target_link_libraries ( mexAlg2D_DirCovTree_vonMises_Edges
+  cisst_target_link_libraries ( mexAlg2D_DirPDTree_vonMises_Edges
     ${REQUIRED_CISST_LIBRARIES}
     )
   IF (X86_MODE)
     MESSAGE("Configuring mex as 32-bit library (mexw32)...\n")
     MESSAGE("32-bit mex file will not run on 64-bit Matlab!\n")
-    SET_TARGET_PROPERTIES( mexAlg2D_DirCovTree_vonMises_Edges
+    SET_TARGET_PROPERTIES( mexAlg2D_DirPDTree_vonMises_Edges
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw32"
       )   
   ELSE (X86_MODE)
     MESSAGE("Configuring mex as 64-bit library (mexw64)...\n")
-    SET_TARGET_PROPERTIES( mexAlg2D_DirCovTree_vonMises_Edges
+    SET_TARGET_PROPERTIES( mexAlg2D_DirPDTree_vonMises_Edges
       PROPERTIES
       PREFIX ""
       SUFFIX ".mexw64"
@@ -548,9 +538,9 @@ if (cisst_FOUND_AS_REQUIRED)
   
   # add_library( mexAlg2D_DirICP_StdICP_Edges SHARED
     # #stdint.h   # not needed for Visual Studio 2010 and later
-    # cisstAlgorithm2D_DirICP_StdICP_Edges_MexInterface.cpp
-    # cisstAlgorithm2D_DirICP_StdICP_Edges_MexInterface.h
-    # cisstAlgorithm2D_DirICP_StdICP_Edges_MexInterface.def    
+    # alg2D_DirICP_StdICP_Edges_MexInterface.cpp
+    # alg2D_DirICP_StdICP_Edges_MexInterface.h
+    # alg2D_DirICP_StdICP_Edges_MexInterface.def    
     # ${MEX_BASE_FILES}
     # )  
   # include_directories(

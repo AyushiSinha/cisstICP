@@ -35,10 +35,10 @@
 #define _wrapper_dlib_h
 
 #include "cisstVector.h"
-#include "./dlib/optimization.h"
-//#include "cisstAlgorithmDirICP_Kent.h"
+#include "dlib/optimization.h"
+//#include "algDirICP_GIMLOP.h"
 
-class cisstAlgorithmDirICP_Kent;  // forward decleration
+class algDirICP_GIMLOP;  // forward decleration
 
 class wrapper_dlib
 {
@@ -57,9 +57,9 @@ public:
   // -- Methods -- //
 
   // constructor
-  wrapper_dlib(); // cisstAlgorithmDirICP_Kent *kent );
+  wrapper_dlib(); // algDirICP_GIMLOP *kent );
 
-  vct6  ComputeRegistration(const vct6 &x0, cisstAlgorithmDirICP_Kent *kent);
+  vct6  ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent);
 };
 
 #endif

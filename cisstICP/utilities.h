@@ -52,6 +52,10 @@
 // get current working directory
 std::string getcwd_str();
 
+// compute a noise covariance matrix having different noise
+//  magnitude parallel vs. perpendicular to a given point 
+//  normal orientation
+vct3x3 ComputePointCovariance( const vct3 &norm, double normPerpVar, double normPrllVar);
 
 // Decompositions for covariance matrices
 
@@ -206,6 +210,7 @@ inline void skew(const vct3 &v, vctDynamicMatrixRef<double> &sk)
 
 // Compute the centroid for a set of vetors
 vct3 vctCentroid(const vctDynamicVector<vct3>& A);
+
 // Compute the weighted centroid for a set of vectors
 vct3 vctWeightedMean(const vctDynamicVector<vct3>& A, const vctDoubleVec &W);
 

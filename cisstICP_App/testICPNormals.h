@@ -10,17 +10,19 @@
 #include "utility.h"
 #include "cisstICP.h"
 #include "cisstMesh.h"
-#include "cisstDirCovTree_Mesh.h"
-#include "cisstDirCovTree_PointCloud.h"
+#include "DirPDTree_Mesh.h"
+#include "DirPDTree_PointCloud.h"
 
-#include "cisstAlgorithmDirICP_StdICP_PointCloud.h"
-#include "cisstAlgorithmDirICP_StdICP_Mesh.h"
-#include "cisstAlgorithmDirICP_vMFG_Mesh.h"
-#include "cisstAlgorithmDirICP_Kent_Mesh.h"
-#include "cisstAlgorithmDirICP_vonMisesPrj_Mesh.h"
+#include "algDirICP_StdICP_PointCloud.h"
+#include "algDirICP_StdICP_Mesh.h"
+#include "algDirICP_IMLOP_Mesh.h"
+#include "algDirICP_GIMLOP_Mesh.h"
+#include "algDirICP_PIMLOP_Mesh.h"
 
 // disable for run-time tests
 #define ENABLE_CALLBACKS
+
+enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_GIMLOP, DirAlgType_PIMLOP };
 
 
 void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
@@ -37,7 +39,7 @@ void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *user
   // Save to file:
   //  - error function (-loglik)
   //  - incremental transform
-  //  - vMFG params
+  //  - IMLOP params
   //  - residual match errors
   // output format:
   //  err r00 r01 r02 r10 r11 r12 r20 r21 r22 tx ty tz normWeight posWeight avgNormError avgPosError 
@@ -97,8 +99,8 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   //int    nThresh = 5;       // Cov Tree Params
   //double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "../ICP_TestData/";
-  std::string outputDir = "LastRun/";
+  std::string workingDir = "..//test_data//";
+  std::string outputDir = "LastRun//";
 
   std::string saveSourceMeshPath = workingDir + outputDir + "SaveMeshSource";
   std::string saveTargetMeshPath = workingDir + outputDir + "SaveMeshTarget";
@@ -109,7 +111,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
 
   cisstMesh         mesh_source;
   cisstMesh         mesh_target;
-  cisstDirCovTreeBase*      pTree;
+  DirPDTreeBase*      pTree;
   vctDynamicVector<vct3>    samples;
   vctDynamicVector<vct3>    sampleNorms;
   vctDynamicVector<vct3>    noisySamples;
@@ -163,32 +165,33 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
 
   if (TargetShapeAsMesh)
   {
-    // build covariance tree on the mesh directly
+    // build PD tree on the mesh directly
     //  Note: defines measurement noise to be zero
-    printf("Building mesh covariance tree .... ");
-    pTree = new cisstDirCovTree_Mesh(mesh_target, nThresh, diagThresh);
+    printf("Building mesh PD tree .... ");
+    pTree = new DirPDTree_Mesh(mesh_target, nThresh, diagThresh);
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
   else
   {
-    // build Point Cloud covariance tree from mesh
+    // build Point Cloud PD tree from mesh
     // (uses triangle center points as the point cloud)
-    //  Note: the mesh constructor for the point cloud covariance tree
+    //  Note: the mesh constructor for the point cloud PD tree
     //        assumes the specified noise in direction perpendicular to surface
     //        and sets the in-plane noise based on the triangle size in order
     //        to allow for greater freedom of match anywhere along the triangle surface
     //        even though each triangle surface is represented by only one point.
-    printf("Building point cloud covariance tree .... ");
-    cisstDirCovTree_PointCloud *pPointCloudTree;
-    pPointCloudTree = new cisstDirCovTree_PointCloud(mesh_target, nThresh, diagThresh);
+    printf("Building point cloud PD tree .... ");
+    cisstPointCloud pointCloud(mesh_target);
+    DirPDTree_PointCloud *pPointCloudTree;
+    pPointCloudTree = new DirPDTree_PointCloud(pointCloud, nThresh, diagThresh);
     pTree = pPointCloudTree;
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
 
   // Random Numbers: Normal RV's
-  std::string normRVFile = workingDir + "../ICP_TestData/GaussianValues.txt";
+  std::string normRVFile = workingDir + "GaussianValues.txt";
   std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
 
   // Generate random samples from mesh
@@ -222,7 +225,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   //std::string baseFolder = "..\\ICP_TestData\\RandomTests\\";
   std::string baseFolder = "//jhdfs/data/lcsr$/CIIS/sbillin3/Research/ICOP/Data/RandomTests_FemurPatch/TestD_BivariateNormalTheta_OffsetR10-20P10-20_NoOutlierDetection/";  
   std::string testDir = "Noise_Plane1Norm1_Offset_R10-20T10-20_NSamps50/";
-  std::string trialName = "vMFG";     // Note: Finit and samples are same for all trials
+  std::string trialName = "IMLOP";     // Note: Finit and samples are same for all trials
   std::string trialNum = "19";
   std::string commonDir = "CommonFiles/";  
   std::string loadTargetMeshFile = baseFolder + commonDir + "SaveMeshTarget.mesh";
@@ -241,11 +244,11 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   cisstICP::MeshSave(mesh_target, saveTargetMeshPath);
   if (TargetShapeAsMesh)
   { // target shape is a mesh
-    pTree = new cisstDirCovTree_Mesh(mesh_target, nThresh, diagThresh);
+    pTree = new DirPDTree_Mesh(mesh_target, nThresh, diagThresh);
   }
   else
   { // target shape is a point cloud
-    pTree = new cisstDirCovTree_PointCloud(mesh_target, nThresh, diagThresh);
+    pTree = new DirPDTree_PointCloud(mesh_target, nThresh, diagThresh);
   }
   printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   cisstICP::SamplesLoad( noisySamples, noisySampleNorms, loadNoisySamplesFile );
@@ -296,32 +299,32 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
 
 
   // ICP Algorithm
-  cisstAlgorithmDirICP *pICPAlg = NULL;
+  algDirICP *pICPAlg = NULL;
   switch (algType)
   {
   case DirAlgType_StdICP:
   {
     if (TargetShapeAsMesh)
     { // target shape is a mesh
-      cisstDirCovTree_Mesh *pTreeMesh = dynamic_cast<cisstDirCovTree_Mesh*>(pTree);
-      pICPAlg = new cisstAlgorithmDirICP_StdICP_Mesh(pTreeMesh, noisySamples, noisySampleNorms);
+      DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+      pICPAlg = new algDirICP_StdICP_Mesh(pTreeMesh, noisySamples, noisySampleNorms);
     }
     else
     { // target shape is a point cloud
-      cisstDirCovTree_PointCloud *pTreePointCloud = dynamic_cast<cisstDirCovTree_PointCloud*>(pTree);
-      pICPAlg = new cisstAlgorithmDirICP_StdICP_PointCloud(pTreePointCloud, noisySamples, noisySampleNorms);
+      DirPDTree_PointCloud *pTreePointCloud = dynamic_cast<DirPDTree_PointCloud*>(pTree);
+      pICPAlg = new algDirICP_StdICP_PointCloud(pTreePointCloud, noisySamples, noisySampleNorms);
     }
     break;
   }
-  case DirAlgType_vMFG:
+  case DirAlgType_IMLOP:
   {
     if (!TargetShapeAsMesh)
     {
-      std::cout << "ERROR: Currently only mesh target supported for vMFG" << std::endl;
+      std::cout << "ERROR: Currently only mesh target supported for IMLOP" << std::endl;
       assert(0);
     }
-    cisstDirCovTree_Mesh *pTreeMesh = dynamic_cast<cisstDirCovTree_Mesh*>(pTree);
-    //cisstAlgorithmDirICP_vMFG_Mesh *pAlg = new cisstAlgorithmDirICP_vMFG_Mesh( pTreeMesh, &ICP );
+    DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+    //algDirICP_IMLOP_Mesh *pAlg = new algDirICP_IMLOP_Mesh( pTreeMesh, &ICP );
     //pAlg->k_init = 0.0;
     //pAlg->sigma2_init = 1.0;
     //pAlg->wRpos = 0.5;
@@ -330,21 +333,21 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     double wRpos = 0.5;
     double kfactor = 1.0;
     bool dynamicParamEst = true;
-    cisstAlgorithmDirICP_vMFG_Mesh *pAlg = new cisstAlgorithmDirICP_vMFG_Mesh(
+    algDirICP_IMLOP_Mesh *pAlg = new algDirICP_IMLOP_Mesh(
       pTreeMesh, noisySamples, noisySampleNorms,
       k, sigma2, wRpos, kfactor, dynamicParamEst);
     pICPAlg = pAlg;
     break;
   }
-  case DirAlgType_Kent:
+  case DirAlgType_GIMLOP:
   {
     if (!TargetShapeAsMesh)
     {
-      std::cout << "ERROR: Currently only mesh target supported for Kent" << std::endl;
+      std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
       assert(0);
     }
-    cisstDirCovTree_Mesh *pTreeMesh = dynamic_cast<cisstDirCovTree_Mesh*>(pTree);
-    // define Kent parameters
+    DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+    // define GIMLOP parameters
     double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
     double B = sampleNoiseEccentricity*k / 2.0;
     std::cout << "k: " << k << " B: " << B << std::endl;
@@ -371,21 +374,21 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     //  argL(i).Column(1) = L2;
     //}
     // create algorithm
-    cisstAlgorithmDirICP_Kent_Mesh *pAlg = new cisstAlgorithmDirICP_Kent_Mesh(
+    algDirICP_GIMLOP_Mesh *pAlg = new algDirICP_GIMLOP_Mesh(
       pTreeMesh, noisySamples, noisySampleNorms,
       argK, argB, sampleNoiseL, sampleNoiseInvCov);
     //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
     pICPAlg = pAlg;
     break;
   }
-  case DirAlgType_vonMisesPrj:
+  case DirAlgType_PIMLOP:
   {
     if (!TargetShapeAsMesh)
     {
-      std::cout << "ERROR: Currently only mesh target supported for vonMisesPrj" << std::endl;
+      std::cout << "ERROR: Currently only mesh target supported for PIMLOP" << std::endl;
       assert(0);
     }
-    cisstDirCovTree_Mesh *pTreeMesh = dynamic_cast<cisstDirCovTree_Mesh*>(pTree);
+    DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
     // define noise model parameters
     vctDynamicVector<vct2> Xpln(nSamples, vct2(0.0));
     double k = 0.0;
@@ -396,7 +399,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     vctDynamicVector<vctRot3> argRx_pln(nSamples, Rx_pln);
 
     // create algorithm
-    cisstAlgorithmDirICP_vonMisesPrj_Mesh *pAlg = new cisstAlgorithmDirICP_vonMisesPrj_Mesh(
+    algDirICP_PIMLOP_Mesh *pAlg = new algDirICP_PIMLOP_Mesh(
       pTreeMesh, 
       noisySamples, Xpln, argRx_pln, argK, argM );
     pICPAlg = pAlg;

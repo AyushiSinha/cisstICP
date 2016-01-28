@@ -36,11 +36,11 @@
 
 #include <limits>
 
-#include "cisstCovTreeBase.h"
-//#include "cisstCovTree_Mesh.h"
+#include "PDTreeBase.h"
+//#include "PDTree_Mesh.h"
 //#include "cisstPointCloud.h"
 
-class cisstAlgorithmICP;      // forward declerations for mutual dependency
+class algICP;      // forward declerations for mutual dependency
 
 
 class cisstICP
@@ -187,7 +187,7 @@ public:
 protected:
 
   Options opt;
-  cisstAlgorithmICP *pAlgorithm;
+  algICP *pAlgorithm;
 
   vctFrm3 FGuess;
   vctFrm3 Freg, Fbest;        // rigid body transforms (model = F * sample)
@@ -213,7 +213,7 @@ public:
 
 
   ReturnType RunICP( 
-    cisstAlgorithmICP *pAlg, const Options &opt, const vctFrm3 &FGuess,
+    algICP *pAlg, const Options &opt, const vctFrm3 &FGuess,
     std::vector<Callback> *pUserCallbacks = NULL,
     bool bEnableAlgorithmCallbacks = true);
 

@@ -40,14 +40,14 @@
 #include <cisstOSAbstraction.h>
 
 #include "cisstICP.h"
-#include "cisstAlgorithmICP.h"
+#include "algICP.h"
 
 // debug
 //#define ENABLE_CODE_TRACE
 //#define ENABLE_CODE_PROFILER
 
 cisstICP::ReturnType cisstICP::RunICP(
-  cisstAlgorithmICP *pAlg,
+  algICP *pAlg,
   const Options &opt,
   const vctFrm3 &FGuess,
   std::vector<Callback> *pUserCallbacks,
@@ -55,7 +55,7 @@ cisstICP::ReturnType cisstICP::RunICP(
 {
   if (pAlg == NULL)
   {
-    std::cerr << "ERROR: no registration algorithm specified" << std::endl;
+    std::cout << "ERROR: no registration algorithm specified" << std::endl;
     assert(0);
     return ReturnType();
   }
@@ -73,7 +73,10 @@ cisstICP::ReturnType cisstICP::RunICP(
   if (bEnableAlgorithmCallbacks)
   {
     // add algorithm callbacks
-    AddIterationCallbacks(pAlg->ICP_GetIterationCallbacks());
+    // NOTE: for some reason, linux requires callbacks to be stored
+    //       to a local variable before use as a function argument
+    std::vector<Callback> callbacks = pAlg->ICP_GetIterationCallbacks();
+    AddIterationCallbacks(callbacks);
   }
 
   // begin registration
@@ -83,7 +86,7 @@ cisstICP::ReturnType cisstICP::RunICP(
 
 cisstICP::ReturnType cisstICP::IterateICP()
 {
-  bool JustDidAccelStep = false;
+  //bool JustDidAccelStep = false;
   std::stringstream termMsg;
   double dAng, dPos;
   double dAng01, dAng12 = 0.0;

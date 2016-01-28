@@ -34,20 +34,208 @@
 
 #include "cisstPointCloud.h"
 
+#include "utilities.h"
 
-// Load points from file
-int cisstPointCloud::ReadPointsFromFile(
-  vctDynamicVector<vct3> &pts,
-  std::string &filePath)
+cisstPointCloud::cisstPointCloud( vctDynamicVector<vct3> &points ) :
+points(points)
 {
-  pts.SetSize(0);
-  return AppendPointsFromFile(pts, filePath);
+  InitializeNoiseModel();
 }
 
-// Append points from file
-int cisstPointCloud::AppendPointsFromFile(
+cisstPointCloud::cisstPointCloud(
+  vctDynamicVector<vct3> &points,
+  vctDynamicVector<vct3> &pointOrientations) :
+points(points),
+pointOrientations(pointOrientations)
+{
+  if (points.size() != pointOrientations.size()) 
+  {
+    std::cout << "ERROR: number of points and point orientations are not the same;"
+      << " setting point cloud size to zero" << std::endl;
+    points.SetSize(0);
+    pointOrientations.SetSize(0);
+    return;
+  }
+
+  InitializeNoiseModel();
+}
+
+cisstPointCloud::cisstPointCloud(cisstMesh &mesh)
+{
+  double sqrDist;
+  vct3 v0, v1, v2;
+
+  // build point cloud from triangle centers
+  int NData = mesh.NumTriangles();
+  int *DataIndices = new int[NData];
+  for (int i = 0; i < NData; i++)
+  {
+    DataIndices[i] = i;
+  }
+  points.SetSize(NData);
+  pointOrientations.SetSize(NData);
+  pointCov.SetSize(NData);
+  pointCovEig.SetSize(NData);
+  for (int i = 0; i < NData; i++)
+  {
+    mesh.FaceCoords(i, v0, v1, v2);
+    points[i] = (v0 + v1 + v2) / 3.0;
+    pointOrientations[i] = mesh.faceNormals[i];
+    pointCov[i] = mesh.TriangleCov[i];
+    pointCovEig[i] = mesh.TriangleCovEig[i];
+  }
+}
+
+cisstPointCloud::cisstPointCloud(
+  cisstMesh &mesh,
+  double noisePerpPlaneSD)
+{
+  double noiseInPlaneVar, noisePerpPlaneVar;
+  double sqrDist;
+  vct3 c, v0, v1, v2;
+
+  noisePerpPlaneVar = noisePerpPlaneSD*noisePerpPlaneSD;
+
+  // build point cloud from triangle centers
+  int NData = mesh.NumTriangles();
+  int *DataIndices = new int[NData];
+  for (int i = 0; i < NData; i++)
+  {
+    DataIndices[i] = i;
+  }
+  points.SetSize(NData);
+  pointOrientations.SetSize(NData);
+  for (int i = 0; i < NData; i++)
+  {
+    mesh.FaceCoords(i, v0, v1, v2);
+    points[i] = (v0 + v1 + v2) / 3.0;
+    pointOrientations[i] = mesh.faceNormals[i];
+  }
+
+  // Define noise properties of point cloud
+  //  use triangles to determine in-plane noise
+  pointCov.SetSize(NData);
+  pointCovEig.SetSize(NData);
+  for (int i = 0; i < NData; i++)
+  {
+    mesh.FaceCoords(i, v0, v1, v2);
+    c = (v0 + v1 + v2) / 3.0;
+
+    // compute in-plane noise as the variance of the distance 
+    // between the triangle center and its 3 vertices
+    sqrDist = (v0 - c).NormSquare();
+    sqrDist += (v1 - c).NormSquare();
+    sqrDist += (v2 - c).NormSquare();
+    sqrDist /= 3.0;
+    noiseInPlaneVar = sqrDist;
+
+    // set noise model for this point
+    pointCov[i] = ComputePointCovariance(
+      mesh.faceNormals.at(i),
+      noisePerpPlaneVar,
+      noiseInPlaneVar);
+
+    // list eigenvalues in descending order
+    if (noiseInPlaneVar >= noisePerpPlaneVar)
+    {
+      pointCovEig[i].Element(0) = noiseInPlaneVar;
+      pointCovEig[i].Element(1) = noiseInPlaneVar;
+      pointCovEig[i].Element(2) = noisePerpPlaneVar;
+    }
+    else
+    {
+      pointCovEig[i].Element(0) = noisePerpPlaneVar;
+      pointCovEig[i].Element(1) = noiseInPlaneVar;
+      pointCovEig[i].Element(2) = noiseInPlaneVar;
+    }
+  }
+}
+
+void cisstPointCloud::ResetPointCloud()
+{
+  points.SetSize(0);
+  pointOrientations.SetSize(0);
+  pointCov.SetSize(0);
+  pointCovEig.SetSize(0);
+}
+
+void cisstPointCloud::InitializeNoiseModel()
+{
+  pointCov.SetSize(points.size());
+  pointCovEig.SetSize(points.size());
+
+  pointCov.SetAll(vct3x3(0.0));
+  pointCovEig.SetAll(vct3(0.0));
+}
+
+void cisstPointCloud::SavePointCloudCov(std::string &filePath)
+{
+  //std::cout << "Saving point cloud covariances to file: " << filePath << std::endl;
+  std::ofstream fs(filePath.c_str());
+  if (!fs.is_open())
+  {
+    std::cout << "ERROR: failed to open file for saving cov: " << filePath << std::endl;
+    assert(0);
+  }
+  unsigned int numCov = this->pointCov.size();
+  //fs << "NUMCOV " << numCov << "\n";
+  for (unsigned int i = 0; i < numCov; i++)
+  {
+    fs << this->pointCov.at(i).Row(0) << " "
+      << this->pointCov.at(i).Row(1) << " "
+      << this->pointCov.at(i).Row(2) << "\n";
+  }
+}
+
+int cisstPointCloud::WritePointCloudToFile(std::string &filePath)
+{
+  return WritePointCloudToFile(filePath, points, pointOrientations);
+}
+
+int cisstPointCloud::ReadPointCloudFromFile(std::string &filePath)
+{
+  ResetPointCloud();
+
+  int rv = ReadPointCloudFromFile(filePath, points, pointOrientations);
+
+  InitializeNoiseModel();
+  return rv;
+}
+
+int cisstPointCloud::AppendPointCloudFromFile(std::string &filePath)
+{
+  return AppendPointCloudFromFile(filePath, points, pointOrientations);
+}
+
+int cisstPointCloud::WritePointCloudToFile(
+  std::string &filePath,
+  vctDynamicVector<vct3> &points)
+{
+  vctDynamicVector<vct3> orientations;
+  return WritePointCloudToFile(filePath, points, orientations);
+}
+
+int cisstPointCloud::ReadPointCloudFromFile(
+  std::string &filePath,
+  vctDynamicVector<vct3> &points)
+{
+  vctDynamicVector<vct3> orientations;
+  return ReadPointCloudFromFile(filePath, points, orientations);
+}
+
+int cisstPointCloud::AppendPointCloudFromFile(
+  std::string &filePath,
+  vctDynamicVector<vct3> &points)
+{
+  vctDynamicVector<vct3> orientations;
+  return AppendPointCloudFromFile(filePath, points, orientations);
+}
+
+
+int cisstPointCloud::WritePointCloudToFile(
+  std::string &filePath,
   vctDynamicVector<vct3> &pts,
-  std::string &filePath)
+  vctDynamicVector<vct3> &orientations)
 {
   // Text file format:
   //
@@ -55,32 +243,89 @@ int cisstPointCloud::AppendPointsFromFile(
   //  px py pz
   //   ...
   //  px py pz
+  //  POINT_ORIENTATIONS numOrientations
+  //  nx ny nz
+  //   ...
+  //  nx ny nz
+  //
+
+  //std::cout << "Saving pts & normals to file: " << filePath << std::endl;
+  std::ofstream fs(filePath.c_str());
+  if (!fs.is_open())
+  {
+    std::cout << "ERROR: failed to open file: " << filePath << std::endl;
+    return -1;
+  }
+  // write points
+  fs << "POINTS " << pts.size() << "\n";
+  for (unsigned int i = 0; i < pts.size(); i++)
+  {
+    fs << pts.at(i)[0] << " " << pts.at(i)[1] << " " << pts.at(i)[2] << "\n";
+  }
+  // write orientations [optional]
+  if (orientations.size() == 0)
+  {
+    return 0;
+  }
+  fs << "POINT_ORIENTATIONS " << pts.size() << "\n";
+  for (unsigned int i = 0; i < pts.size(); i++)
+  {
+    fs << orientations.at(i)[0] << " " << orientations.at(i)[1] << " " << orientations.at(i)[2] << "\n";
+  }
+  fs.close();
+  return 0;
+}
+
+int cisstPointCloud::ReadPointCloudFromFile(
+  std::string &filePath,
+  vctDynamicVector<vct3> &pts,
+  vctDynamicVector<vct3> &orientations)
+{
+  pts.SetSize(0);
+  orientations.SetSize(0);
+  return AppendPointCloudFromFile(filePath, pts, orientations);
+}
+
+int cisstPointCloud::AppendPointCloudFromFile(
+  std::string &filePath,
+  vctDynamicVector<vct3> &pts,
+  vctDynamicVector<vct3> &orientations )
+{
+  // Text file format:
+  //
+  //  POINTS numPoints
+  //  px py pz
+  //   ...
+  //  px py pz
+  //  POINT_ORIENTATIONS numOrientations
+  //  nx ny nz
+  //   ...
+  //  nx ny nz
   //
 
   unsigned int itemsRead;
   std::string line;
   float f1, f2, f3;
+  float n1, n2, n3;
 
   unsigned int pOffset;
   pOffset = pts.size();
 
-  std::cout << "Reading pts from file: " << filePath << std::endl;
+  //std::cout << "Reading pts & normals from file: " << filePath << std::endl;
   std::ifstream fs(filePath.c_str());
   if (!fs.is_open())
   {
-    std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
-    assert(0);
+    std::cout << "ERROR: failed to open file: " << filePath << std::endl;
     return -1;
   }
 
-  // read pts
+  // read points
   unsigned int numPoints;
   std::getline(fs, line);
   itemsRead = std::sscanf(line.c_str(), "POINTS %u", &numPoints);
   if (itemsRead != 1)
   {
-    std::cerr << "ERROR: expected POINTS header at line: " << line << std::endl;
-    assert(0);
+    std::cout << "ERROR: expected POINTS header at line: " << line << std::endl;
     return -1;
   }
   vct3 v;
@@ -92,8 +337,7 @@ int cisstPointCloud::AppendPointsFromFile(
     itemsRead = std::sscanf(line.c_str(), "%f %f %f", &f1, &f2, &f3);
     if (itemsRead != 3)
     {
-      std::cerr << "ERROR: expeced a point value at line: " << line << std::endl;
-      assert(0);
+      std::cout << "ERROR: expected a point value at line: " << line << std::endl;
       return -1;
     }
     v[0] = f1;
@@ -104,46 +348,47 @@ int cisstPointCloud::AppendPointsFromFile(
   }
   if (fs.bad() || fs.fail() || pointCount != numPoints)
   {
-    std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-    assert(0);
+    std::cout << "ERROR: read points from file failed; last line read: " << line << std::endl;
     return -1;
   }
-  fs.close();
 
-  std::cout << " ..." << pts.size() << " sample pts" << std::endl;
-
-  return 0;
-}
-
-// Write points to file
-int cisstPointCloud::WritePointsToFile(
-  vctDynamicVector<vct3> &pts,
-  std::string &filePath)
-{
-  // Text file format:
-  //
-  //  POINTS numPoints
-  //  px py pz
-  //   ...
-  //  px py pz
-  //
-  //  where vx's are indices into the pts array
-
-  std::cout << "Saving pts to file: " << filePath << std::endl;
-  std::ofstream fs(filePath.c_str());
-  if (!fs.is_open())
+  // read orientations [optional]
+  unsigned int numNormals;
+  std::getline(fs, line);
+  itemsRead = std::sscanf(line.c_str(), "POINT_ORIENTATIONS %u", &numNormals);
+  if (itemsRead != 1)
   {
-    std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
-    assert(0);
+    //std::cout << "ERROR: expected POINT_ORIENTATIONS header at line: " << line << std::endl;
+    return 1;
+  }
+  if (numNormals != numPoints)
+  {
+    std::cout << "ERROR: number of orientations does not match number of points" << std::endl;
     return -1;
   }
-  fs << "POINTS " << pts.size() << "\n";
-  for (unsigned int i = 0; i < pts.size(); i++)
+  vct3 n;
+  orientations.resize(pOffset + numPoints);  // non-destructive
+  unsigned int normCount = 0;
+  while (fs.good() && normCount < numNormals)
   {
-    fs << pts.at(i)[0] << " "
-      << pts.at(i)[1] << " "
-      << pts.at(i)[2] << "\n";
+    std::getline(fs, line);
+    itemsRead = std::sscanf(line.c_str(), "%f %f %f", &n1, &n2, &n3);
+    if (itemsRead != 3)
+    {
+      std::cout << "ERROR: expected an orientation value at line: " << line << std::endl;
+      return -1;
+    }
+    n[0] = n1; n[1] = n2; n[2] = n3;
+    orientations.at(pOffset + normCount).Assign(n);
+    normCount++;
   }
+  if (fs.bad() || fs.fail() || normCount != numNormals)
+  {
+    std::cout << "ERROR: read orientations from file failed; last line read: " << line << std::endl;
+    return -1;
+  }
+
   fs.close();
+  //std::cout << " ..." << pts.size() << " sample points & orientations" << std::endl;
   return 0;
 }

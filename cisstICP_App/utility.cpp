@@ -31,33 +31,41 @@
 //    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 // ****************************************************************************
-#include <windows.h>
+
 #include <fstream>
 
-#include "utility.h"
-#include "cisstPointCloud.h"
-#include "cisstPointCloudDir.h"
-#include "utilities.h"
+//#include <boost/filesystem.hpp>
 
 #include "cisstNumerical.h"
 
-void CreateDir(const std::string &dir)
-{
-  int rv = CreateDirectory(dir.c_str(), NULL);
-  if (rv || ERROR_ALREADY_EXISTS == GetLastError())
-  {
-    if (rv)
-    { // created directory
-      std::cout << "Creating directory: \"" << dir << "\"" << std::endl;
-    }
-    // else directory already exists
-  }
-  else
-  { // failed to create directory
-    std::cout << "ERROR! create directory failed: " << dir << std::endl;
-    assert(0);
-  }
-}
+#include "utility.h"
+#include "cisstPointCloud.h"
+#include "utilities.h"
+
+
+//void CreateDir(const std::string &dir)
+//{
+//  boost::filesystem::create_directories(dir.c_str());
+//}
+
+//#include <windows.h>
+//void CreateDir(const std::string &dir)
+//{
+//  int rv = CreateDirectory(dir.c_str(), NULL);
+//  if (rv || ERROR_ALREADY_EXISTS == GetLastError())
+//  {
+//    if (rv)
+//    { // created directory
+//      std::cout << "Creating directory: \"" << dir << "\"" << std::endl;
+//    }
+//    // else directory already exists
+//  }
+//  else
+//  { // failed to create directory
+//    std::cout << "ERROR! create directory failed: " << dir << std::endl;
+//    assert(0);
+//  }
+//}
 
 void transform_write(vctFrm3 &F, std::string &filename)
 {
@@ -224,7 +232,7 @@ void WriteToFile_Cov(const vctDynamicVector<vct3x3> &cov,
 }
 
 // Write L to file
-void WriteToFile_L(const vctDynamicVector<vctFixedSizeMatrix<double, 3, 2>> &L,
+void WriteToFile_L(const vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &L,
   std::string &filePath)
 {
   // Text file format:
@@ -447,7 +455,7 @@ void GenerateRandomL(unsigned int randSeed, unsigned int &randSeqPos,
 
   for (unsigned int i = 0; i < nL; i++)
   {
-    // Generate random major / minor axis for Kent distribution where the
+    // Generate random major / minor axis for GIMLOP distribution where the
     //  major / minor axis are perpendicular to each other and perpendicular
     //  to the central direction
     // generate any vector not parallel to central direction
@@ -475,7 +483,9 @@ void Draw3DGaussianSample(std::ifstream &randnStream,
   //  different machines
   vct3 eigenValues;
   vct3x3 eigenVectors;
-  ComputeCovEigenDecomposition_NonIter(M, eigenValues, eigenVectors);
+
+  ComputeCovEigenDecomposition_SVD(M, eigenValues, eigenVectors);
+  //ComputeCovEigenDecomposition_NonIter(M, eigenValues, eigenVectors);
 
   vct3x3 Ninv;
   Ninv.Column(0) = eigenVectors.Column(0)*sqrt(eigenValues[0]);
@@ -609,14 +619,14 @@ void DrawFisherSample(std::ifstream &randnStream, double k, const vct3 &mean, vc
   //}
 }
 
-// Kent Parameters
+// GIMLOP Parameters
 //  k  ~ concentration       (Note the approximation 1/k ~= circSD^2)
 //  B  ~ ovalness parameter  (Note eccentricity e = 2*Beta/k) 
 //  mean ~ central direction
 //  L  ~ [l1,l2]
 //        l1 ~ major axis
 //        l2 ~ minor axis
-void DrawKentSample(std::ifstream &randnStream,
+void DrawGIMLOPSample(std::ifstream &randnStream,
   double k, double B, const vct3 &mean,
   const vctFixedSizeMatrix<double, 3, 2> &L, vct3 &n)
 {
@@ -659,7 +669,7 @@ void DrawKentSample(std::ifstream &randnStream,
   double Rangle = Z.Norm();
   if (Rangle > cmnPI)
   {
-    std::cout << "WARNING: generated Kent sample more than 180 degrees"
+    std::cout << "WARNING: generated GIMLOP sample more than 180 degrees"
       << " offset from the central direction" << std::endl;
   }
   vctRot3 R(vctAxAnRot3(Raxis, Rangle));
@@ -724,8 +734,10 @@ void GenerateSamples(cisstMesh &mesh,
     lam0 = mu0 / mu;
     lam1 = mu1 / mu;
     lam2 = mu2 / mu;
-    samples.at(s) = mesh.Triangle(Fx).Interpolate(lam0, lam1, lam2);
-    sampleNorms.at(s) = mesh.Triangle(Fx).norm;
+    vct3 v0, v1, v2;
+    mesh.FaceCoords(Fx, v0, v1, v2);
+    samples.at(s) = lam0*v0 + lam1*v1 + lam2*v2;
+    sampleNorms.at(s) = mesh.faceNormals(Fx);
     sampleDatums.at(s) = Fx;
   }
   randSeqPos = cisstRandomSeq.GetSequencePosition();
@@ -733,7 +745,7 @@ void GenerateSamples(cisstMesh &mesh,
   // save samples
   if (SavePath_Samples)
   {
-    if (cisstPointCloudDir::WritePointsToFile(samples, sampleNorms, *SavePath_Samples) < 0)
+    if (cisstPointCloud::WritePointCloudToFile(*SavePath_Samples, samples, sampleNorms) < 0)
     {
       std::cout << "ERROR: Samples save failed" << std::endl;
       assert(0);
@@ -767,7 +779,7 @@ void GenerateNoisySamples_Gaussian(
   if (SavePath_NoisySamples)
   {
     std::string noisySampsSavePath = *SavePath_NoisySamples;
-    cisstPointCloud::WritePointsToFile(noisySamples, noisySampsSavePath);
+    cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples);
   }
   // save sample covariances
   if (SavePath_Cov)
@@ -809,7 +821,7 @@ void GenerateOutlierSamples_SurfaceOffset(
   if (SavePath_OutlierSamples)
   {
     std::string savePath = *SavePath_OutlierSamples;
-    cisstPointCloud::WritePointsToFile(outlierSamples, savePath);
+    cisstPointCloud::WritePointCloudToFile(savePath, outlierSamples);
   }
 }
 
@@ -940,7 +952,7 @@ void GenerateSampleErrors_Covariance(
   if (SavePath_NoisySamples)
   {
     std::string savePath = *SavePath_NoisySamples;
-    cisstPointCloud::WritePointsToFile(noisySamples, savePath);
+    cisstPointCloud::WritePointCloudToFile(savePath, noisySamples);
   }
 }
 
@@ -1005,7 +1017,7 @@ void GenerateSampleErrors_SurfaceNoise(
   if (SavePath_NoisySamples)
   {
     std::string savePath = *SavePath_NoisySamples;
-    cisstPointCloud::WritePointsToFile(noisySamples, savePath);
+    cisstPointCloud::WritePointCloudToFile(savePath,noisySamples);
   }
 }
 
@@ -1104,17 +1116,17 @@ void GenerateSampleRandomNoise(unsigned int randSeed, unsigned int &randSeqPos,
     L.Column(0) = R.Transpose()*majorXY;
     L.Column(1) = R.Transpose()*minorXY;
 
-    // Kent Noise Model
+    // GIMLOP Noise Model
     // Use the approximation that k ~= 1/circSD^2
     double k = 1.0 / (circStdDev*circStdDev);
     double B = circEccentricity*k / 2.0;
-    DrawKentSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i));
+    DrawGIMLOPSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i));
 
     // TODO: change to 3x3 L allowing for a different central direction
     //       than the observed sample
     // Reorient "reported" L to be perpendicular to the noisySample rather than
     //  the non-noisy sample (do this because the noisy sample will be used as
-    //  the central direction in the Kent noise model to simulate an observed
+    //  the central direction in the GIMLOP noise model to simulate an observed
     //  data point with unknown ground truth orientation)
     // Compute rotation from sample norm to noisy sample norm
     vctRot3 Rl = XProdRotation(sampleNorms(i), noisySampleNorms(i));
@@ -1168,7 +1180,7 @@ void GenerateSampleRandomNoise(unsigned int randSeed, unsigned int &randSeqPos,
   if (SavePath_NoisySamples)
   {
     std::string noisySampsSavePath = *SavePath_NoisySamples;
-    if (cisstPointCloudDir::WritePointsToFile(noisySamples, noisySampleNorms, noisySampsSavePath) < 0)
+    if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples, noisySampleNorms) < 0)
     {
       std::cout << "ERROR: Samples save failed" << std::endl;
       assert(0);
@@ -1284,15 +1296,15 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
       L.Column(0) = R.Transpose()*majorXY;
       L.Column(1) = R.Transpose()*minorXY;
 
-      // Kent Noise Model
+      // GIMLOP Noise Model
       // Use the approximation that k ~= 1/circSD^2
       double k = 1.0 / (circStdDev*circStdDev);
       double B = circEccentricity*k / 2.0;
-      DrawKentSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i));
+      DrawGIMLOPSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i));
 
       // Reorient "reported" L to be perpendicular to the noisySample rather than
       //  the non-noisy sample (do this because the noisy sample will be used as
-      //  the central direction in the Kent noise model to simulate an observed
+      //  the central direction in the GIMLOP noise model to simulate an observed
       //  data point with unknown ground truth orientation)
       // Compute rotation from sample norm to noisy sample norm
       vctRot3 Rl = XProdRotation(sampleNorms(i), noisySampleNorms(i));
@@ -1368,7 +1380,7 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   if (SavePath_NoisySamples)
   {
     std::string noisySampsSavePath = *SavePath_NoisySamples;
-    if (cisstPointCloudDir::WritePointsToFile(noisySamples, noisySampleNorms, noisySampsSavePath) < 0)
+    if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples, noisySampleNorms) < 0)
     {
       std::cout << "ERROR: Samples save failed" << std::endl;
       assert(0);
@@ -1386,6 +1398,7 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   }
 }
 
+#if 0   // TODO: code needs to be updated for changes to library
 
 // Generate noise having different variance perpendicular to its mesh
 //  triangle than noise in-plane
@@ -1404,8 +1417,8 @@ void GenerateNoisyMesh(cisstMesh &mesh,
   unsigned int numTriangles = mesh.NumTriangles();
   unsigned int numVertices = mesh.NumVertices();
 
-  noisyMesh.Triangles.SetSize(numTriangles);
-  noisyMesh.VertexCoordinates.SetSize(numVertices);
+  noisyMesh.faces.SetSize(numTriangles);
+  noisyMesh.vertices.SetSize(numVertices);
   noisyMesh.TriangleCov.SetSize(numTriangles);
   noisyMesh.TriangleCovEig.SetSize(numTriangles);
 
@@ -1426,7 +1439,7 @@ void GenerateNoisyMesh(cisstMesh &mesh,
     p.Multiply(noiseStdDev);
 
     // Assign noisy vertex to noisy mesh
-    noisyMesh.VertexCoordinates.Element(k) = mesh.VertexCoordinates.Element(k) + p;
+    noisyMesh.vertices.Element(k) = mesh.vertices.Element(k) + p;
   }
 
   // construct triangles for noisy mesh
@@ -1531,9 +1544,11 @@ void SetMeshTriangleCovariances(cisstMesh &mesh,
     mesh.TriangleCov[i] = R.Transpose()*M*R;
   }
 }
+#endif
 
 // TODO: enable
 #if 0
+
 void Callback_TrackRegPath_Utility( cisstICP::CallbackArg &arg, void *userData )
 {
   // cast to norm callback arg type
@@ -1548,7 +1563,7 @@ void Callback_TrackRegPath_Utility( cisstICP::CallbackArg &arg, void *userData )
   // Save to file:
   //  - error function (-loglik)
   //  - incremental transform
-  //  - vMFG params
+  //  - IMLP params
   //  - residual match errors
   // output format:
   //  err r00 r01 r02 r10 r11 r12 r20 r21 r22 tx ty tz normWeight posWeight avgNormError avgPosError 
@@ -1651,6 +1666,7 @@ vctRot3 XProdRotation(const vct3 &a, const vct3 &b)
   }
 }
 
+#if 0
 bool vct3HasValue(int x, vctFixedSizeVector<int, 3> vj)
 {
   if (x == vj[0] || x == vj[1] || x == vj[2])
@@ -1726,3 +1742,4 @@ double ComputeAvgNeighborDistance( cisstMesh mesh )
 
   return distSum / (double)numNbrs;
 }
+#endif

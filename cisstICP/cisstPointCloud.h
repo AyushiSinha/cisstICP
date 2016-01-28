@@ -34,41 +34,107 @@
 #ifndef _cisstPointCloud_h_
 #define _cisstPointCloud_h_
 
-#include <stdio.h>
 #include <cisstVector.h>
-#include <cisstCommon.h>
+
+#include "cisstMesh.h"
 
 class cisstPointCloud
 {
 
 public:
 
+  //--- Variables ---//
+
   vctDynamicVector<vct3> points;
 
-  cisstPointCloud(vctDynamicVector<vct3> &points) :
-    points(points)
-  {};
+  // optional point cloud properties
+  vctDynamicVector<vct3> pointOrientations;
+
+  // point cloud noise model
+  vctDynamicVector<vct3x3>  pointCov;       // covariance of measurement noise
+  vctDynamicVector<vct3>    pointCovEig;    // eigenvalues of covariance
 
 
-  // Point Set I/O
-  static int WritePointsToFile(vctDynamicVector<vct3> &points, std::string &filePath);
-  static int ReadPointsFromFile(vctDynamicVector<vct3> &points, std::string &filePath);
-  static int AppendPointsFromFile(vctDynamicVector<vct3> &points, std::string &filePath);
+  //--- Methods ---//
+  
+  // constructors
+  cisstPointCloud() {};
 
-  int WritePointsToFile(std::string &filePath)
-  {
-    WritePointsToFile(points, filePath);
-  }
+  cisstPointCloud(vctDynamicVector<vct3> &points);
 
-  int ReadPointsFromFile(std::string &filePath)
-  {
-    ReadPointsFromFile(points, filePath);
-  }
+  cisstPointCloud(
+    vctDynamicVector<vct3> &points,
+    vctDynamicVector<vct3> &pointOrientations);
 
-  int AppendPointsFromFile(std::string &filePath)
-  {
-    AppendPointsFromFile(points, filePath);
-  }
+  // build point cloud from a mesh by choosing the centerpoint 
+  // from each mesh triangle as a point in the cloud; also
+  // the noise model of each mesh triangle is copied as the
+  // noise model for each point in the point cloud
+  cisstPointCloud( cisstMesh &mesh );
+
+  // build point cloud from a mesh by choosing the centerpoint 
+  // from each mesh triangle as a point in the cloud; the
+  // noise model of the point cloud is initialized such that
+  // the variance along the point orientation is as specified
+  // and the variance perpendicular to the point orientation
+  // is equal to the variance of the distance from the
+  // center of each triangle to its 3 vertices
+  cisstPointCloud( cisstMesh &mesh, double noisePerpPlaneSD);
+
+
+  // initializes all point cloud properties to empty (default initializer);
+  //  this is a useful routine to use while building a point cloud,
+  //  since some point cloud properties are optional and may not be
+  //  initialized by the data used to build the point cloud; calling this 
+  //  ensures that unused properties are emptied rather than left with
+  //  possibly invalid values
+  void ResetPointCloud();
+
+  // initializes point cloud noise model to zero (default initializer)
+  void InitializeNoiseModel();
+
+
+  // I/O
+
+  // save point cloud noise model covariance matrices to file
+  void SavePointCloudCov(std::string &file);
+
+  // methods for writing / reading point cloud objects to / from a file
+  int WritePointCloudToFile(std::string &filePath);
+  int ReadPointCloudFromFile(std::string &filePath);
+  int AppendPointCloudFromFile(std::string &filePath);
+
+  // static methods for writing / reading point cloud points and 
+  // optionall point orientations to / from file without 
+  // referencing a point cloud object
+
+  static int WritePointCloudToFile( 
+    std::string &filePath, 
+    vctDynamicVector<vct3> &points, 
+    vctDynamicVector<vct3> &orientaitons);
+  
+  static int ReadPointCloudFromFile( 
+    std::string &filePath, 
+    vctDynamicVector<vct3> &points, 
+    vctDynamicVector<vct3> &orientaitons);
+  
+  static int AppendPointCloudFromFile( 
+    std::string &filePath, 
+    vctDynamicVector<vct3> &points, 
+    vctDynamicVector<vct3> &orientaitons);
+
+
+  static int WritePointCloudToFile(
+    std::string &filePath,
+    vctDynamicVector<vct3> &points);
+
+  static int ReadPointCloudFromFile(
+    std::string &filePath,
+    vctDynamicVector<vct3> &points);
+
+  static int AppendPointCloudFromFile(
+    std::string &filePath,
+    vctDynamicVector<vct3> &points);
 
 };
 

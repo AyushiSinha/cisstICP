@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2015, Seth Billings, Russell Taylor, Johns Hopkins University
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -37,109 +37,118 @@
 #include <stdio.h>
 #include <cisstVector.h>
 #include <cisstCommon.h>
-#include "cisstTriangle.h"
+//#include "cisstTriangle.h"
 
 class cisstMesh 
 {
 
-protected: 
-
-	void Reset();
-
-	int cisstError(const char* Msg) const 
-	{ assert(0);
-	  // cisstGENERIC_ASSERT_WITH_MSG(0,Msg); 
-    std::cerr << Msg << std::endl;  // SDB
-	  return 0;
-  };
-
 public:
 
-	vctDynamicVector<vct3>          VertexCoordinates;
-	vctDynamicVector<cisstTriangle> Triangles;
+  //--- Variables ---//
 
-  // Noise model of the mesh
+	vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
+  vctDynamicVector<vctInt3>   faces;          // the vertex indices for each triangle in the mesh
+  vctDynamicVector<vct3>      faceNormals;    // the face normal for each triangle in the mesh
+
+  // optional mesh properties
+  vctDynamicVector<vct3>      vertexNormals;  // a normal orientation associated with each vertex  
+  vctDynamicVector<vctInt3>   faceNeighbors;  // the face indices for the neighbors of each triangle
+                                              //  in the mesh
+
+  // mesh noise model
   //  NOTE: if used, this must be set manually by the user AFTER loading the mesh file
   //        (defaults to all zeroes, i.e. zero measurement noise on the mesh)
   vctDynamicVector<vct3x3>  TriangleCov;        // triangle covariances
   vctDynamicVector<vct3>    TriangleCovEig;     // triangle covariance eigenvalues (in decreasing size)
 
 
-  // constructors
+  //--- Methods ---//
+
+  // constructor
   cisstMesh() {};
-  cisstMesh(const char *fn) { ReadMeshFile(fn); }
 
   // destructor
-  ~cisstMesh() { Reset(); };
+  ~cisstMesh() {}
 
-	inline int NumTriangles() const {return Triangles.size();}
-	inline int NumVertices() const  {return VertexCoordinates.size();}
+  // initializes all mesh properties to empty (default initializer);
+  //  this is a useful routine to use while building a mesh,
+  //  since some mesh properties are optional and may not be
+  //  initialized by the data used to build the mesh; calling this 
+  //  ensures that unused properties are emptied rather than left with
+  //  possibly invalid values
+  void ResetMesh();
 
-  void ComputeTriangleNoiseModels(
-    double noiseInPlaneVar,
-    double noisePerpPlaneVar);
+  inline int NumVertices() const { return vertices.size(); }
+  inline int NumTriangles() const { return faces.size(); }
+
+  // initializes triangle noise models to zero (default initializer)
+  void InitializeNoiseModel();
+
+  // computes noise model covariances for each triangle in the mesh
+  //  such that the in-plane and perpendicular-plane directions have
+  //  the specified variance
+  void InitializeNoiseModel( double noiseInPlaneVar, double noisePerpPlaneVar);
 
   void SaveTriangleCovariances(std::string &filePath);
 
-  //// get noise model for a given triangle index
-  //inline vct3x3& TriangleCov( int ti )
-  //  { return TriangleCov[ti];
-  //  }
+ // // get mesh vertex index for the given triangle index and vertex
+	//inline int TriangleVertexIndex(int ti, int v)
+ //   { return faces[ti][v]; 
+ //   }
 
-  // get triangle at a given triangle index
-	inline cisstTriangle& Triangle(int ti)
-    { return Triangles[ti]; 
-    }
+	//// get mesh vertex indexes for the given triangle index
+	//inline virtual void TriangleVertexIndexes(int ti, int &v0, int &v1, int &v2) const
+	//	{ v0=Triangles[ti].Vx[0];
+	//		v1=Triangles[ti].Vx[1];
+	//		v2=Triangles[ti].Vx[2];
+	//	}
 
-  // get mesh vertex index for the given triangle index and vertex
-	inline int TriangleVertexIndex(int ti, int v)
-    { return Triangles[ti].VertexIndex(v); 
-    }
-
-	// get mesh vertex indexes for the given triangle index
-	inline virtual void TriangleVertexIndexes(int ti, int &v0, int &v1, int &v2) const
-		{ v0=Triangles[ti].Vx[0];
-			v1=Triangles[ti].Vx[1];
-			v2=Triangles[ti].Vx[2];
-		}
-
-  // get triangle normal for the given triangle index
-  inline vct3 TriangleNorm(int ti)
-    { return Triangles[ti].norm;
-    }
-
-  // get coordinates of all vertices for a given triangle index  (optimized)
-	inline void VerticesCoords(int ti, vct3 &v0, vct3 &v1, vct3 &v2) const
-	{ v0 = VertexCoordinates.Element(Triangles[ti].Vx[0]);
-    v1 = VertexCoordinates.Element(Triangles[ti].Vx[1]);
-    v2 = VertexCoordinates.Element(Triangles[ti].Vx[2]);
+  // get coordinates of all three vertices for a given face index
+	inline void FaceCoords(int ti, vct3 &v0, vct3 &v1, vct3 &v2) const
+	{ v0 = vertices[faces[ti][0]];
+    v1 = vertices[faces[ti][1]];
+    v2 = vertices[faces[ti][2]];
 	}
-  // get vertex coordinate for a given vertex index
-	inline vct3 VertexCoord(int vx) const
-  { return VertexCoordinates.at(vx);
+  // get vertex coordinate for a given face/vertex index
+	inline vct3& FaceCoord(int ti, int vi)
+  { return vertices[faces[ti][vi]];
   }
 
-  // set vertex coords for a given vertex index
-  //  Note: changing vertex coordinates changes the normal vectors
-  //        of all associated triangles
-  //        it is responsibility of the user to keep these values
-  //        consistent
-	inline void SetVertexCoord(int vx, vct3 v)	{VertexCoordinates[vx].Assign(v);}
-	inline void SetVertexCoord(int vx, float x, float y, float z) {VertexCoordinates[vx].Assign(x,y,z);}
-	inline void SetVertexCoord(int vx, double x, double y, double z) {VertexCoordinates[vx].Assign(x,y,z);}
+ // // set vertex coords for a given vertex index
+ // //  Note: changing vertex coordinates changes the normal vectors
+ // //        of all associated triangles
+ // //        it is responsibility of the user to keep these values
+ // //        consistent
+	//inline void SetVertexCoord(int vx, vct3 v)	{VertexCoordinates[vx].Assign(v);}
+	//inline void SetVertexCoord(int vx, float x, float y, float z) {VertexCoordinates[vx].Assign(x,y,z);}
+	//inline void SetVertexCoord(int vx, double x, double y, double z) {VertexCoordinates[vx].Assign(x,y,z);}
 
   // Mesh I/O
+
+  // Build mesh from an array of vertices, faces, and face normals
   int  LoadMesh(
     const vctDynamicVector<vct3> &V,
     const vctDynamicVector<vctInt3> &T,
     const vctDynamicVector<vct3> &N);
-  int  LoadMeshFromSTLFile(const std::string &stlFilePath);
-  //int  LoadMeshFromLegacyVTKFile(const std::string &vtkFilePath);
+
+  // Build new mesh from a single .mesh file
   int  LoadMeshFile( const std::string &meshFilePath );
-  int  LoadMeshFileMultiple( const std::vector<std::string> &meshFilePaths );  
+
+  // Build new mesh from multiple .mesh files
+  int  LoadMeshFileMultiple( const std::vector<std::string> &meshFilePaths ); 
+
+  // Save mesh to .mesh file
   int  SaveMeshFile( const std::string &filePath );
+
+  // Build new mesh from .stl file
+  int  LoadMeshFromSTLFile(const std::string &stlFilePath);
+
 private:
+
+  // Load .mesh file, adding it to the current mesh while preserving all
+  //  data currently existing in the mesh
   int  AddMeshFile(const std::string &meshFilePath);
+
 public:
 
   // Legacy Mesh I/O
@@ -149,9 +158,6 @@ public:
 	void ReadSFCMeshFile(const char *fn);
 	void WriteMeshFile(const char *fn);
 	void WriteSURMeshFile(const char *fn);
-
-	//void Print(FILE* chan);
-
 };
 
 #endif // _cisstMesh_h_
