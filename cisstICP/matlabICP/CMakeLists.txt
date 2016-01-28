@@ -47,44 +47,44 @@ if (cisst_FOUND_AS_REQUIRED)
       # )    
   # ENDIF (X86_MODE)  
   
-  # # WildMagic5 Mathematics Library
-  # find_path (WM5_BASE_DIR
-    # NAMES wm5path.txt
-    # PATHS "C:/software/WildMagic5"
-    # )
-  # if (IS_DIRECTORY ${WM5_BASE_DIR})
-    # # Release:
+  # WildMagic5 Mathematics Library
+  find_path (WM5_BASE_DIR
+    NAMES wm5path.txt
+    PATHS "C:/software/WildMagic5"
+    )
+  if (IS_DIRECTORY ${WM5_BASE_DIR})
+    # Release:
+    find_path (WM5_LIB_PATH
+      NAMES Wm5Core.lib
+      #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
+      HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Release"
+      )    
+    find_library( WM5_CORE_LIB Wm5Core.lib PATHS ${WM5_LIB_PATH})
+    find_library( WM5_MATH_LIB Wm5Mathematics.lib PATHS ${WM5_LIB_PATH})
+    # # Debug:
     # find_path (WM5_LIB_PATH
-      # NAMES Wm5Core.lib
+      # NAMES Wm5CoreD.lib
       # #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
-      # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Release"
+      # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Debug"
       # )    
-    # find_library( WM5_CORE_LIB Wm5Core.lib PATHS ${WM5_LIB_PATH})
-    # find_library( WM5_MATH_LIB Wm5Mathematics.lib PATHS ${WM5_LIB_PATH})
-    # # # Debug:
-    # # find_path (WM5_LIB_PATH
-      # # NAMES Wm5CoreD.lib
-      # # #PATHS "C:/software/WildMagic5/SDK/Library/v120/x64/Release"
-      # # HINTS ${WM5_BASE_DIR}"/SDK/Library/v120/x64/Debug"
-      # # )    
-    # # find_library( WM5_CORE_LIB Wm5CoreD.lib PATHS ${WM5_LIB_PATH})
-    # # find_library( WM5_MATH_LIB Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH})    
-    # # # # find_library( WM5_CORE_LIB_DEBUG Wm5CoreD.lib PATHS ${WM5_LIB_PATH_DEBUG})
-    # # # # find_library( WM5_MATH_LIB_DEBUG Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH_DEBUG})        
-    # # # # # Debug:
-    # # # # find_library( WM5MATH_LIB Wm5MathematicsD.lib Wm5CoreD.lib
-      # # # # HINTS "C:/software/WildMagic5/SDK/Library/v120/x64/Debug"
-      # # # # )
+    # find_library( WM5_CORE_LIB Wm5CoreD.lib PATHS ${WM5_LIB_PATH})
+    # find_library( WM5_MATH_LIB Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH})    
+    # # # find_library( WM5_CORE_LIB_DEBUG Wm5CoreD.lib PATHS ${WM5_LIB_PATH_DEBUG})
+    # # # find_library( WM5_MATH_LIB_DEBUG Wm5MathematicsD.lib PATHS ${WM5_LIB_PATH_DEBUG})        
+    # # # # Debug:
+    # # # find_library( WM5MATH_LIB Wm5MathematicsD.lib Wm5CoreD.lib
+      # # # HINTS "C:/software/WildMagic5/SDK/Library/v120/x64/Debug"
+      # # # )
       
-    # find_path( WM5_LIB_INCLUDE
-      # NAMES "Wm5NoniterativeEigen3x3.h"
-      # PATHS
-      # HINTS ${WM5_BASE_DIR}"/SDK/Include"
-      # #HINTS "C:/software/WildMagic5/SDK/Include"
-      # DOC  ""
-      # )
-    # include_directories(${WM5_LIB_INCLUDE})  
-  # endif (IS_DIRECTORY ${WM5_BASE_DIR})
+    find_path( WM5_LIB_INCLUDE
+      NAMES "Wm5NoniterativeEigen3x3.h"
+      PATHS
+      HINTS ${WM5_BASE_DIR}"/SDK/Include"
+      #HINTS "C:/software/WildMagic5/SDK/Include"
+      DOC  ""
+      )
+    include_directories(${WM5_LIB_INCLUDE})  
+  endif (IS_DIRECTORY ${WM5_BASE_DIR})
   
   
   #=== ICP LIBRARY ===
@@ -149,8 +149,8 @@ if (cisst_FOUND_AS_REQUIRED)
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   cisst_target_link_libraries ( mexAlgDirICP_IMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
@@ -189,8 +189,8 @@ if (cisst_FOUND_AS_REQUIRED)
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
     #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   cisst_target_link_libraries ( mexAlgDirICP_GIMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
@@ -228,9 +228,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgDirICP_PIMLOP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   cisst_target_link_libraries ( mexAlgDirICP_PIMLOP_Mesh
     ${REQUIRED_CISST_LIBRARIES}
@@ -268,9 +267,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgICP_StdICP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}    
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlgDirICP_StdICP_Mesh 
@@ -315,9 +313,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgDirICP_StdICP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug  
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}   
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}   
     )    
   # IF (X86_MODE)
     # target_link_libraries( mexAlgDirICP_StdICP_Mesh 
@@ -362,9 +359,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgPDTree_MLP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlgPDTree_MLP_Mesh 
@@ -409,9 +405,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlgPDTree_CP_Mesh
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlgPDTree_CP_Mesh 
@@ -456,9 +451,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlg2D_DirPDTree_CP_Edges
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB}
-    #${WM5_CORE_LIB}  
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}  
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlg2D_DirPDTree_CP_Edges 
@@ -503,9 +497,8 @@ if (cisst_FOUND_AS_REQUIRED)
   target_link_libraries (mexAlg2D_DirPDTree_vonMises_Edges
     ${MATLAB_ENGINE_LIBRARIES}
     ${cisstICP_LIB}
-    #${WM5_MATH_LIB_DEBUG} # only need this if compiling in debug
-    #${WM5_MATH_LIB_DEBUG}    
-    #${WM5_CORE_LIB}  
+    ${WM5_MATH_LIB}
+    ${WM5_CORE_LIB}  
     )
   # IF (X86_MODE)
     # target_link_libraries( mexAlg2D_DirPDTree_vonMises_Edges 

@@ -25,7 +25,7 @@ properties
   Tn;       % triangle normals                  Nt x 3
   
   % member objects
-  mexAlg_vonMisesPrj;   % mex object implementing this algorithm
+  mexAlg_PIMLOP;   % mex object implementing this algorithm
   
 end
 
@@ -38,7 +38,7 @@ methods
   %% Delete
   function delete( this )
     % delete mex objects
-    this.mexAlg_vonMisesPrj.delete();
+    this.mexAlg_PIMLOP.delete();
   end  
   
   %% Initialize Algorithm
@@ -118,11 +118,11 @@ methods
     % Mex objects
     if (bTargetAsMesh)
       utlDebugMsg( this.bEnableDebug,'Creating mex object: mexInterface_AlgICP_vonMisesPrj_Mesh...\n')
-      this.mexAlg_vonMisesPrj = mexInterface_AlgDirICP_vonMisesPrj_Mesh();
+      this.mexAlg_PIMLOP = mexInterface_AlgDirICP_PIMLOP_Mesh();
       utlDebugMsg( this.bEnableDebug,' ...done\n');
       
-      utlDebugMsg( this.bEnableDebug,'Initializing mexAlg_vonMisesPrj...\n')
-      this.mexAlg_vonMisesPrj.Initialize( ...
+      utlDebugMsg( this.bEnableDebug,'Initializing mexAlg_PIMLOP...\n')
+      this.mexAlg_PIMLOP.Initialize( ...
         this.V, this.T, this.Tn,...
         this.Xp, this.Xpln, this.Rx_plane, this.k, this.M);
       utlDebugMsg( this.bEnableDebug,' ...done\n');
@@ -143,7 +143,7 @@ methods
     this.Rx_plane = Rx_plane;
     this.k = k;
     this.M = M;
-    this.mexAlg_vonMisesPrj.SetSamples( Xp,Xpln,Rx_plane,k,M );
+    this.mexAlg_PIMLOP.SetSamples( Xp,Xpln,Rx_plane,k,M );
   end
   
   %% ICP: Initialize Registration
@@ -158,7 +158,7 @@ methods
     ICP_InitializeParameters@algICP(this, F0);
     
     utlDebugMsg( this.bEnableDebug,'initializing ICP parameters...\n')
-    this.mexAlg_vonMisesPrj.ICP_InitializeParameters( F0 );
+    this.mexAlg_PIMLOP.ICP_InitializeParameters( F0 );
     utlDebugMsg( this.bEnableDebug,' ...done\n');
   end 
   
@@ -167,7 +167,7 @@ methods
     % compute matches
     %  also computes post-match parameters
     utlDebugMsg( this.bEnableDebug,'computing matches...\n' );
-    [this.Yp, this.Yn] = this.mexAlg_vonMisesPrj.ICP_ComputeMatches();
+    [this.Yp, this.Yn] = this.mexAlg_PIMLOP.ICP_ComputeMatches();
     Yp = this.Yp;
     Yn = this.Yn;
     utlDebugMsg( this.bEnableDebug,' ...done\n' );  
@@ -182,7 +182,7 @@ methods
     % register matches
     %  also computes post-registration parameters
     utlDebugMsg( this.bEnableDebug,'registering matches...\n' );
-    [this.F] = this.mexAlg_vonMisesPrj.ICP_RegisterMatches();
+    [this.F] = this.mexAlg_PIMLOP.ICP_RegisterMatches();
     utlDebugMsg( this.bEnableDebug,' ...done\n' );    
     
     % compute change in registration
@@ -201,7 +201,7 @@ methods
   %% ICP: Evaluate Error Function
   function fval = ICP_EvaluateErrorFunction( this )
     utlDebugMsg( this.bEnableDebug,'evaluating error function...\n' );
-    this.fval = this.mexAlg_vonMisesPrj.ICP_EvaluateErrorFunction();
+    this.fval = this.mexAlg_PIMLOP.ICP_EvaluateErrorFunction();
     utlDebugMsg( this.bEnableDebug,' ...done\n' );
     
     % return values

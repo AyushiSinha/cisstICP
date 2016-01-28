@@ -174,7 +174,7 @@ public:
 #endif
       
       // save lambda value of match for computing 3D match equivalent
-      matchNorms.Element(s) = pTree->Triangle(matchDatums.Element(s)).norm;
+      matchNorms.Element(s) = pTree->MeshP->faceNormals[matchDatums[s]];
       //SamplePostMatch(s);
     }
 

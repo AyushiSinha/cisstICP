@@ -30,7 +30,7 @@ properties
   Tn;       % triangle normals                  Nt x 3
   
   % member objects
-  mexAlg_vMFG;   % mex object implementing this algorithm
+  mexAlg_IMLOP;   % mex object implementing this algorithm
   
 end
 
@@ -43,7 +43,7 @@ methods
   %% Delete
   function delete( this )
     % delete mex objects
-    this.mexAlg_vMFG.delete();
+    this.mexAlg_IMLOP.delete();
   end  
   
   %% Initialize Algorithm
@@ -138,12 +138,12 @@ methods
         
     % Mex objects
     if (bTargetAsMesh)
-      utlDebugMsg( this.bEnableDebug,'Creating mex object: mexInterface_AlgDirICP_vMFG_Mesh...\n')
-      this.mexAlg_vMFG = mexInterface_AlgDirICP_vMFG_Mesh();
+      utlDebugMsg( this.bEnableDebug,'Creating mex object: mexInterface_AlgDirICP_IMLOP_Mesh...\n')
+      this.mexAlg_IMLOP = mexInterface_AlgDirICP_IMLOP_Mesh();
       utlDebugMsg( this.bEnableDebug,' ...done\n');
       
-      utlDebugMsg( this.bEnableDebug,'Initializing mexAlg_vMFG...\n')
-      this.mexAlg_vMFG.Initialize( ...
+      utlDebugMsg( this.bEnableDebug,'Initializing mexAlg_IMLOP...\n')
+      this.mexAlg_IMLOP.Initialize( ...
         this.V, this.T, this.Tn,...
         this.Xp, this.Xn,...
         this.sigma2_init, this.kinit, this.wRpos, this.bDynamicParamEst);
@@ -175,7 +175,7 @@ methods
     if exist('bDynamicParamEst','var') && ~isempty(bDynamicParamEst)
       this.bDynamicParamEst = bDynamicParamEst;
     end
-    this.mexAlg_vMFG.SetSamples( this.Xp, this.Xn,...
+    this.mexAlg_IMLOP.SetSamples( this.Xp, this.Xn,...
       this.sigma2_init, this.kinit, this.wRpos, this.bDynamicParamEst );
   end
   
@@ -191,7 +191,7 @@ methods
     ICP_InitializeParameters@algICP(this, F0);
     
     utlDebugMsg( this.bEnableDebug,'initializing ICP parameters...\n')
-    this.mexAlg_vMFG.ICP_InitializeParameters( F0 );
+    this.mexAlg_IMLOP.ICP_InitializeParameters( F0 );
     utlDebugMsg( this.bEnableDebug,' ...done\n');
   end 
   
@@ -200,7 +200,7 @@ methods
     % compute matches
     %  also computes post-match parameters
     utlDebugMsg( this.bEnableDebug,'computing matches...\n' );
-    [this.Yp, this.Yn] = this.mexAlg_vMFG.ICP_ComputeMatches();
+    [this.Yp, this.Yn] = this.mexAlg_IMLOP.ICP_ComputeMatches();
     Yp = this.Yp;
     Yn = this.Yn;
     utlDebugMsg( this.bEnableDebug,' ...done\n' );  
@@ -215,7 +215,7 @@ methods
     % register matches
     %  also computes post-registration parameters
     utlDebugMsg( this.bEnableDebug,'registering matches...\n' );
-    [this.F, this.sigma2, this.k] = this.mexAlg_vMFG.ICP_RegisterMatches();
+    [this.F, this.sigma2, this.k] = this.mexAlg_IMLOP.ICP_RegisterMatches();
     utlDebugMsg( this.bEnableDebug,' ...done\n' );    
     
     % compute change in registration
@@ -234,7 +234,7 @@ methods
   %% ICP: Evaluate Error Function
   function fval = ICP_EvaluateErrorFunction( this )
     utlDebugMsg( this.bEnableDebug,'evaluating error function...\n' );
-    this.fval = this.mexAlg_vMFG.ICP_EvaluateErrorFunction();
+    this.fval = this.mexAlg_IMLOP.ICP_EvaluateErrorFunction();
     utlDebugMsg( this.bEnableDebug,' ...done\n' );
     
     % return values

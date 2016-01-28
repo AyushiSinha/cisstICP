@@ -11,12 +11,12 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
     
     %% Constructor - Create a new C++ class instance 
     function this = mexInterface_AlgDirICP_PIMLOP_Mesh()
-      this.h = mexAlgDirICP_vonMisesPrj_Mesh('new');
+      this.h = mexAlgDirICP_PIMLOP_Mesh('new');
     end
 
     %% Destructor - Destroy the C++ class instance
     function delete(this)
-      mexAlgDirICP_vonMisesPrj_Mesh('delete', this.h);
+      mexAlgDirICP_PIMLOP_Mesh('delete', this.h);
     end
     
     %% Initialize Algorithm
@@ -43,7 +43,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % //  Rx_plane ~ 3d sample normal coords: Xn3d = Rx_plane * [Xn2d;0]  (3 x 3 x Ns double)
       % //  k ~ concentration of sample orientations    (Ns x 1 double)
       % //  M ~ covariance matrices of sample points    (3 x 3 x Ns double)
-      mexAlgDirICP_vonMisesPrj_Mesh('Initialize',this.h,...
+      mexAlgDirICP_PIMLOP_Mesh('Initialize',this.h,...
         V',Tcpp',Tn',...
         Xp',Xpln',Rx_plane, k,M);  
     end
@@ -61,7 +61,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % //  cmd
       % //  class handle
       % //  sample points                 (3 x Ns double)
-      mexAlgDirICP_vonMisesPrj_Mesh('SetSamples',this.h,...
+      mexAlgDirICP_PIMLOP_Mesh('SetSamples',this.h,...
         Xp',Xpln',Rx_plane, k,M);
     end
         
@@ -73,7 +73,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % //  cmd
       % //  class handle
       % //  Freg ~ [R,t]      (3 x 4 double)
-      mexAlgDirICP_vonMisesPrj_Mesh('ICP_InitializeParameters',this.h, F0(1:3,:));
+      mexAlgDirICP_PIMLOP_Mesh('ICP_InitializeParameters',this.h, F0(1:3,:));
     end    
         
     %% ICP: Compute Matches
@@ -89,7 +89,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % // 
       % // Output:
       % //  SampleMatchPts ~ matches for 3D sample pts    (3 x numPts double)  [optional]      
-      [Yp, Yn] = mexAlgDirICP_vonMisesPrj_Mesh('ICP_ComputeMatches', this.h);
+      [Yp, Yn] = mexAlgDirICP_PIMLOP_Mesh('ICP_ComputeMatches', this.h);
       Yp = Yp';
       Yn = Yn';
     end    
@@ -107,7 +107,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % // Output:
       % //  Freg ~ [R,t]      (3 x 4 double)    (Y = Freg * X)
       % //
-      Freg = mexAlgDirICP_vonMisesPrj_Mesh('ICP_RegisterMatches', this.h);
+      Freg = mexAlgDirICP_PIMLOP_Mesh('ICP_RegisterMatches', this.h);
       F = getFrm3(Freg(1:3,1:3),Freg(1:3,4));
     end        
 
@@ -119,7 +119,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % // Output:
       % //  fval  ~ value of error function (double)
       % //      
-      fval = mexAlgDirICP_vonMisesPrj_Mesh('ICP_EvaluateErrorFunction', this.h);
+      fval = mexAlgDirICP_PIMLOP_Mesh('ICP_EvaluateErrorFunction', this.h);
     end
     
     function bTerminate = ICP_Terminate( this )
@@ -130,7 +130,7 @@ classdef mexInterface_AlgDirICP_PIMLOP_Mesh < handle
       % // Output:
       % //  bTerminate  ~ boolean specifying algorithm-specific termination (logical scalar)
       % //
-      bTerminate = mexAlgDirICP_vonMisesPrj_Mesh('ICP_Terminate', this.h);
+      bTerminate = mexAlgDirICP_PIMLOP_Mesh('ICP_Terminate', this.h);
     end
   end
 end

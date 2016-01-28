@@ -35,7 +35,7 @@ properties
   scaleTermThresh;
   
   % member objects
-  mexAlgCovTreeCP;   % mex object for StdICP algorithm
+  mexAlgPDTreeCP;   % mex object for StdICP algorithm
   
 end
 
@@ -48,7 +48,7 @@ methods
   %% Delete
   function delete( this )
     % delete mex objects
-    this.mexAlgCovTreeCP.delete();
+    this.mexAlgPDTreeCP.delete();
   end  
   
   %% Initialize Algorithm
@@ -133,11 +133,11 @@ methods
     % Mex objects
     if (this.bTargetAsMesh)
       utlDebugMsg( this.bEnableDebug,'creating 3D point matcher algorithm...\n')
-      this.mexAlgCovTreeCP = mexInterface_AlgCovTree_CP_Mesh();
+      this.mexAlgPDTreeCP = mexInterface_AlgPDTree_CP_Mesh();
       utlDebugMsg( this.bEnableDebug,' ...done\n')
 
       utlDebugMsg( this.bEnableDebug,'initializing 3D point matcher algorithm...\n')
-      this.mexAlgCovTreeCP.Initialize( this.V, this.T, this.Tn);
+      this.mexAlgPDTreeCP.Initialize( this.V, this.T, this.Tn);
       utlDebugMsg( this.bEnableDebug,' ...done\n')
     else
       error('point cloud target not supported')
@@ -185,7 +185,7 @@ methods
     % compute matches
     utlDebugMsg( this.bEnableDebug,'computing matches...\n' );
     [this.Y, ~, this.matchDatums] = ...
-      this.mexAlgCovTreeCP.ComputeMatches( this.Xxfm, this.matchDatums );
+      this.mexAlgPDTreeCP.ComputeMatches( this.Xxfm, this.matchDatums );
     Y = this.Y;
     utlDebugMsg( this.bEnableDebug,' ...done\n' );
     
