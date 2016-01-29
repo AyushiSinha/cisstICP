@@ -37,7 +37,6 @@
 #include <limits>
 
 #include "cisstNumerical.h"
-#include "Wm5NoniterativeEigen3x3.h"  // WildMagic5
 
 // getcwd
 #include <errno.h>
@@ -46,6 +45,13 @@
   #define getcwd _getcwd
 #else
   #include <unistd.h>
+#endif
+
+// uncomment this define if not using the WildMagic5 library
+//#define REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+
+#ifndef REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+  #include "Wm5NoniterativeEigen3x3.h"  // WildMagic5
 #endif
 
 //#define ENABLE_UTILITIES_DEBUG
@@ -166,6 +172,12 @@ vct3x3 ComputePointCovariance(const vct3 &norm, double normPrllVar, double normP
 
 void ComputeCovEigenDecomposition_NonIter(const vct3x3 &M, vct3 &eigenValues, vct3x3 &eigenVectors)
 {
+#ifdef REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+
+  // redirect to non-iterative SVD routine
+  ComputeCovEigenDecomposition_SVD(M, eigenValues, eigenVectors);
+
+#else
   // Calls the non-iterative eigen solver of the WildMagic5 library
   // 
   // eigen values in descending order
@@ -191,27 +203,11 @@ void ComputeCovEigenDecomposition_NonIter(const vct3x3 &M, vct3 &eigenValues, vc
   double det = 
     solver.GetEigenvector(2).Dot(solver.GetEigenvector(1).Cross(
     solver.GetEigenvector(0)));
-
   if (det < 0.0)
   {
     eigenVectors.Column(2).Multiply(-1.0);
   }
-
-  //for (i = 0; i < 3; ++i)
-  //{
-  //  mNoniterativeEigenvalues[i] = noniterativeSolver.GetEigenvalue(i);
-  //  mNoniterativeEigenvectors[i] = noniterativeSolver.GetEigenvector(i);
-  //  result = A*mNoniterativeEigenvectors[i] -
-  //    mNoniterativeEigenvalues[i] * mNoniterativeEigenvectors[i];
-  //  length = result.Length();
-  //  if (length > noniterativeError)
-  //  {
-  //    noniterativeError = length;
-  //  }
-  //}
-  //noniterativeDeterminant = Mathf::FAbs(
-  //  mNoniterativeEigenvectors[0].Dot(mNoniterativeEigenvectors[1].Cross(
-  //  mNoniterativeEigenvectors[2])));
+#endif // REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
 }
 
 

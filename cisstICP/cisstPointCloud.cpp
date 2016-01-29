@@ -62,7 +62,6 @@ pointOrientations(pointOrientations)
 
 cisstPointCloud::cisstPointCloud(cisstMesh &mesh)
 {
-  double sqrDist;
   vct3 v0, v1, v2;
 
   // build point cloud from triangle centers

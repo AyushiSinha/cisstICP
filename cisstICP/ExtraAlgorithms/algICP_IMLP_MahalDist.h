@@ -35,8 +35,6 @@
 #define _algICP_IMLP_MahalDist_h
 
 #include "algICP_IMLP.h"
-#include "Ellipsoid_OBB_Intersection_Solver.h"
-#include "utilities.h"
 
 class algICP_IMLP_MahalDist : public algICP_IMLP
 {

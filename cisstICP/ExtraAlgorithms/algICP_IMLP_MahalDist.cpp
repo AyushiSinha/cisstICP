@@ -35,6 +35,8 @@
 #include "cisstICP.h"
 #include "PDTreeNode.h"
 #include "RegisterP2P.h"
+#include "Ellipsoid_OBB_Intersection_Solver.h"
+#include "utilities.h"
 
 #define COMPUTE_ERROR_FUNCTION
 //#define DEBUG_IMLP

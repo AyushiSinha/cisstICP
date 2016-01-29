@@ -35,8 +35,6 @@
 #define _algICP_IMLP_ClosestPoint_h
 
 #include "algICP_IMLP.h"
-#include "Ellipsoid_OBB_Intersection_Solver.h"
-#include "utilities.h"
 
 class algICP_IMLP_ClosestPoint : public algICP_IMLP
 {

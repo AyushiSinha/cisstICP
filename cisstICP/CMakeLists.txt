@@ -299,7 +299,7 @@ IF (cisst_FOUND_AS_REQUIRED)
       ${WM5_CORE_LIB}
       )
   ELSE (WM5_LIB_PATH)
-    message(WARNING "WildMagic5 is not found; calls to the non-iterative covariance decomposition functions (such as ComputeCovDecomposition_NonIter) will need to be changed to calls to the less efficient iterative methods (such as ComputeCovDecomposition_SVD) in order to compile the code")
+    message(WARNING "WildMagic5 is not found; must uncomment the line for define REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD in utilities.cpp prior to compiling in order to redirect the calls for non-iterative covariance eigen-decomposition to the iterative SVD-based alternative.")
   ENDIF (WM5_LIB_PATH)
 
   # IF (GSL_LIB)

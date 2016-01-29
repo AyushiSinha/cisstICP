@@ -138,7 +138,6 @@ vctFrm3 PDTreeNode::ComputeCovFrame(int i0, int i1)
   //  NOTE:  can speed this up using the WildMagic5 closed-form
   //         covariance decomposition
   ComputeCovEigenDecomposition_NonIter(C, e, Q);
-  //ComputeCovEigenDecomposition_SVD(C, e, Q);
 
   // find largest eigenvalue
   int j = 0;

@@ -109,7 +109,6 @@ vctFrm3 DirPDTreeNode::ComputeCovFrame(int i0, int i1)
   
   // compute eigen decomposition of covariance matrix
   ComputeCovEigenDecomposition_NonIter(C, e, Q);
-  //ComputeCovEigenDecomposition_SVD(C, e, Q);
 
   int j = 0;
   for (i = 1; i < 3; i++)

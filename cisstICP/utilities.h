@@ -36,19 +36,6 @@
 
 #include <cisstVector.h>
 
-#define OUTPUT_TO_MATLAB
-
-#ifdef OUTPUT_TO_MATLAB
-  #define PRINT_DEBUG(x) { \
-      mexPrintf(x);   \
-      mexEvalString("drawnow;"); \
-      }
-#else
-  #define PRINT_DEBUG(x) { \
-      printf(x);   \
-      }
-#endif
-
 // get current working directory
 std::string getcwd_str();
 
