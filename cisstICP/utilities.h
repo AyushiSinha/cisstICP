@@ -34,7 +34,9 @@
 #ifndef _utilities_H
 #define _utilities_H
 
+#include <string>
 #include <cisstVector.h>
+
 
 // get current working directory
 std::string getcwd_str();

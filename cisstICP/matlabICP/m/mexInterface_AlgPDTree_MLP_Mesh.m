@@ -11,12 +11,12 @@ classdef mexInterface_AlgPDTree_MLP_Mesh < handle
     
     %% Constructor - Create a new C++ class instance 
     function this = mexInterface_AlgPDTree_MLP_Mesh()
-      this.h = mexAlgCovTree_MLP_Mesh('new');
+      this.h = mexAlgPDTree_MLP_Mesh('new');
     end
 
     %% Destructor - Destroy the C++ class instance
     function delete(this)
-      mexAlgCovTree_MLP_Mesh('delete', this.h);
+      mexAlgPDTree_MLP_Mesh('delete', this.h);
     end
     
     %% Initialize Algorithm
@@ -38,10 +38,10 @@ classdef mexInterface_AlgPDTree_MLP_Mesh < handle
       % //    Tcov ~ triangle covariances (3 x 3 x Nt double)      
       % //
       if ~exist('Tcov','var') || isempty(Tcov)
-        mexAlgCovTree_MLP_Mesh('Initialize', this.h,...
+        mexAlgPDTree_MLP_Mesh('Initialize', this.h,...
           V',Tcpp',Tn');
       else
-        mexAlgCovTree_MLP_Mesh('Initialize', this.h,...
+        mexAlgPDTree_MLP_Mesh('Initialize', this.h,...
           V',Tcpp',Tn',Tcov);        
       end
     end
@@ -60,10 +60,10 @@ classdef mexInterface_AlgPDTree_MLP_Mesh < handle
      
       if exist('matchDatumsInit','var') && ~isempty(matchDatumsInit)
         [matchPts, matchNorms, matchDatums] = ...
-          mexAlgCovTree_MLP_Mesh('ComputeMatches', this.h, samplePts', sampleCov, matchDatumsInit);
+          mexAlgPDTree_MLP_Mesh('ComputeMatches', this.h, samplePts', sampleCov, matchDatumsInit);
       else
         [matchPts, matchNorms, matchDatums] = ...
-          mexAlgCovTree_MLP_Mesh('ComputeMatches', this.h, samplePts', sampleCov);
+          mexAlgPDTree_MLP_Mesh('ComputeMatches', this.h, samplePts', sampleCov);
       end
       
       matchPts = matchPts';
