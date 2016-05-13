@@ -1,6 +1,11 @@
 #ifndef _mexInterface_AlgPDTree_MLP_Mesh_h
 #define _mexInterface_AlgPDTree_MLP_Mesh_h
 
+#include "matlabClassHandle.h"
+#include "mex.h"
+#include "matlabParser.h"
+#include "matlabExtras.h"
+
 #include "algPDTree_MLP_Mesh.h"
 
 
@@ -59,11 +64,11 @@ public:
 public:
 
   // constructor
-	mexInterface_AlgPDTree_MLP_Mesh() 
+  mexInterface_AlgPDTree_MLP_Mesh()
     : pAlg(NULL)
   {}
 
-	~mexInterface_AlgPDTree_MLP_Mesh()
+  ~mexInterface_AlgPDTree_MLP_Mesh()
   {
     if (pAlg)
     {
@@ -74,4 +79,5 @@ public:
 
   void ComputeMatches();
 
+};
 #endif

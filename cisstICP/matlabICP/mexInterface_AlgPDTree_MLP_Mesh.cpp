@@ -29,11 +29,6 @@
 // ****************************************************************************
 
 #include "mexInterface_AlgPDTree_MLP_Mesh.h"
-
-#include "matlabClassHandle.h"
-#include "mex.h"
-#include "matlabParser.h"
-#include "matlabExtras.h"
 #include "utilities.h"
 
 
