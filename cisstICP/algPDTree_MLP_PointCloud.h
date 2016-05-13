@@ -54,6 +54,9 @@ public:
     pTree(pTree)
   {};
 
+  // destructor
+  virtual ~algPDTree_MLP_PointCloud() {}
+
 
   double FindClosestPointOnDatum(
     const vct3 &v,

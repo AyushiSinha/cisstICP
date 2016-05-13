@@ -64,7 +64,7 @@ public:
 	PDTree_Mesh(cisstMesh &mesh, int nThresh, double diagThresh);
 
   // destructor
-  ~PDTree_Mesh();
+  virtual ~PDTree_Mesh();
 
 
   //--- Base Class Virtual Methods ---//

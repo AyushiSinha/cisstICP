@@ -97,6 +97,9 @@ public:
 #endif
   };
 
+  // destructor
+  virtual ~PDTreeBase() {}
+
   int FastInitializeProximalDatum(const vct3 &v, vct3 &proxPoint);
 
   void SetSearchAlgorithm(algPDTree *pAlg)

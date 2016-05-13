@@ -79,14 +79,14 @@ int DirPDTreeBase::FindClosestDatum(
   unsigned int &numNodesSearched,
   double currentMatchError)
 {
-  // SDB: by specifying a good starting datum (such as previous closest datum)
-  //      the search for new closest datum is more efficient because
-  //      the bounds value will be a good initial guess => fewer datums are
-  //      closely searched.
   unsigned int numNodesVisited = 0;
   numNodesSearched = 0;
 
   // check if previous match was feasible
+  // SDB: by specifying a good starting datum (such as previous closest datum)
+  //      the search for new closest datum is more efficient because
+  //      the bounds value will be a good initial guess => fewer datums are
+  //      closely searched.
   if (prevDatum >= 0)
   { // previous match was feasible, make sure it is still feasible
     //  set error bound to a big number so that this call returns
@@ -113,8 +113,6 @@ int DirPDTreeBase::FindClosestDatum(
   // since all datums must lie within the root node, we don't need to do a node bounds
   // check on the root => it is more efficient to explicitly search each child node of the
   // root rather than searching the root node itself.
-  //int datum = Top->FindClosestDatum( v, n, closestPoint, closestPointNorm, matchError, numNodesVisited, numNodesSearched );
-
   int datum;
   if (treeDepth > 0)
   {
@@ -136,42 +134,6 @@ int DirPDTreeBase::FindClosestDatum(
   {
     datum = prevDatum;  // no feasible datum found closer than previous datum
   }
-
-  //if (numNodesSearched==0)
-  //{
-  //  //FILE *debugPrint = fopen("../ICP_TestData/LastRun/debugPDTreePrint.txt","w"); 
-  //  //Print( debugPrint, 0 );
-  //  //fclose( debugPrint );
-
-  //  std::ofstream fs("../ICP_TestData/LastRun/debugPDTreePrint.txt");
-  //  PrintTerminalNodes( fs );
-  //  fs.close();
-
-  //  std::cout << "No nodes searched!" << std::endl 
-  //    << " v: " << v << std::endl
-  //    << " n: " << n << std::endl
-  //    << " c: " << closestPoint << std::endl
-  //    << " cn: " << closestPointNorm << std::endl
-  //    << " prevDatum: " << prevDatum << std::endl;
-  //  DirPDTreeNode termNode( 0.0 );
-  //  int rv = FindTerminalNode( prevDatum, termNode );
-  //  if (rv == 0)
-  //    std::cout << " --> prevDatum has no terminal node!" << std::endl;
-  //  else
-  //  {
-  //    std::cout << "Terminal Node:" << std::endl;
-  //    termNode.Print( stdout, 0 );
-
-  //    cisstICPNormalsAlgorithm_CovEst *alg;
-  //    alg = dynamic_cast<cisstICPNormalsAlgorithm_CovEst *>(pAlgorithm);
-  //    std::cout << "covGamma: " << std::endl << alg->covGamma << std::endl;
-  //    std::cout << "invCovGamma: " << std::endl << alg->covGammaInv << std::endl;
-  //    std::cout << "ErrorBound = " << errorBound << std::endl;
-  //    std::cout << "ClosestPointError = " 
-  //      << pAlgorithm->FindClosestPointOnDatum( v, n, closestPoint, closestPointNorm, prevDatum ) << std::endl;
-  //    pAlgorithm->NodeMightBeCloser( v, n, &termNode, errorBound );
-  //  }
-  //}
 
   //std::cout << "numNodesVisited: " << numNodesVisited << "\tnumNodesSearched: " << numNodesSearched << std::endl;
   return datum;
@@ -211,21 +173,3 @@ void DirPDTreeBase::PrintTerminalNodes(std::ofstream &fs)
   Top->PrintTerminalNodes(fs);
 }
 
-//void DirPDTreeBase::PrintDatum(FILE* chan, int level, int datum)
-//{
-//  fprintfBlanks(chan, level);
-//  fprintf(chan, "%5d:", datum);
-//  // SDB
-//  //{ fprintf(stdout," ["); fprintfVct3(stdout,DatumSortPoint(datum)); fprintf(stdout,"] ");};
-//  //// fprintf(stdout," [ ...]"); 
-//  //fprintf(stdout,"\n");
-//  { fprintf(chan, " ["); fprintfVct3(chan, DatumSortPoint(datum)); fprintf(chan, "] "); };
-//  fprintf(chan, "\n");
-//}
-//
-//void DirPDTreeBase::Print(FILE* chan, int indent)
-//{
-//  fprintf(chan, "PD Tree Statistics\n");
-//  fprintf(chan, "\tNumData = %d\n\tNumNodes = %d\n\tTreeDepth = %d\n\n", NData, NNodes, treeDepth);
-//  Top->Print(chan, indent);
-//}

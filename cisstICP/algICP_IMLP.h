@@ -142,6 +142,9 @@ public:
     double outlierChiSquareThreshold = 7.81,
     double sigma2Max = std::numeric_limits<double>::max());
 
+  // destructor
+  virtual ~algICP_IMLP() {}
+
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
 
   // TODO: specify surface model independently and compute Mxi

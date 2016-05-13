@@ -71,6 +71,9 @@ public:
     pDirTree(pDirTree)
   { /*searchLambdas.SetSize(pDirTree->EdgeList.numEdges);*/ }
 
+  // destructor
+  virtual ~alg2D_DirPDTree_vonMises_Edges() {}
+
 
   //--- PD Tree Interface Methods ---//
 

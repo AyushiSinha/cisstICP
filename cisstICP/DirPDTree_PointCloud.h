@@ -65,7 +65,7 @@ public:
     double diagThresh);
 
   // destructor
-  ~DirPDTree_PointCloud();
+  virtual ~DirPDTree_PointCloud();
 
 
   //-- Base Class Method Overrides --//

@@ -60,7 +60,7 @@ public:
   {}
  
   // destructor
-  ~algICP_StdICP_Mesh() {}
+  virtual ~algICP_StdICP_Mesh() {}
 
 };
 

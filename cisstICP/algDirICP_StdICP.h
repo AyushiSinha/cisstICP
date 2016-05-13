@@ -104,6 +104,9 @@ public:
     SetSamples(samplePts, sampleNorms);
   }
 
+  // destructor
+  virtual ~algDirICP_StdICP() {}
+
   void SetSamples(
     vctDynamicVector<vct3> &samplePts,
     vctDynamicVector<vct3> &sampleNorms)

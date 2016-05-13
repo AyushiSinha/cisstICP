@@ -64,6 +64,9 @@ public:
     TCPS(*(pTree->MeshP))
   {}
 
+  // destructor
+  virtual ~algPDTree_CP_Mesh() {}
+
 
   //--- PD Tree Interface Methods ---//
 

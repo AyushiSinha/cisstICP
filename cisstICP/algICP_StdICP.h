@@ -95,6 +95,9 @@ public:
     SetSamples(samplePts);
   }  
 
+  // destructor
+  virtual ~algICP_StdICP() {}
+
   void SetSamples(vctDynamicVector<vct3> &samplePts)
   {
     algICP::SetSamples(samplePts);

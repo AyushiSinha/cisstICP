@@ -50,6 +50,9 @@ protected:
     : algPDTree(pTree)
   {}
 
+  // destructor
+  virtual ~algPDTree_CP() {}
+
 
   //--- PD Tree Interface Methods ---//
 

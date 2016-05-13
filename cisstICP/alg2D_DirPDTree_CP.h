@@ -50,6 +50,9 @@ protected:
     : alg2D_DirPDTree(pDirTree)
   {}
 
+  // destructor
+  virtual ~alg2D_DirPDTree_CP() {}
+
 
   //--- PD Tree Interface Methods ---//
 

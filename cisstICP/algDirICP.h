@@ -90,6 +90,9 @@ public:
     const vctDynamicVector<vct3> &samplePts,
     const vctDynamicVector<vct3> &sampleNorms);
 
+  // destructor
+  virtual ~algDirICP() {}
+
   // R       ~  mean of norm products
   // circSD  ~  circular standard deviation of theta (angular match error in radians)
   void  ComputeCircErrorStatistics(double sumNormProducts, double &R, double &circSD);

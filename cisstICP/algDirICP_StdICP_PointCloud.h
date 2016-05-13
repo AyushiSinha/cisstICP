@@ -64,6 +64,9 @@ public:
     pDirTree(pDirTree)
   {}
 
+  // destructor
+  virtual ~algDirICP_StdICP_PointCloud() {}
+
 
   //--- PD Tree Methods ---//
 

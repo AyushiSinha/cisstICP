@@ -62,7 +62,7 @@ public:
         int nThresh, double diagThresh, bool bUseOBB = true);
 
     // destructor
-    ~DirPDTree2D_Edges();
+    virtual ~DirPDTree2D_Edges();
 
 
     //-- Base Class Method Overrides --//

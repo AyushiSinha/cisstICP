@@ -64,7 +64,7 @@ public:
 	DirPDTree_Mesh(cisstMesh mesh, int nThresh, double diagThresh);
 
   // destructor
-  ~DirPDTree_Mesh();
+  virtual ~DirPDTree_Mesh();
 
 
   //-- Base Class Method Overrides --//

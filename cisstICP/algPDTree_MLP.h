@@ -73,6 +73,9 @@ public:
     : algPDTree(pTree)
   {}
 
+  // destructor
+  virtual ~algPDTree_MLP() {}
+
   // must call this prior to beginning search for each sample
   //   sampleXfm_M   ~ noise covariance of the transformed sample point
   //   sample_M_Eig  ~ eigenvalues of the sample covariance (in order of decreasing magnitude)

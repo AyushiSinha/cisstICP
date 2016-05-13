@@ -151,6 +151,10 @@ public:
     SetSamples(samplePts, sampleNorms);
   }
 
+  // destructor
+  virtual ~algDirICP_IMLOP() {}
+
+
   void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   double  ComputeRpos();
 

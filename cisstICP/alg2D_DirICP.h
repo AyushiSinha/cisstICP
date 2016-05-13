@@ -117,6 +117,9 @@ public:
     vctDynamicVector<vct2> &samplePts,
     vctDynamicVector<vct2> &sampleNorms);
 
+  // destructor
+  virtual ~alg2D_DirICP() {}
+
   void  ComputeCircErrorStatistics(double sumNormProducts, double &R, double &circSD);
 
 protected:

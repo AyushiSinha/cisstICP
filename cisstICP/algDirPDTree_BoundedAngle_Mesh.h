@@ -65,6 +65,9 @@ public:
     TCPS(pDirTree->mesh)
   {}
 
+  // destructor
+  virtual ~algDirPDTree_BoundedAngle_Mesh() {}
+
 
   //--- PD Tree Interface Methods ---//
 

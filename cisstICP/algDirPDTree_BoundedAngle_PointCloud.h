@@ -62,6 +62,9 @@ public:
     pDirTree(pDirTree)
   {}
 
+  // destructor
+  virtual ~algDirPDTree_BoundedAngle_PointCloud() {}
+
 
   //--- PD Tree Interface Methods ---//
 
