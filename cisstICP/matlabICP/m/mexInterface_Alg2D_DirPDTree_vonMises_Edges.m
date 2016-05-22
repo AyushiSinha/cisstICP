@@ -11,12 +11,12 @@ classdef mexInterface_Alg2D_DirPDTree_vonMises_Edges < handle
 
     %% Constructor - Create a new C++ class instance 
     function this = mexInterface_Alg2D_DirPDTree_vonMises_Edges()
-      this.h = mexAlg2D_DirCovTree_vonMises_Edges('new');
+      this.h = mexAlg2D_DirPDTree_vonMises_Edges('new');
     end
 
     %% Destructor - Destroy the C++ class instance
     function delete(this)
-      mexAlg2D_DirCovTree_vonMises_Edges('delete', this.h);
+      mexAlg2D_DirPDTree_vonMises_Edges('delete', this.h);
     end
     
     %% Initialize Algorithm
@@ -25,7 +25,7 @@ classdef mexInterface_Alg2D_DirPDTree_vonMises_Edges < handle
     %  edgesV2       ~ second vertices of 2D edges   (Ne x 2)  (in image coords)
     %  edgesNorm     ~ 2D edge normals               (Ne x 2)  (in image coords)
     function Initialize( this, edgesV1, edgesV2, edgesNorm)
-      mexAlg2D_DirCovTree_vonMises_Edges('Initialize',this.h, ...
+      mexAlg2D_DirPDTree_vonMises_Edges('Initialize',this.h, ...
         edgesV1', edgesV2', edgesNorm');
     end
         
@@ -56,7 +56,7 @@ classdef mexInterface_Alg2D_DirPDTree_vonMises_Edges < handle
       match_ThetaMax = match_ThetaMax * pi/180;    
     
       [matchPts2D, matchNorms2D, matchDatums, matchPermitted] = ...
-        mexAlg2D_DirCovTree_vonMises_Edges('ComputeMatches', this.h, ...
+        mexAlg2D_DirPDTree_vonMises_Edges('ComputeMatches', this.h, ...
         samplePts', sampleNorms', sigma2, k, matchDatumsInit, match_ThetaMax);
 
       matchPts2D = matchPts2D';
@@ -70,7 +70,7 @@ classdef mexInterface_Alg2D_DirPDTree_vonMises_Edges < handle
     % %   k       ~ (Ns x 1)  or  scalar
     % %   sigma2  ~ (Ns x 1)  or  scalar
     % function SetNoiseModel( k, sigma2 )
-    %   mexAlg2D_DirCovTree_vonMises_Edges('SetNoiseModel', this.h, k, sigma2);
+    %   mexAlg2D_DirPDTree_vonMises_Edges('SetNoiseModel', this.h, k, sigma2);
     % end
   end
 end

@@ -11,12 +11,12 @@ classdef mexInterface_AlgPDTree_CP_Mesh < handle
     
     %% Constructor - Create a new C++ class instance 
     function this = mexInterface_AlgPDTree_CP_Mesh()
-      this.h = mexAlgCovTree_CP_Mesh('new');
+      this.h = mexAlgPDTree_CP_Mesh('new');
     end
 
     %% Destructor - Destroy the C++ class instance
     function delete(this)
-      mexAlgCovTree_CP_Mesh('delete', this.h);
+      mexAlgPDTree_CP_Mesh('delete', this.h);
     end
     
     %% Initialize Algorithm
@@ -34,7 +34,7 @@ classdef mexInterface_AlgPDTree_CP_Mesh < handle
       % //    T ~ triangle vertex indices (3 x Nt integer)
       % //    N ~ 3D triangle normals     (3 x Nt double)
       % //
-      mexAlgCovTree_CP_Mesh('Initialize', this.h,...
+      mexAlgPDTree_CP_Mesh('Initialize', this.h,...
         V',Tcpp',Tn');
     end
 
@@ -51,11 +51,11 @@ classdef mexInterface_AlgPDTree_CP_Mesh < handle
      
       if exist('matchDatumsInit','var') && ~isempty(matchDatumsInit)
         [matchPts, matchNorms, matchDatums] = ...
-          mexAlgCovTree_CP_Mesh('ComputeMatches', this.h, ...
+          mexAlgPDTree_CP_Mesh('ComputeMatches', this.h, ...
           samplePts', matchDatumsInit);
       else
         [matchPts, matchNorms, matchDatums] = ...
-          mexAlgCovTree_CP_Mesh('ComputeMatches', this.h, samplePts');      
+          mexAlgPDTree_CP_Mesh('ComputeMatches', this.h, samplePts');      
       end
       
       matchPts = matchPts';

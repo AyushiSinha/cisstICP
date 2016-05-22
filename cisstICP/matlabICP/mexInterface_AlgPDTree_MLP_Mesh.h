@@ -1,19 +1,16 @@
 #ifndef _mexInterface_AlgPDTree_MLP_Mesh_h
 #define _mexInterface_AlgPDTree_MLP_Mesh_h
 
-#include "matlabClassHandle.h"
 #include "mex.h"
-#include "matlabParser.h"
-#include "matlabExtras.h"
 
 #include "algPDTree_MLP_Mesh.h"
 
 
 #ifdef DEBUG_MEX
-#define MEX_DEBUG(x) MEX_PRINT((std::string("MEX_DEBUG: ") + x + "\n").c_str())
+  #define MEX_DEBUG(x) MEX_PRINT((std::string("MEX_DEBUG: ") + x + "\n").c_str())
 #else
-#define MEX_DEBUG(x)
-#endif;
+  #define MEX_DEBUG(x)
+#endif
 
 
 // Matlab gateway function
@@ -32,7 +29,7 @@ class mexInterface_AlgPDTree_MLP_Mesh
 
 public:
 
-  PDTree_Mesh             *pTree;
+  PDTree_Mesh        *pTree;
   algPDTree_MLP_Mesh *pAlg;
 
   // covariance tree inputs
@@ -78,6 +75,7 @@ public:
   }
 
   void ComputeMatches();
+};
 
 };
 #endif
