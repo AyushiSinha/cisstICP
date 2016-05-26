@@ -131,7 +131,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
   // initialize algorithm
   Freg0 = Freg1 = vctFrm3::Identity();
   dF = Freg2 = Freg = FGuess;
+  //std::cout << "Init... ";
   pAlgorithm->ICP_InitializeParameters(FGuess);
+  //std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
   time_Extras = codeProfiler.GetElapsedTime();
@@ -150,7 +152,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
     // compute matches
-    pAlgorithm->ICP_ComputeMatches();
+	//std::cout << "Compute Matches... ";
+	pAlgorithm->ICP_ComputeMatches();
+	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_Match = codeProfiler.GetElapsedTime();
@@ -163,7 +167,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
     // update algorithm's post-match parameters
-    pAlgorithm->ICP_UpdateParameters_PostMatch();
+	//std::cout << "Updating parameters... ";
+	pAlgorithm->ICP_UpdateParameters_PostMatch();
+	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_UpdateParams_PostMatch = codeProfiler.GetElapsedTime();
@@ -176,7 +182,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
     // filter matches for outliers
-    nOutliers = pAlgorithm->ICP_FilterMatches();
+	//std::cout << "Filtering matches... ";
+	nOutliers = pAlgorithm->ICP_FilterMatches();
+	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_FilterMatches = codeProfiler.GetElapsedTime();
@@ -192,7 +200,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
       // Compute initial error function value
-      E = pAlgorithm->ICP_EvaluateErrorFunction();
+	  //std::cout << "Evaluating Error... ";
+	  E = pAlgorithm->ICP_EvaluateErrorFunction();
+	  //std::cout << "Done." << std::endl;
       E0 = E1 = std::numeric_limits<double>::max();
       E2 = E;
       tolE = 0.0;
@@ -253,7 +263,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
     // compute registration
-    Freg = pAlgorithm->ICP_RegisterMatches();
+	//std::cout << "Registering matches... ";
+	Freg = pAlgorithm->ICP_RegisterMatches();
+	//std::cout << "Done." << std::endl;
     Freg0 = Freg1;
     Freg1 = Freg2;
     Freg2 = Freg;

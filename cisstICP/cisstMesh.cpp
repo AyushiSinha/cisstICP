@@ -83,6 +83,13 @@ void cisstMesh::ResetMesh()
   TriangleCovEig.SetSize(0);
 }
 
+void cisstMesh::ResetModel()
+{
+	meanShape.SetSize(0);
+	mode.SetSize(0);
+	modeWeight.SetSize(0);
+}
+
 void cisstMesh::InitializeNoiseModel()
 {
   TriangleCov.SetSize(faces.size());
@@ -251,6 +258,7 @@ int cisstMesh::AddMeshFile(const std::string &meshFilePath)
     std::cout << "ERROR: expected POINTS header at line: " << line << std::endl;
     return -1;
   }
+  std::cout << "Number of vertices = " << numPoints << std::endl;
   vct3 v;
   vertices.resize(vOffset + numPoints);  // non destructive resize
   unsigned int pointCount = 0;
@@ -766,4 +774,149 @@ void cisstMesh::WriteSURMeshFile(const char *fn)
   };
 
   fclose(fp);
+}
+
+int cisstMesh::LoadModelFile(const std::string &modelFilePath, int numModes)
+{
+	int rv;
+
+	ResetModel();
+
+	rv = AddModelFile(modelFilePath, numModes);
+
+	return rv;
+}
+
+int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
+{
+	//Load model from file having format:
+
+	//file_location Nvertices=nvertices Nmodes=nmodes
+	//Mode 0 : Mean Vertex Values
+	//mx my mz
+	//	...
+	//mx my mz
+
+	//Mode 1 : Vertex Displacements modeweight
+	//mx my mz
+	//	...
+	//mx my mz
+
+	//...
+
+	//Mode nmodes : Vertex Displacements modeweight
+	//mx my mz
+	//	...
+	//mx my mz
+	float f1, f2, f3;
+	unsigned int itemsRead;
+	std::string line;
+
+	unsigned int mOffset = meanShape.size();
+	unsigned int wOffset = modeWeight.size();
+
+	// open file
+	std::ifstream modelFile;
+	modelFile.open(modelFilePath.c_str());
+	if (!modelFile.is_open())
+	{
+		std::cout << "ERROR: failed to open model file" << std::endl;
+		return -1;
+	}
+
+	// read modes
+	char fileLocation[100];
+	unsigned int numVertices, numModes, modeNum;
+	float modeWt;
+	std::getline(modelFile, line);
+	itemsRead = std::sscanf(line.c_str(), "%s Nvertices= %u Nmodes= %u", fileLocation, &numVertices, &numModes);
+	if (itemsRead != 3)
+	{
+		std::cout << "ERROR: expected header at line: " << line << std::endl;
+		return -1;
+	}
+	std::cout << "Number of vertices = " << numVertices << ", Number of modes = " << numModes << std::endl;
+
+	unsigned int modeCount = 0;
+	while (modelFile.good() && modeCount < modes)
+	{
+		unsigned int vertCount = 0;
+		modeWeight.resize(wOffset + modes - 1);
+		std::getline(modelFile, line);
+		if (modeCount < 1)
+		{
+			itemsRead = std::sscanf(line.c_str(), "Mode %u :Mean Vertex Values", &modeNum);
+			if (itemsRead != 1)
+			{
+				std::cout << "ERROR: expected header at line: " << line << std::endl;
+				return -1;
+			}
+			std::cout << "Mode : " << modeNum << std::endl;
+		}
+		else
+		{
+			itemsRead = std::sscanf(line.c_str(), "Mode %u :Vertex Displacements %f", &modeNum, &modeWt);
+			modeWeight[modeCount - 1] = modeWt;
+			if (itemsRead != 2)
+			{
+				std::cout << "ERROR: expected header at line: " << line << std::endl;
+				return -1;
+			}
+			std::cout << "Mode : " << modeNum << " Mode weight : " << modeWeight[modeCount - 1] << std::endl;
+		}
+
+		vct3 m, w;
+		meanShape.resize(mOffset + numVertices);
+		mode.resize(mOffset + numVertices);
+		wi.resize(mOffset + numVertices);
+		Si.resize(mOffset + numVertices);
+
+		while (vertCount < numVertices)
+		{
+			std::getline(modelFile, line); 
+			itemsRead = std::sscanf(line.c_str(), "%f , %f , %f", &f1, &f2, &f3); 
+			if (itemsRead != 3)
+			{
+				std::cout << "ERROR: expected a point value at line: " << line << std::endl;
+				return -1;
+			}
+			m[0] = f1;
+			m[1] = f2;
+			m[2] = f3;
+			if (modeCount < 1)
+				meanShape.at(mOffset + vertCount).Assign(m);
+			else
+			{
+				mode.at(mOffset + vertCount).Assign(m);
+
+				// wi = sqrt(lambda_i*mi)
+				w[0] = f1*sqrt(modeWt);
+				w[1] = f2*sqrt(modeWt);
+				w[2] = f3*sqrt(modeWt);
+				/*if (vertCount == 50) {
+					std::cout << w[0] << " = sqrt( " << f1 << " * " << modeWt << ")" << std::endl;
+					std::cout << w[1] << " = sqrt( " << f2 << " * " << modeWt << ")" << std::endl;
+					std::cout << w[2] << " = sqrt( " << f3 << " * " << modeWt << ")" << std::endl;
+				}*/
+				wi.at(mOffset + vertCount).Assign(w);
+			}
+			vertCount++;
+		}
+		//std::cout << "In cisstMesh: " << wi.Element(50);
+		if (modelFile.bad() || modelFile.fail() || vertCount != numVertices)
+		{
+			std::cout << "ERROR: read points from model file failed; last line read: " << line << std::endl;
+			return -1;
+		}
+		// si = wi*(V-meanV)
+		if (modeCount > 0)
+			Si = wi*(vertices - meanShape);
+		modeCount++;
+	}
+	if (modelFile.bad() || modelFile.fail() || modeCount != modes)
+	{
+		std::cout << "ERROR: read points from model file failed; last line read: " << line << std::endl;
+		return -1;
+	}
+	return 1;
 }

@@ -45,15 +45,35 @@ public:
 
   vctDynamicVector<vct2> points;
 
+  // optional point cloud properties
+  vctDynamicVector<vct2> pointOrientations;
+
+  // point cloud noise model
+  vctDynamicVector<vct2x2>  pointCov;       // covariance of measurement noise
+  vctDynamicVector<vct2>    pointCovEig;    // eigenvalues of covariance
+  
+  //--- Methods ---//
+
+  // constructors
+  cisstPointCloud2D() {};
+
   cisstPointCloud2D( vctDynamicVector<vct2> &points) :
     points(points)
   {};
+
+  cisstPointCloud2D(
+	  vctDynamicVector<vct2> &points,
+	  vctDynamicVector<vct2> &pointOrientations);
 
 
   // Point Set I/O
   static int WritePointCloudToFile(vctDynamicVector<vct2> &points, std::string &filePath);
   static int ReadPointCloudFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
   static int AppendPointCloudFromFile(vctDynamicVector<vct2> &points, std::string &filePath);
+
+  static int WritePointCloudToFile(vctDynamicVector<vct2> &points, vctDynamicVector<vct2> &orientaitons, std::string &filePath);
+  static int ReadPointCloudFromFile(vctDynamicVector<vct2> &points, vctDynamicVector<vct2> &orientaitons, std::string &filePath);
+  static int AppendPointCloudFromFile(vctDynamicVector<vct2> &points, vctDynamicVector<vct2> &orientaitons, std::string &filePath);
 
   int WritePointCloudToFile(std::string &filePath)
   {

@@ -46,7 +46,7 @@ public:
 
   //--- Variables ---//
 
-	vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
+  vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
   vctDynamicVector<vctInt3>   faces;          // the vertex indices for each triangle in the mesh
   vctDynamicVector<vct3>      faceNormals;    // the face normal for each triangle in the mesh
 
@@ -54,6 +54,13 @@ public:
   vctDynamicVector<vct3>      vertexNormals;  // a normal orientation associated with each vertex  
   vctDynamicVector<vctInt3>   faceNeighbors;  // the face indices for the neighbors of each triangle
                                               //  in the mesh
+
+  vctDynamicVector<vct3>	meanShape;			// the coordinates for each vertex in the mean mesh
+  vctDynamicVector<vct3>	mode;				// the modes per vertex 
+  vctDynamicVector<double>	modeWeight;			// weights per mode
+
+  vctDynamicVector<vct3>	wi;
+  vctDynamicVector<vct3>	Si;					// shape parameter
 
   // mesh noise model
   //  NOTE: if used, this must be set manually by the user AFTER loading the mesh file
@@ -77,6 +84,7 @@ public:
   //  ensures that unused properties are emptied rather than left with
   //  possibly invalid values
   void ResetMesh();
+  void ResetModel();
 
   inline int NumVertices() const { return vertices.size(); }
   inline int NumTriangles() const { return faces.size(); }
@@ -132,7 +140,9 @@ public:
     const vctDynamicVector<vct3> &N);
 
   // Build new mesh from a single .mesh file
-  int  LoadMeshFile( const std::string &meshFilePath );
+  int  LoadMeshFile(const std::string &meshFilePath);
+
+  int  LoadModelFile(const std::string &modelFilePath, int numModes);
 
   // Build new mesh from multiple .mesh files
   int  LoadMeshFileMultiple( const std::vector<std::string> &meshFilePaths ); 
@@ -147,7 +157,9 @@ private:
 
   // Load .mesh file, adding it to the current mesh while preserving all
   //  data currently existing in the mesh
-  int  AddMeshFile(const std::string &meshFilePath);
+	int  AddMeshFile(const std::string &meshFilePath);
+
+	int  AddModelFile(const std::string &modelFilePath, int numModes);
 
 public:
 

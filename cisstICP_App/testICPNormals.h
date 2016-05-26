@@ -99,7 +99,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   //int    nThresh = 5;       // Cov Tree Params
   //double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "..//test_data//";
+  std::string workingDir = "../../..//test_data//";
   std::string outputDir = "LastRun//";
 
   std::string saveSourceMeshPath = workingDir + outputDir + "SaveMeshSource";

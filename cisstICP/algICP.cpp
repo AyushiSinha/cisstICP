@@ -174,7 +174,6 @@ void algICP::ICP_ComputeMatches()
   numInvalidDatums = 0;
   numValidDatums = 0;
 #endif
-
   unsigned int nodesSearched = 0;
 
   minNodesSearched = std::numeric_limits<unsigned int>::max();

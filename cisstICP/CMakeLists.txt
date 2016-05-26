@@ -260,6 +260,10 @@ IF (cisst_FOUND_AS_REQUIRED)
       algDirICP_PIMLOP_Mesh.h
       algDirICP_PIMLOP_dlibWrapper.cpp
       algDirICP_PIMLOP_dlibWrapper.h
+      algICP_DIMLP.cpp
+      algICP_DIMLP.h
+      algICP_DIMLP_dlibWrapper.cpp
+      algICP_DIMLP_dlibWrapper.h
       )
   
     # GIMLOP also requires Numerical Recipes (for 1D Brent Search)

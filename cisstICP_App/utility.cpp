@@ -1398,6 +1398,12 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   }
 }
 
+void ReadShapeModel(cisstMesh &mesh, const std::string &modelLoadPath, int numModes)
+{
+	mesh.LoadModelFile(modelLoadPath, numModes);
+}
+
+
 #if 0   // TODO: code needs to be updated for changes to library
 
 // Generate noise having different variance perpendicular to its mesh

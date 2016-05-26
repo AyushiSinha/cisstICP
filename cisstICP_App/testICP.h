@@ -8,6 +8,7 @@
 #include <limits.h>
 
 #include "utility.h"
+#include "camera.h"
 #include "cisstICP.h"
 #include "cisstMesh.h"
 #include "cisstPointCloud.h"
@@ -16,11 +17,13 @@
 
 #include "algICP_StdICP_Mesh.h"
 #include "algICP_IMLP_Mesh.h"
+#include "algICP_DIMLP.h"
+#include "algDirICP_VIMLOP.h"
 
 #include "algICP_StdICP_PointCloud.h"
 #include "algICP_IMLP_PointCloud.h"
 
-enum ICPAlgType { AlgType_StdICP, AlgType_IMLP };
+enum ICPAlgType { AlgType_StdICP, AlgType_IMLP, AlgType_DIMLP , AlgType_VIMLOP};
 
 void Callback_TrackRegPath_testICP( cisstICP::CallbackArg &arg, void *userData )
 {
@@ -62,8 +65,36 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   int    nThresh = 5;       // Cov Tree Params
   double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "../test_data/";
-  std::string outputDir =  "LastRun/";
+  std::string workingDir = "../../../test_data/";
+  std::string outputDir;
+  switch (algType)
+  {
+  case AlgType_StdICP:
+  {
+	  outputDir = "LastRun_StdICP/";
+	  break;
+  }
+  case AlgType_IMLP:
+  {
+	  outputDir = "LastRun_IMLP/";
+	  break;
+  }
+  case AlgType_DIMLP:
+  {
+	  outputDir = "LastRun_DIMLP/";
+	  break;
+  }
+  case AlgType_VIMLOP:
+  {
+	  outputDir = "LastRun_VIMLOP/";
+	  break;
+  }
+  default:
+  {
+	  std::cout << "ERROR: unknown algorithm type" << std::endl;
+	  assert(0);
+  }
+  }
 
   std::string saveMeshPath =          workingDir + outputDir + "SaveMesh";
   std::string saveSamplesPath =       workingDir + outputDir + "SaveSamples.pts";
@@ -84,11 +115,19 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   vctDynamicVector<vct3x3>  sampleNoiseInvCov;
   vctDynamicVector<vct3x2>  sampleNoiseL;
 
+  vctDynamicVector<vct2> noisySamples2d;
+  vctDynamicVector<vct2> noisyNorms2d;
+  vctDynamicVector<vct2x2>  sampleNoiseCov2d;
+  vctDynamicVector<vct2x2>  normNoiseCov2d;
+
 #if 1
 
-  std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  std::string loadMeshPath = workingDir + "Warped_MT_recentered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
+
+  std::string loadModelPath = workingDir + "atlas_mt.txt";
 
   const int nSamples = 100;
 
@@ -194,6 +233,14 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
                            Fi );
   // save initial offset
   transform_write(Fi, saveOffsetXfmPath);
+
+  ReadShapeModel(mesh, loadModelPath, 2);
+
+
+  noisySamples2d.SetSize(1);
+  noisyNorms2d.SetSize(1);
+  sampleNoiseCov2d.SetSize(1);
+  normNoiseCov2d.SetSize(1);
 
 #else
   // Replay Randomized Trial
@@ -309,7 +356,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
       { // target shape is a point cloud
         PDTree_PointCloud *pTreePointCloud = dynamic_cast<PDTree_PointCloud*>(pTree);
         algICP_IMLP_PointCloud *pAlg;
-        pAlg = new algICP_IMLP_PointCloud(pTreePointCloud, noisySamples, sampleNoiseCov, sampleNoiseCov);
+		pAlg = new algICP_IMLP_PointCloud(pTreePointCloud, noisySamples, sampleNoiseCov, sampleNoiseCov);
         // set sample noise model
         //pAlg->SetSampleCovariances( sampleNoiseCov );
         pICPAlg = pAlg;
@@ -318,6 +365,35 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
       }
       break;
     }
+  case AlgType_DIMLP:
+  {
+	  PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+	  algICP_DIMLP *pAlg;
+	  pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, mesh.mode, mesh.modeWeight);
+
+	  mesh.TriangleCov.SetSize(mesh.NumTriangles());
+	  mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
+	  mesh.TriangleCov.SetAll(vct3x3(0.0));
+	  pTreeMesh->ComputeNodeNoiseModels();
+	  pICPAlg = pAlg;
+
+	  break;
+  }
+  case AlgType_VIMLOP:
+  {
+	  PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+	  camera cam(500, 500, 1, 1, 0, 0);
+	  algDirICP_VIMLOP *pAlg;
+	  pAlg = new algDirICP_VIMLOP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, noisySamples2d, noisyNorms2d, sampleNoiseCov2d, normNoiseCov2d, cam);
+
+	  mesh.TriangleCov.SetSize(mesh.NumTriangles());
+	  mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
+	  mesh.TriangleCov.SetAll(vct3x3(0.0));
+	  pTreeMesh->ComputeNodeNoiseModels();
+	  pICPAlg = pAlg;
+
+	  break;
+  }
   default:
     {
       std::cout << "ERROR: unknown algorithm type" << std::endl;

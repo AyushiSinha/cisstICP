@@ -170,6 +170,44 @@ vct3x3 ComputePointCovariance(const vct3 &norm, double normPrllVar, double normP
   return M;
 }
 
+// delete this, and use utitlites2D
+void ComputeCovEigenDecomposition_NonIter(const vct2x2 &M, vct2 &eigenValues, vct2x2 &eigenVectors)
+{
+#ifdef REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+
+	// redirect to non-iterative SVD routine
+	ComputeCovEigenDecomposition_SVD(M, eigenValues, eigenVectors);
+
+#else
+	// Calls the non-iterative eigen solver of the WildMagic5 library
+	// 
+	// eigen values in descending order
+	// eigen vectors listed by column   (has determinant = 1)
+	//
+
+	bool rowMajor = 1;
+	Wm5::Matrix3<double> A(M.Pointer(0, 0), rowMajor);
+
+	Wm5::NoniterativeEigen3x3<double> solver(A);
+
+	//  change order from ascending to descending
+	eigenValues.Assign(
+		solver.GetEigenvalue(1),
+		solver.GetEigenvalue(0));
+	eigenVectors.Column(0).Assign(solver.GetEigenvector(2));
+	eigenVectors.Column(1).Assign(solver.GetEigenvector(1));
+
+	// check that eigen vector matrix is a proper rotation matrix
+	//  NOTE: this is probably not important, but a nice property to have
+	double det =
+		solver.GetEigenvector(1).Dot(solver.GetEigenvector(0)); // .Cross(solver.GetEigenvector(0)));
+	if (det < 0.0)
+	{
+		eigenVectors.Column(1).Multiply(-1.0);
+	}
+#endif // REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+}
+
 void ComputeCovEigenDecomposition_NonIter(const vct3x3 &M, vct3 &eigenValues, vct3x3 &eigenVectors)
 {
 #ifdef REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD

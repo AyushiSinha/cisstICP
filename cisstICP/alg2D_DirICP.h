@@ -150,7 +150,7 @@ public:
   virtual void    ICP_ComputeMatches();
   virtual unsigned int ICP_FilterMatches();   // handle outliers
 
-  virtual vctFrm2 ICP_RegisterMatches() = 0;
+  virtual vctFrm3 ICP_RegisterMatches() = 0;				// vctFrm2 changed to vctFrm3 with homogeneous coordinates
   virtual double  ICP_EvaluateErrorFunction() = 0;
 
   //virtual std::vector<cisstICP::Callback> ICP_GetIterationCallbacks();

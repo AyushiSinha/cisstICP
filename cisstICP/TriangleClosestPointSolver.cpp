@@ -421,5 +421,5 @@ void TriangleClosestPointSolver::FindMostLikelyPointOnTriangle(
     point,
     v1, v2, v3,
     N, Ninv,
-    closestPoint);
+	closestPoint);
 }

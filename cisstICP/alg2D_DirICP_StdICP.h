@@ -104,7 +104,7 @@ public:
   //--- ICP Interface Methods ---//
 
   void          ICP_InitializeParameters(vctFrm2 &FGuess);
-  vctFrm2       ICP_RegisterMatches();
+  vctFrm3       ICP_RegisterMatches();
   double        ICP_EvaluateErrorFunction();
   unsigned int  ICP_FilterMatches();
 

@@ -55,6 +55,7 @@ void ComputeCovEigenValues_Trig(const vct3x3 &M, vct3 &eigenValues);
 
 //  eigen values in descending order
 //  eigen vectors listed by column and has determinant = 1 (i.e. a rotation matrix)
+void ComputeCovEigenDecomposition_NonIter(const vct2x2 &M, vct2 &eigenValues, vct2x2 &eigenVectors);
 void ComputeCovEigenDecomposition_NonIter(const vct3x3 &M, vct3 &eigenValues, vct3x3 &eigenVectors);
 
 //  eigen values in descending order

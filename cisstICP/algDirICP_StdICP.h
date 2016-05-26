@@ -122,7 +122,7 @@ public:
   //--- ICP Interface Methods ---//
 
   void          ICP_InitializeParameters(vctFrm3 &FGuess);
-  vctFrm3       ICP_RegisterMatches();
+  vctFrm3       ICP_RegisterMatches();					// vctFrm2 changed to vctFrm3 with homogeneous coordinates
   double        ICP_EvaluateErrorFunction();
   unsigned int  ICP_FilterMatches();
 

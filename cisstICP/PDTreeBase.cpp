@@ -100,11 +100,11 @@ int PDTreeBase::FindClosestDatum(
     int ClosestMore = -1;
     ClosestLEq = Top->pLEq->FindClosestDatum(v, closestPoint, matchError, numNodesVisited, numNodesSearched);
     ClosestMore = Top->pMore->FindClosestDatum(v, closestPoint, matchError, numNodesVisited, numNodesSearched);
-    datum = (ClosestMore < 0) ? ClosestLEq : ClosestMore;
+	datum = (ClosestMore < 0) ? ClosestLEq : ClosestMore;
   }
   else
   {
-    datum = Top->FindClosestDatum(v, closestPoint, matchError, numNodesVisited, numNodesSearched);
+	  datum = Top->FindClosestDatum(v, closestPoint, matchError, numNodesVisited, numNodesSearched);
   }
   if (datum < 0)
   {

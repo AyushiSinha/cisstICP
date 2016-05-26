@@ -51,17 +51,19 @@ int main(void)
 
   bool TargetShapeAsMesh = true;
   ICPAlgType algType;
-  algType = AlgType_StdICP;
+  //algType = AlgType_StdICP;
   //algType = AlgType_IMLP;
+  //algType = AlgType_DIMLP;
+  algType = AlgType_VIMLOP;
   testICP(TargetShapeAsMesh, algType);
 
   TargetShapeAsMesh = true;
   ICPDirAlgType dirAlgType;
   //dirAlgType = DirAlgType_StdICP;
-  dirAlgType = DirAlgType_IMLOP;
+  //dirAlgType = DirAlgType_IMLOP;
   //dirAlgType = DirAlgType_GIMLOP;
   //dirAlgType = DirAlgType_PIMLOP;
-  testICPNormals(TargetShapeAsMesh, dirAlgType);
+  //testICPNormals(TargetShapeAsMesh, dirAlgType);
 
   return 0;
 }

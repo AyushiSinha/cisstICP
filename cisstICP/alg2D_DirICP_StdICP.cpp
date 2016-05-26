@@ -64,8 +64,9 @@ double alg2D_DirICP_StdICP::ICP_EvaluateErrorFunction()
   //return sqrt(SqrErr / nSamples);
 }
 
-vctFrm2 alg2D_DirICP_StdICP::ICP_RegisterMatches()
+vctFrm3 alg2D_DirICP_StdICP::ICP_RegisterMatches()
 {
+  // vctFrm2 changed to vctFrm3 with homogeneous coordinates
   CISST_THROW("Not Implemented");
 }
 
