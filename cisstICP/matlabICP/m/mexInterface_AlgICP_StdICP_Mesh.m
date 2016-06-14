@@ -24,7 +24,7 @@ classdef mexInterface_AlgICP_StdICP_Mesh < handle
     %   X     ~ source points     N x 3
     %   V     ~ target vertices   Nv x 3
     %   T,Tn  ~ target triangles and triangle normals   Nt x 3
-    function Initialize(this, X, V,T,Tn)
+    function Initialize(this, X, V,T)
       % convert triangles to C++ indexing (base-0) and to integer data type
       Tcpp = int32(T - ones(size(T)));
       % // Expected Input:
@@ -34,8 +34,7 @@ classdef mexInterface_AlgICP_StdICP_Mesh < handle
       % //  mesh
       % //    V ~ 3D vertex positions     (3 x Nv double)
       % //    T ~ triangle vertex indices (3 x Nt integer)
-      % //    N ~ triangle normals        (3 x Nt double)  
-      mexAlgICP_StdICP_Mesh('Initialize',this.h, X', V',Tcpp',Tn');  
+      mexAlgICP_StdICP_Mesh('Initialize',this.h, X', V',Tcpp');
     end
     
     %% Set Samples

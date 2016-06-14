@@ -148,6 +148,27 @@ void cisstMesh::SaveTriangleCovariances(std::string &filePath)
   }
 }
 
+int  cisstMesh::LoadMesh(
+  const vctDynamicVector<vct3> &V,
+  const vctDynamicVector<vctInt3> &T)
+{
+  ResetMesh();
+
+  if (V.size() < 1 || T.size() < 1)
+  {
+    std::cout << "ERROR: invalid input" << std::endl;
+    assert(0);
+  }
+
+  vertices = V;
+  faces = T;
+  ComputeFaceNormalsFromVertices();
+
+  InitializeNoiseModel();
+
+  return 0;
+}
+
 int cisstMesh::LoadMesh(
   const vctDynamicVector<vct3> &V,
   const vctDynamicVector<vctInt3> &T,
@@ -167,8 +188,6 @@ int cisstMesh::LoadMesh(
 
   InitializeNoiseModel();
 
-  //std::cout << " Mesh Build Complete (Points: " << vertices.size()
-  //  << ", Triangles: " << faces.size() << ")" << std::endl;
   return 0;
 }
 
@@ -579,6 +598,31 @@ int cisstMesh::LoadMeshFromSTLFile(const std::string &stlFilePath)
 
   return 0;
 }
+
+void cisstMesh::ComputeFaceNormalsFromVertices()
+{
+  int nFaces = faces.size();
+  faceNormals.SetSize(nFaces);
+  vct3 n, v1, v2, v3;
+
+  for (int i = 0; i < nFaces; i++)
+  {
+    // compute face normal by right-hand rule
+    v1 = vertices(faces(i)[0]);
+    v2 = vertices(faces(i)[1]);
+    v3 = vertices(faces(i)[2]);
+    n = vctCrossProduct(v2 - v1, v3 - v1);
+    if (n.Norm() < 1e-12) {
+      std::cout << "ERROR: the computed face normal vector is extremely small; setting normal to all zeros" << std::endl;
+      n.SetAll(0.0);
+    }
+    else {
+      n.NormalizedSelf();
+    }
+    faceNormals(i) = n;
+  }
+}
+
 
 
 //--- Legacy I/O ---//
