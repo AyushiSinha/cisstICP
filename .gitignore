@@ -3,3 +3,4 @@
 
 # build directories
 *_build/
+*_build_debug/
