@@ -72,6 +72,8 @@ public:
     searchLambdas.SetSize(pDirTree->EdgeList.numEdges);
   }
 
+  // destructor
+  virtual ~alg2D_DirPDTree_CP_Edges() {}
 
   //--- PD Tree Interface Methods ---//
 

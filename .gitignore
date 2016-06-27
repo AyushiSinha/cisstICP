@@ -1,0 +1,5 @@
+# this file
+#.gitignore
+
+# build directories
+*_build/

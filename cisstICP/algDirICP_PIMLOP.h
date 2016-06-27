@@ -123,6 +123,9 @@ public:
     const vctDynamicVector<double> &sample_k,
     const vctDynamicVector<vct3x3> &sample_M);
 
+  // destructor
+  virtual ~algDirICP_PIMLOP() {}
+
   void SetSamples(
     const vctDynamicVector<vct3> &samplePts,
     const vctDynamicVector<vct2> &sampleNorms2d,

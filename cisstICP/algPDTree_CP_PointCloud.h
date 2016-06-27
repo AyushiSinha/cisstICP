@@ -54,6 +54,9 @@ public:
     pTree(pTree)
   {};
 
+  // destructor
+  virtual ~algPDTree_CP_PointCloud() {}
+
 
   // finds the point on this datum with lowest match error
   //  and returns the match error and closest point

@@ -59,7 +59,7 @@ public:
   {}
 
   // destructor
-  ~algICP_StdICP_PointCloud() {}
+  virtual ~algICP_StdICP_PointCloud() {}
 
 };
 

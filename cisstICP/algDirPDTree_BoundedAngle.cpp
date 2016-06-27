@@ -52,11 +52,16 @@ int algDirPDTree_BoundedAngle::NodeMightBeCloser(
 
   // --- Compute Lower Bound on Orientation Error --- //
 
-  double dThetaAvg = acos(Xn.DotProduct(node->Navg));
-  if (dThetaAvg > node->dThetaMax + maxMatchAngle)
+  double cos_dThetaAvg = Xn.DotProduct(node->Navg);
+  if (cos_dThetaAvg < cos(node->dThetaMax + maxMatchAngle))
   { // all orientations in this node exceed the maximum angular match error
     return 0;
   }
+  //double dThetaAvg = acos(Xn.DotProduct(node->Navg));
+  //if (dThetaAvg > node->dThetaMax + maxMatchAngle)
+  //{ // all orientations in this node exceed the maximum angular match error
+  //  return 0;
+  //}
 
   // --- Positional Node Distance Test --- //
 

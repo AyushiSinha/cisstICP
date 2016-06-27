@@ -64,7 +64,7 @@ public:
   {}
  
   // destructor
-  ~algDirICP_PIMLOP_Mesh() {}
+  virtual ~algDirICP_PIMLOP_Mesh() {}
 
 
   // standard ICP algorithm virtual methods

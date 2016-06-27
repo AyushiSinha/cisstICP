@@ -67,7 +67,7 @@ public:
     double diagThresh);
 
   // destructor
-  ~PDTree_PointCloud();
+  virtual ~PDTree_PointCloud();
 
   void SavePointCloud(std::string &file) 
   { 

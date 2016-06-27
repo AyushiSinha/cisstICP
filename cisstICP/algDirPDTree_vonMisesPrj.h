@@ -91,6 +91,9 @@ public:
     : algDirPDTree(pDirTree)
   {}
 
+  // destructor
+  virtual ~algDirPDTree_vonMisesPrj() {}
+
   // Set sample to be matched in the search (slower routine)
   //  Xpln       ~ non-transformed in-plane (2d) sample orientation
   //  Rx_pln     ~ transformation from plane to y coordinates:  Xn = Rx_pln * [Xpln; 0]

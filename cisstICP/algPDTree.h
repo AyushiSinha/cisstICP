@@ -61,6 +61,9 @@ public:
   // constructor
   algPDTree(PDTreeBase *pTree);
 
+  // destructor
+  virtual ~algPDTree() {}
+
 
   //--- PD Tree Interface Methods ---//
 

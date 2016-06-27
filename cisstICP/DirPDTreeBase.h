@@ -99,7 +99,8 @@ public:
 #endif
   };
 
-  ~DirPDTreeBase(){};
+  // destructor
+  virtual ~DirPDTreeBase() {}
 
   int FastInitializeProximalDatum(
     const vct3 &v, const vct3 &n, vct3 &proxPoint, vct3 &proxNorm);

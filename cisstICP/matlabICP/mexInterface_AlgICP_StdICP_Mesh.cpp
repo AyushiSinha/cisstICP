@@ -189,7 +189,6 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
   //  mesh
   //    V ~ 3D vertex positions     (3 x Nv double)
   //    T ~ triangle vertex indices (3 x Nt integer)
-  //    N ~ triangle normals        (3 x Nt double)
   //  
 
   // Get the class instance from the second input
@@ -197,9 +196,9 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
     *convertMat2Ptr<mexInterface_AlgICP_StdICP_Mesh>(prhs[1]);
 
   // Check parameters
-  if (nlhs != 0 || nrhs != 6 )
+  if (nlhs != 0 || nrhs != 5 )
   {
-    MEX_ERROR("Initialize: requires 0 outputs, 6 inputs.");
+    MEX_ERROR("Initialize: requires 0 outputs, 5 inputs.");
   }
 
 
@@ -214,29 +213,14 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
   {
     Parse3DVectorArray_Double(prhs[2], samplePts);
   }
-  //if (nrhs == 7)
-  //{
-  //  MEX_DEBUG(" ...SampleNorms\n");
-  //  Parse3DVectorArray_Double(prhs[6], sampleNorms);
-  //}
-  //else
-  //{
-  //  // dummy sample norms
-  //  sampleNorms.SetSize(samplePts.size());
-  //  sampleNorms.SetAll(vct3(0.0, 0.0, 0.0));
-  //}
-
 
   // Parse Mesh  
   vctDynamicVector<vct3> V;
   vctDynamicVector<vctInt3> T;
-  vctDynamicVector<vct3> N;
   MEX_DEBUG(" ...V\n");
   Parse3DVectorArray_Double(prhs[3], V);
   MEX_DEBUG(" ...T\n");
   Parse3DVectorArray_Int(prhs[4], T);
-  MEX_DEBUG(" ...N\n");
-  Parse3DVectorArray_Double(prhs[5], N);
 
   //// Parse Transform
   //vctFrm3 F0;
@@ -248,7 +232,7 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
   // build mesh
   MEX_DEBUG("Building mesh...\n");
   cisstMesh *pMesh = new cisstMesh();
-  pMesh->LoadMesh(V, T, N);
+  pMesh->LoadMesh(V, T);
   if (pMesh->NumVertices() == 0)
   {
     MEX_ERROR("ERROR: Build mesh failed\n");

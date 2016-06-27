@@ -67,6 +67,8 @@ public:
       TCPS(pDirTree->mesh)
   {}
 
+  // destructor
+  virtual ~algDirICP_StdICP_Mesh() {}
 
   //--- PD Tree Methods ---//
 

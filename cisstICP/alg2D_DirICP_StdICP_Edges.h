@@ -78,6 +78,9 @@ public:
     //searchLambdas.SetSize(pDirTree->EdgeList.numEdges);
   }
 
+  // destructor
+  virtual ~alg2D_DirICP_StdICP_Edges() {}
+
   void SetSamples(
     vctDynamicVector<vct2> &samplePts,
     vctDynamicVector<vct2> &sampleNorms)
@@ -87,21 +90,8 @@ public:
     matchLambdas.SetSize(samplePts.size());
   }
 
+  void  SamplePreMatch(unsigned int sampleIndex) {}
+  void  SamplePostMatch(unsigned int sampleIndex);
 
-  virtual void  SamplePreMatch(unsigned int sampleIndex) {}
-  virtual void  SamplePostMatch(unsigned int sampleIndex);
-
-
-  ////--- PD Tree Methods ---//
-
-  //double FindClosestPointOnDatum(
-  //  const vct2 &v, const vct2 &n,
-  //  vct2 &closest, vct2 &closestNorm,
-  //  int datum);
-
-  //int DatumMightBeCloser(
-  //  const vct2 &v, const vct2 &n,
-  //  int datum,
-  //  double ErrorBound);
 };
 #endif

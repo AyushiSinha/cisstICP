@@ -37,8 +37,7 @@
 #include "alg2D_DirICP.h"
 #include "DirPDTree2DBase.h"
 
-class alg2D_DirICP_StdICP 
-  : public alg2D_DirICP  //, public alg2D_DirPDTree
+class alg2D_DirICP_StdICP : public alg2D_DirICP  //, public alg2D_DirPDTree
 {
   //
   // This is a base class for the standard ICP algorithm
@@ -87,6 +86,9 @@ public:
     SetSamples(samplePts, sampleNorms);
   };
 
+  // destructor
+  virtual ~alg2D_DirICP_StdICP() {}
+
   void SetSamples(
     vctDynamicVector<vct2> &samplePts,
     vctDynamicVector<vct2> &sampleNorms)
@@ -113,22 +115,5 @@ public:
   //void  ICP_ComputeMatches();
   //std::vector<cisstICP::Callback> ICP_GetIterationCallbacks();
 
-
-  ////--- PD Tree Interface Methods ---//
-
-  //int  NodeMightBeCloser(
-  //  const vct2 &v, const vct2 &n,
-  //  DirPDTree2DNode const *node,
-  //  double ErrorBound);
-
-  //virtual double FindClosestPointOnDatum(
-  //  const vct2 &v, const vct2 &n,
-  //  vct2 &closest, vct2 &closestNorm,
-  //  int datum) = 0;
-
-  //virtual int DatumMightBeCloser(
-  //  const vct2 &v, const vct2 &n,
-  //  int datum,
-  //  double ErrorBound) = 0;
 };
 #endif

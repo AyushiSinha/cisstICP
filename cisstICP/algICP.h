@@ -123,6 +123,9 @@ public:
   // constructor
   algICP(PDTreeBase *pTree, const vctDynamicVector<vct3> &samplePts);
 
+  // destructor
+  virtual ~algICP() {}
+
   virtual void  SetSamples(const vctDynamicVector<vct3> &argSamplePts);
 
   virtual void ComputeMatchStatistics(double &Avg, double &StdDev);

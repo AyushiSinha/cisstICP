@@ -63,6 +63,9 @@ public:
     cos_maxMatchAngle(cos(maxMatchAngle))
   {}
 
+  // destructor
+  virtual ~algDirPDTree_BoundedAngle() {}
+
 
   //--- PD Tree Interface Methods ---//
 

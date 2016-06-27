@@ -14,7 +14,6 @@ properties
   V;   % vertices            Nv x 3
   % mesh target only:
   T;   % triangle faces (vertex indices)         Nt x 3
-  Tn;  % triangle normals                        Nt x 3
   
   % outliers
   outliers; % logical array of outliers
@@ -37,12 +36,12 @@ methods
   
   %% Initialize Algorithm
   % V       ~ target vertices     Nv x 3
-  % T,Tn    ~ target triangles and triangle normals (for mesh target only)  Nt x 3
+  % T       ~ target triangles (for mesh target only)  Nt x 3
   % X       ~ source points       N x 3  
   % flags
   %   bEnableDebug    ~ enable debug messages
   %   bTargetAsMesh   ~ set point cloud or mesh target
-  function Initialize( this, V,T,Tn, X, flags )
+  function Initialize( this, V,T, X, flags )
     
     % initialize superclass
     Initialize@algICP( this );
@@ -76,10 +75,8 @@ methods
     this.V = V;
     if (this.bTargetAsMesh)
       this.T = T;
-      this.Tn = Tn;
     else
       this.T = [];
-      this.Tn = [];
     end
     
     % Mex objects
@@ -89,7 +86,7 @@ methods
       utlDebugMsg( this.bEnableDebug,' ...done\n');
       
       utlDebugMsg( this.bEnableDebug,'Initializing mexAlgStdICP...\n')
-      this.mexAlgStdICP.Initialize( this.X, this.V,this.T,this.Tn );
+      this.mexAlgStdICP.Initialize( this.X, this.V, this.T );
       utlDebugMsg( this.bEnableDebug,' ...done\n');
     else
       error('mex library not yet supported: mexAlgStdICP_PointCloud');

@@ -109,7 +109,7 @@ public:
 #endif
   };
 
-  ~DirPDTree2DBase(){};
+  virtual ~DirPDTree2DBase() {}
 
   void SetSearchAlgorithm(alg2D_DirPDTree *alg)
   {

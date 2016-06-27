@@ -72,6 +72,9 @@ public:
 	TCPS(*(pTree->MeshP))
   {};
 
+  // destructor
+  virtual ~algICP_IMLP_Mesh() {}
+
 
   //-- PD Tree Methods --//
 

@@ -167,6 +167,9 @@ public:
     const vctDynamicVector<vct3x3> &M,
     PARAM_EST_TYPE paramEst = PARAMS_FIXED);
 
+  // destructor
+  virtual ~algDirICP_GIMLOP() {}
+
   // dlib routines
   void    UpdateOptimizerCalculations(const vct6 &x);
   void    CostFunctionGradient(const vct6 &x, vct6 &g);

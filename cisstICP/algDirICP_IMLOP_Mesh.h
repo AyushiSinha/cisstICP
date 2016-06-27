@@ -72,6 +72,9 @@ public:
       TCPS(pDirTree->mesh)
   {}
 
+  // destructor
+  virtual ~algDirICP_IMLOP_Mesh() {}
+
 
   //--- PD Tree Interface Methods ---//
 

@@ -48,7 +48,7 @@
 #endif
 
 // uncomment this define if not using the WildMagic5 library
-//#define REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
+#define REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
 
 #ifndef REDIRECT_COV_EIGENDECOMP_NONITER_TO_SVD
   #include "Wm5NoniterativeEigen3x3.h"  // WildMagic5

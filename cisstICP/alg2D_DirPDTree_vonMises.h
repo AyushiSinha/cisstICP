@@ -67,6 +67,9 @@ protected:
     k(k), sigma2(sigma2), dThetaMax(thetaMax), bPermittedMatchFound(false)
   {}
 
+  // destructor
+  virtual ~alg2D_DirPDTree_vonMises() {}
+
   //// Helper Methods
   //int FastInitializeProximalDatum(
   //  const vct2 &v, const vct2 &n,

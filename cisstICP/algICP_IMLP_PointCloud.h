@@ -68,6 +68,9 @@ public:
     pTree(pTree)
   {};
 
+  // destructor
+  virtual ~algICP_IMLP_PointCloud() {}
+
   //--- PD Tree Interface Methods ---//
 
   double  FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int datum);

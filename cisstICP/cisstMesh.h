@@ -122,6 +122,9 @@ public:
   { return vertices[faces[ti][vi]];
   }
 
+  // assumes vertex order follows right-hand rule with curl v1->v2->v3
+  void ComputeFaceNormalsFromVertices();
+
  // // set vertex coords for a given vertex index
  // //  Note: changing vertex coordinates changes the normal vectors
  // //        of all associated triangles
@@ -132,6 +135,13 @@ public:
 	//inline void SetVertexCoord(int vx, double x, double y, double z) {VertexCoordinates[vx].Assign(x,y,z);}
 
   // Mesh I/O
+
+  // Build mesh from an array of vertices and faces;
+  // face normals are computed from the vertex positions assuming
+  // vertex order follows the right-hand rule relative to the face normal
+  int  LoadMesh(
+    const vctDynamicVector<vct3> &V,
+    const vctDynamicVector<vctInt3> &T);
 
   // Build mesh from an array of vertices, faces, and face normals
   int  LoadMesh(
