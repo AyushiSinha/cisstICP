@@ -132,7 +132,7 @@ methods
       else
         x0 = zeros(6,1);
       end
-    end    
+    end   
     
     if ~this.bConstrainScale
       % compute new x to minimize the unconstrained cost function
@@ -150,6 +150,7 @@ methods
     end
     
     % convert result to matrix form F = [R,t]
+    %x(isnan(x)) = x0+((2*rand()-1)/1000);
     alpha = x(1:3);
     R = rodrigues2rot(x(1:3));
     t = x(4:6);
