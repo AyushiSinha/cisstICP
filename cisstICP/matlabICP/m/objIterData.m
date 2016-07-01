@@ -21,7 +21,9 @@ methods
   %% Methods
   function AddIterData( this, iter,fval,dRrod,dt,dAng,dPos )
     index = iter + 1;
-    this.fval(index,1) = fval;
+    if ~isempty(fval)
+      this.fval(index,1) = fval;
+    end
     this.dRrod(index,:) = dRrod;
     this.dt(index,:) = dt;
     this.dAng(index,1) = dAng;
