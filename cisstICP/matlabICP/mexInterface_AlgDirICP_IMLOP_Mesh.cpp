@@ -263,11 +263,10 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 
   MEX_DEBUG(" ...done\n");
 
-
   // build mesh
   MEX_DEBUG("Building mesh...\n");
   cisstMesh *pMesh = new cisstMesh();
-  pMesh->LoadMesh(V, T, N);
+  pMesh->LoadMesh(&V, &T, &N);
   if (pMesh->NumVertices() == 0)
   {
     MEX_ERROR("ERROR: Build mesh failed\n");
@@ -290,7 +289,8 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
   }
   double kfactor = 1.0;
   obj.pAlg = new algDirICP_IMLOP_Mesh(
-    pPDTree, samplePts, sampleNorms, kinit, sigma2_init, wRpos, kfactor, bDynamicParamEst);
+    pPDTree, samplePts, sampleNorms, 
+    kinit, sigma2_init, wRpos, kfactor, bDynamicParamEst);
 }
 
 // Set the algorithm samples

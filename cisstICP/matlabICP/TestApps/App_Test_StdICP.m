@@ -1,14 +1,13 @@
 clear, clc
 
 inputDir = '../../../test_data';
-
 meshPath = [inputDir,'/','ProximalFemur.ply'];
 
 % dependencies
 dep = {
-  '../../../matlabICP_build/Release'
-  '../m'
-  '../m/utilities'
+  '../../../matlabICP_build/Release'  % mex interface to cisstICP
+  '../m'            % matlab component of cisstICP
+  '../m/utilities'  % utilities for transformations, etc.
   };
 for i = 1:length(dep)
   addpath( dep{i} );
@@ -24,11 +23,11 @@ R = rotz(thetas(3))*roty(thetas(2))*rotx(thetas(1));
 t = rand(3,1)*5;
 Fi = getFrm3(R,t);
 
-% use mesh vertices as samples
-samps = applyFrm3( Fi, mesh.vertices );
-
 disp('Initial Offset')
 disp(Fi)
+
+% use mesh vertices as samples
+samps = applyFrm3( Fi, mesh.vertices );
 
 
 %--- Run ICP ---%
@@ -57,7 +56,7 @@ extras.XplotGT = mesh.vertices;
 disp('Freg')
 disp( Freg )
 
-% compute registraiton error
+% compute registration error
 dF = invFrm3(Fi)*invFrm3(Freg);
 [~,AngErr] = rot2AxisAngle(getRot(dF));
 PosErr = norm(getPos(dF));

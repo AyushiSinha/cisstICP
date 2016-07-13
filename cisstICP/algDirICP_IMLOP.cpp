@@ -611,8 +611,16 @@ void algDirICP_IMLOP::UpdateNoiseModel(double sumSqrDist, double sumNormProducts
   double R2 = R*R;
   if (dynamicParamEst)
   {
-    k = R*(3.0 - R2) / (1.0 - R2);        // approx for k
-    k = k > threshK ? threshK : k;  // perfect match threshold
+    // protect from division by zero
+    if (R2 >= 1.0)
+    {
+      k = threshK;  // set k to its max value
+    }
+    else
+    {
+      k = R*(3.0 - R2) / (1.0 - R2);  // approx for k
+      k = k > threshK ? threshK : k;  // perfect match threshold
+    }
 
     // reduce k by a factor
     k = k * k_factor;
@@ -680,11 +688,12 @@ double algDirICP_IMLOP::ComputeRpos()
 #endif
 
   double Rpos = dotProducts / nmlzTerm;
+  // 0 <= Rpos <= 1
   Rpos = Rpos < 0.0 ? 0.0 : Rpos;
+  Rpos = Rpos > 1.0 ? 1.0 : Rpos;
   //double posCircSD = sqrt(-2*log(Rpos));
   return Rpos;
 }
-
 
 
 // Below are various methods that were tried in an attempt to balance the k & B

@@ -11,12 +11,12 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
     
     %% Constructor - Create a new C++ class instance 
     function this = mexInterface_AlgDirICP_IMLOP_Mesh()
-      this.h = mexAlgDirICP_vMFG_Mesh('new');
+      this.h = mexAlgDirICP_IMLOP_Mesh('new');
     end
 
     %% Destructor - Destroy the C++ class instance
     function delete(this)
-      mexAlgDirICP_vMFG_Mesh('delete', this.h);
+      mexAlgDirICP_IMLOP_Mesh('delete', this.h);
     end
     
     %% Initialize Algorithm
@@ -46,7 +46,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % //  wRpos ~ positional weighting for k estimation   (double)    optional
       % //  bDynamicParamEst                                (bool)      optional
       % //
-      mexAlgDirICP_vMFG_Mesh('Initialize',this.h,...
+      mexAlgDirICP_IMLOP_Mesh('Initialize',this.h,...
         V',Tcpp',Tn',...
         Xp',Xn', sigma2_init,kinit,wRpos,bDynamicParamEst);
     end
@@ -70,7 +70,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % //  wRpos ~ positional weighting for k estimation   (double)
       % //  bDynamicParamEst                                (bool)
       % //
-      mexAlgDirICP_vMFG_Mesh('SetSamples',this.h,...
+      mexAlgDirICP_IMLOP_Mesh('SetSamples',this.h,...
         Xp',Xn', sigma2_init,kinit,wRpos,bDynamicParamEst);
     end
         
@@ -82,7 +82,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % //  cmd
       % //  class handle
       % //  Freg ~ [R,t]      (3 x 4 double)
-      mexAlgDirICP_vMFG_Mesh('ICP_InitializeParameters',this.h, F0(1:3,:));
+      mexAlgDirICP_IMLOP_Mesh('ICP_InitializeParameters',this.h, F0(1:3,:));
     end    
         
     %% ICP: Compute Matches
@@ -98,7 +98,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % // 
       % // Output:
       % //  SampleMatchPts ~ matches for 3D sample pts    (3 x numPts double)  [optional]      
-      [Yp, Yn] = mexAlgDirICP_vMFG_Mesh('ICP_ComputeMatches', this.h);
+      [Yp, Yn] = mexAlgDirICP_IMLOP_Mesh('ICP_ComputeMatches', this.h);
       Yp = Yp';
       Yn = Yn';
     end    
@@ -118,7 +118,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % //  sigma2    ~  updated variance of positional noise model
       % //  k         ~  updated concentration of orientation noise model  
       [Freg, sigma2, K] = ...
-        mexAlgDirICP_vMFG_Mesh('ICP_RegisterMatches', this.h);
+        mexAlgDirICP_IMLOP_Mesh('ICP_RegisterMatches', this.h);
       F = getFrm3(Freg(1:3,1:3),Freg(1:3,4));
     end        
 
@@ -130,7 +130,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % // Output:
       % //  fval  ~ value of error function (double)
       % //      
-      fval = mexAlgDirICP_vMFG_Mesh('ICP_EvaluateErrorFunction', this.h);
+      fval = mexAlgDirICP_IMLOP_Mesh('ICP_EvaluateErrorFunction', this.h);
     end
     
     function bTerminate = ICP_Terminate( this )
@@ -141,7 +141,7 @@ classdef mexInterface_AlgDirICP_IMLOP_Mesh < handle
       % // Output:
       % //  bTerminate  ~ boolean specifying algorithm-specific termination (logical scalar)
       % //
-      bTerminate = mexAlgDirICP_vMFG_Mesh('ICP_Terminate', this.h);
+      bTerminate = mexAlgDirICP_IMLOP_Mesh('ICP_Terminate', this.h);
     end
   end
 end

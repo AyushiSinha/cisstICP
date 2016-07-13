@@ -59,8 +59,9 @@ methods
   % bEnableDebug    ~ enable debug messages
   function Initialize( this, ...
     V,T,Tn, ...
-    Xp,Xn, sigma2_init,kinit,wRpos,bDynamicParamEst,...
-    bTargetAsMesh,bEnableDebug )
+    Xp,Xn, ...
+    sigma2_init, kinit, wRpos, bDynamicParamEst, ...
+    bTargetAsMesh, bEnableDebug )
     
     % initialize superclass
     Initialize@algICP( this );
@@ -180,7 +181,7 @@ methods
   end
   
   %% ICP: Initialize Registration
-  function ICP_InitializeParameters( this, F0 )
+  function ICP_InitializeParameters( this, F0, algPayload )
     
     % initial guess
     if ~exist('F0','var') || isempty(F0)

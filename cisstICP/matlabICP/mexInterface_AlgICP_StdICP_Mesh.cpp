@@ -232,7 +232,7 @@ void CommandInitialize(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
   // build mesh
   MEX_DEBUG("Building mesh...\n");
   cisstMesh *pMesh = new cisstMesh();
-  pMesh->LoadMesh(V, T);
+  pMesh->LoadMesh(&V, &T);
   if (pMesh->NumVertices() == 0)
   {
     MEX_ERROR("ERROR: Build mesh failed\n");

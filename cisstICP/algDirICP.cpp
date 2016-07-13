@@ -411,6 +411,13 @@ void algDirICP::ComputeCircErrorStatistics(double sumNormProducts, double &R, do
   //     where theta is the angle between matched vectors; i.e. theta = acos(dot(Ny,Nx))
   R = sumNormProducts / nSamples;
 
+  // R must be <= 1
+  if (R > 1.0)
+  {
+    std::cout << "WARNING: R > 1, thresholding R at 1" << std::endl;
+    R = 1.0;
+  }
+
   // R must be >= 0 for a dist'n that is biased towards its mean direction
   //  (i.e. for a Fisher-like distn')
   // It is possible that all matches point in opposite directions
