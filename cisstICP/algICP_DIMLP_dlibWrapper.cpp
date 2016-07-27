@@ -64,7 +64,7 @@ namespace
   {
     static vct6   x;
     static vct9   g;
-	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(9);  // 6-element vector
+	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(9);  // 9-element vector
 
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
       x_dlib(3), x_dlib(4), x_dlib(5));
@@ -160,6 +160,6 @@ vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
 
   //std::cout << "[1.4]" << std::endl;
   return vct6( x_dlib(0), x_dlib(1), x_dlib(2), 
-	  x_dlib(3), x_dlib(4), x_dlib(5));
+			   x_dlib(3), x_dlib(4), x_dlib(5) );
   //std::cout << "[1.5]" << std::endl;
 }

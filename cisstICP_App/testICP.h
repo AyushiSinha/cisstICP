@@ -65,7 +65,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   int    nThresh = 5;       // Cov Tree Params
   double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "../../../test_data/";
+  std::string workingDir = "F:/Registration_Framework/cissticp/test_data/";
   std::string outputDir;
   switch (algType)
   {
@@ -122,12 +122,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
 #if 1
 
-  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  std::string loadMeshPath = workingDir + "Warped_MT_recentered.mesh";
+  std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  //std::string loadMeshPath = workingDir + "Warped_MT_recentered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
 
-  std::string loadModelPath = workingDir + "atlas_mt.txt";
+  //std::string loadModelPath = workingDir + "atlas_mt.txt";
 
   const int nSamples = 100;
 
@@ -234,7 +234,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   // save initial offset
   transform_write(Fi, saveOffsetXfmPath);
 
-  ReadShapeModel(mesh, loadModelPath, 2);
+  //ReadShapeModel(mesh, loadModelPath, 2);
 
 
   noisySamples2d.SetSize(1);

@@ -140,6 +140,10 @@ void algICP_DIMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
 	// initialize base class 
 	algICP_IMLP::ICP_InitializeParameters(FGuess);
 	this->FGuess = FGuess;
+
+	//Tssm_Y_t.SetAll(vct3(0.0));
+	//Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
+	//invMx_Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
 }
 
 void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
@@ -197,6 +201,11 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.Transpose();
 	}
 
+#ifdef DEBUG_IMLP
+	std::cout << "My0:" << std::endl << *Myi[0] << std::endl;
+	std::cout << "My1:" << std::endl << *Myi[1] << std::endl;
+#endif
+
 	bFirstIter_Matches = false;
 }
 
@@ -204,6 +213,7 @@ void algICP_DIMLP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
 	// base class
 	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
+	//pTree = new PDTree_Mesh(*pMesh, 5, 5.0);
 }
 
 double algICP_DIMLP::ICP_EvaluateErrorFunction()
@@ -354,7 +364,7 @@ bool algICP_DIMLP::ICP_Terminate(vctFrm3 &F)
 vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 {
 	vctFrm3 dF;
-#if 0
+#if 1
 	vct6 x0(0.0);
 	vct6 x;
 
@@ -373,7 +383,7 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	Freg = dF * Freg;
 	//std::cout << "[3]" << std::endl;
 #else
-	RegisterP2P_TLS(samplePtsXfmd, matchPts, //Tssm_matchPts,
+	RegisterP2P_TLS(samplePtsXfmd, Tssm_matchPts, //matchPts,
 		R_Mxi_Rt, Myi_sigma2, dF);
 	Freg = dF*Freg;
 #endif
@@ -531,6 +541,10 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 	// return match error 
 	//  log term plus square Mahalanobis distance
 	d = (v - closest);
+
+	//BoundingBox BB;
+	//pTree->EnlargeBounds(Freg, datum, BB);
+
 	return log(det_M) + vctDotProduct(d, Minv*d);
 }
 

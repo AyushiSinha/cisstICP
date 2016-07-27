@@ -107,6 +107,8 @@ IF (cisst_FOUND_AS_REQUIRED)
     BoundingBox.h
     utilities.h
     utilities.cpp
+    camera.h
+    camera.cpp
     PointProjectionRoutines.cpp
     PointProjectionRoutines.h
     RegisterP2P.cpp
@@ -183,6 +185,8 @@ IF (cisst_FOUND_AS_REQUIRED)
     algDirICP_IMLOP.h
     algDirICP_IMLOP_Mesh.cpp
     algDirICP_IMLOP_Mesh.h
+    algDirICP_VIMLOP.cpp
+    algDirICP_VIMLOP.h
     # 2D Registration
     DirPDTree2DBase.cpp
     DirPDTree2DBase.h
@@ -190,6 +194,8 @@ IF (cisst_FOUND_AS_REQUIRED)
     DirPDTree2DNode.h
     DirPDTree2D_Edges.cpp
     DirPDTree2D_Edges.h
+    DirPDTree2D_Points.cpp
+    DirPDTree2D_Points.h
     alg2D_DirPDTree.cpp
     alg2D_DirPDTree.h
     alg2D_DirPDTree_CP.cpp
