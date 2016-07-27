@@ -59,7 +59,7 @@ public:
 	vct3 eta; 
 
 	// -- Optimizer calculations common to both cost and gradient function
-	vct6 x_prev;
+	vct9 x_prev;
 	vct3 a, t;
 	vctRot3 Ra;
 	vctDynamicVector<vct3> Tssm_Y_t;
@@ -106,9 +106,9 @@ public:
 		vctDynamicVector<double> &argSampleModeWts);
 
 
-	void    UpdateOptimizerCalculations(const vct6 &x);
-	void    CostFunctionGradient(const vct6 &x, vct9 &g);
-	double  CostFunctionValue(const vct6 &x);
+	void    UpdateOptimizerCalculations(const vct9 &x);
+	void    CostFunctionGradient(const vct9 &x, vct9 &g);
+	double  CostFunctionValue(const vct9 &x);
 
 protected:
 	// -- Deformable Methods -- //

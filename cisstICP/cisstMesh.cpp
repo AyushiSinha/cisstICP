@@ -880,6 +880,11 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		return -1;
 	}
 	std::cout << "Number of vertices = " << numVertices << ", Number of modes = " << numModes << std::endl;
+	if (vertices.size() != numVertices)
+	{
+		std::cout << "ERROR: model data does not match mesh data - number of vertices are different." << std::endl;
+		return 0;
+	}
 
 	unsigned int modeCount = 0;
 	while (modelFile.good() && modeCount < modes)
@@ -953,8 +958,11 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			return -1;
 		}
 		// si = wi*(V-meanV)
-		if (modeCount > 0)
-			Si = wi*(vertices - meanShape);
+		if (modeCount > 0) {
+			for (int i = 0; i < vertCount; i++)
+				Si[i] = wi[i].DotProduct(vertices[i] - meanShape[i]);
+		}
+			//Si = wi.DotProduct(vertices - meanShape);
 		modeCount++;
 	}
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)

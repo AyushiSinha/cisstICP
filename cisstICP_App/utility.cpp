@@ -1398,9 +1398,9 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   }
 }
 
-void ReadShapeModel(cisstMesh &mesh, const std::string &modelLoadPath, int numModes)
+int ReadShapeModel(cisstMesh &mesh, const std::string &modelLoadPath, int numModes)
 {
-	mesh.LoadModelFile(modelLoadPath, numModes);
+	return mesh.LoadModelFile(modelLoadPath, numModes);
 }
 
 

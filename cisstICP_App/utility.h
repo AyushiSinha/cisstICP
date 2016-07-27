@@ -82,7 +82,7 @@ void CreateMesh(
   const std::string &meshLoadPath,
   std::string *SavePath_Mesh = 0);
 
-void ReadShapeModel(
+int ReadShapeModel(
 	cisstMesh &mesh,
 	const std::string &modelLoadPath,
 	int numModes);

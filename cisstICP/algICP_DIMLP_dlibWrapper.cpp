@@ -52,9 +52,10 @@ namespace
   //  (needed for function pointers)
   double fValue(const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct6 x;
+    static vct9 x;
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-      x_dlib(3), x_dlib(4), x_dlib(5));
+      x_dlib(3), x_dlib(4), x_dlib(5),
+	  x_dlib(6), x_dlib(7), x_dlib(8));
 
     return alg->CostFunctionValue(x);
   }
@@ -62,12 +63,13 @@ namespace
   algICP_DIMLP_dlibWrapper::dlib_vector fDerivative(
 	  const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct6   x;
+    static vct9   x;
     static vct9   g;
 	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(9);  // 9-element vector
 
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-      x_dlib(3), x_dlib(4), x_dlib(5));
+		x_dlib(3), x_dlib(4), x_dlib(5),
+		x_dlib(6), x_dlib(7), x_dlib(8));
 
     alg->CostFunctionGradient(x, g);
     g_dlib(0) = g[0];
@@ -99,7 +101,7 @@ algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
 
 vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
 {
-  dlib_vector x_dlib(6);  // 6-element vector
+  dlib_vector x_dlib(9);  // 6-element vector
 
   //std::cout << "[1.1]" << std::endl;
   try
@@ -120,7 +122,10 @@ vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
     x_dlib(2) = x0[2];
     x_dlib(3) = x0[3];
     x_dlib(4) = x0[4];
-    x_dlib(5) = x0[5];
+	x_dlib(5) = x0[5];
+	x_dlib(6) = 0;
+	x_dlib(7) = 0;
+	x_dlib(8) = 1;
 
 #ifdef DLIB_VERIFY_DERIVATIVE
     std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 

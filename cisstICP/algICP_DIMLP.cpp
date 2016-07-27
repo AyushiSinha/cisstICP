@@ -390,7 +390,7 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	return Freg;
 }
 
-void algICP_DIMLP::UpdateOptimizerCalculations(const vct6 &x)
+void algICP_DIMLP::UpdateOptimizerCalculations(const vct9 &x)
 {
 	//std::cout << "[1.2.1]" << std::endl;
 	a.Assign(x[0], x[1], x[2]);
@@ -420,7 +420,7 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vct6 &x)
 	x_prev = x;
 }
 
-double algICP_DIMLP::CostFunctionValue(const vct6 &x)
+double algICP_DIMLP::CostFunctionValue(const vct9 &x)
 {
 	// don't recompute these if already computed for gradient
 	if (x.NotEqual(x_prev))
@@ -440,7 +440,7 @@ double algICP_DIMLP::CostFunctionValue(const vct6 &x)
 	return f;
 }
 
-void algICP_DIMLP::CostFunctionGradient(const vct6 &x, vct9 &g)
+void algICP_DIMLP::CostFunctionGradient(const vct9 &x, vct9 &g)
 {
 	vctFixedSizeVector<vctRot3, 3> dRa;  // Rodrigues Jacobians of R(a) wrt ax,ay,az
 

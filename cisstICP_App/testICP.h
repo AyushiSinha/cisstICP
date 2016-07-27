@@ -58,183 +58,189 @@ void Callback_SaveIterationsToFile_testICP( cisstICP::CallbackArg &arg, void *us
 //                      false - uses point cloud (taken from mesh) to represent target shape
 void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 {
-  //char k;
-  //std::cout << "press key then enter to start:" << std::endl;
-  //std::cin >> k;
+	//char k;
+	//std::cout << "press key then enter to start:" << std::endl;
+	//std::cin >> k;
 
-  int    nThresh = 5;       // Cov Tree Params
-  double diagThresh = 5.0;  //  ''
+	int    nThresh = 5;       // Cov Tree Params
+	double diagThresh = 5.0;  //  ''
 
-  std::string workingDir = "F:/Registration_Framework/cissticp/test_data/";
-  std::string outputDir;
-  switch (algType)
-  {
-  case AlgType_StdICP:
-  {
-	  outputDir = "LastRun_StdICP/";
-	  break;
-  }
-  case AlgType_IMLP:
-  {
-	  outputDir = "LastRun_IMLP/";
-	  break;
-  }
-  case AlgType_DIMLP:
-  {
-	  outputDir = "LastRun_DIMLP/";
-	  break;
-  }
-  case AlgType_VIMLOP:
-  {
-	  outputDir = "LastRun_VIMLOP/";
-	  break;
-  }
-  default:
-  {
-	  std::cout << "ERROR: unknown algorithm type" << std::endl;
-	  assert(0);
-  }
-  }
+	std::string workingDir = "F:/Registration_Framework/cissticp/test_data/";
+	std::string outputDir;
+	switch (algType)
+	{
+	case AlgType_StdICP:
+	{
+						   outputDir = "LastRun_StdICP/";
+						   break;
+	}
+	case AlgType_IMLP:
+	{
+						 outputDir = "LastRun_IMLP/";
+						 break;
+	}
+	case AlgType_DIMLP:
+	{
+						  outputDir = "LastRun_DIMLP/";
+						  break;
+	}
+	case AlgType_VIMLOP:
+	{
+						   outputDir = "LastRun_VIMLOP/";
+						   break;
+	}
+	default:
+	{
+			   std::cout << "ERROR: unknown algorithm type" << std::endl;
+			   assert(0);
+	}
+	}
 
-  std::string saveMeshPath =          workingDir + outputDir + "SaveMesh";
-  std::string saveSamplesPath =       workingDir + outputDir + "SaveSamples.pts";
-  std::string saveNoisySamplesPath =  workingDir + outputDir + "SaveNoisySamples.pts";
-  std::string saveCovPath =           workingDir + outputDir + "SaveSampleCov.txt";
-  std::string saveOffsetXfmPath =     workingDir + outputDir + "SaveOffsetXfm.txt";
-  std::string saveRegXfmPath =        workingDir + outputDir + "SaveRegXfm.txt";
-  //std::string saveLPath =             workingDir + outputDir + "SaveSampleL";
+	std::string saveMeshPath = workingDir + outputDir + "SaveMesh";
+	std::string saveSamplesPath = workingDir + outputDir + "SaveSamples.pts";
+	std::string saveNoisySamplesPath = workingDir + outputDir + "SaveNoisySamples.pts";
+	std::string saveCovPath = workingDir + outputDir + "SaveSampleCov.txt";
+	std::string saveOffsetXfmPath = workingDir + outputDir + "SaveOffsetXfm.txt";
+	std::string saveRegXfmPath = workingDir + outputDir + "SaveRegXfm.txt";
+	//std::string saveLPath =             workingDir + outputDir + "SaveSampleL";
 
-  cisstMesh         mesh;
-  PDTreeBase*         pTree;
-  vctDynamicVector<vct3>    samples;
-  vctDynamicVector<vct3>    sampleNorms;
-  vctDynamicVector<vct3>    noisySamples;
-  vctDynamicVector<vct3>    noisySampleNorms;
-  vctDynamicVector<unsigned int>  sampleDatums;
-  vctDynamicVector<vct3x3>  sampleNoiseCov;
-  vctDynamicVector<vct3x3>  sampleNoiseInvCov;
-  vctDynamicVector<vct3x2>  sampleNoiseL;
+	cisstMesh         mesh;
+	PDTreeBase*         pTree;
+	vctDynamicVector<vct3>    samples;
+	vctDynamicVector<vct3>    sampleNorms;
+	vctDynamicVector<vct3>    noisySamples;
+	vctDynamicVector<vct3>    noisySampleNorms;
+	vctDynamicVector<unsigned int>  sampleDatums;
+	vctDynamicVector<vct3x3>  sampleNoiseCov;
+	vctDynamicVector<vct3x3>  sampleNoiseInvCov;
+	vctDynamicVector<vct3x2>  sampleNoiseL;
 
-  vctDynamicVector<vct2> noisySamples2d;
-  vctDynamicVector<vct2> noisyNorms2d;
-  vctDynamicVector<vct2x2>  sampleNoiseCov2d;
-  vctDynamicVector<vct2x2>  normNoiseCov2d;
+	vctDynamicVector<vct2> noisySamples2d;
+	vctDynamicVector<vct2> noisyNorms2d;
+	vctDynamicVector<vct2x2>  sampleNoiseCov2d;
+	vctDynamicVector<vct2x2>  normNoiseCov2d;
 
 #if 1
 
-  std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  //std::string loadMeshPath = workingDir + "Warped_MT_recentered.mesh";
-  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
-  //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
+	std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+	//std::string loadMeshPath = workingDir + "Warped_MT_recentered.mesh";
+	//std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
+	//std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
 
-  //std::string loadModelPath = workingDir + "atlas_mt.txt";
+	std::string loadModelPath = workingDir + "atlas_mt.txt";
 
-  const int nSamples = 100;
+	const int nSamples = 100;
 
-  // Samples Noise Model
-  //  NOTE: this is a generative noise model (i.e. noise is generated according
-  //        to the noise properties defined here)
-  //double noiseSampsSD[3] = {1.0, 1.0, 1.0};   // noise model for samples (std dev along each axis)
-  double sampleNoiseInPlane = 1.0;      // standard deviation of noise in and out of plane
-  double sampleNoisePerpPlane = 2.0;    //   ''
+	// Samples Noise Model
+	//  NOTE: this is a generative noise model (i.e. noise is generated according
+	//        to the noise properties defined here)
+	//double noiseSampsSD[3] = {1.0, 1.0, 1.0};   // noise model for samples (std dev along each axis)
+	double sampleNoiseInPlane = 1.0;      // standard deviation of noise in and out of plane
+	double sampleNoisePerpPlane = 2.0;    //   ''
 
-  // Target Noise Model (for point cloud target only)
-  //  NOTE: this is a descriptive model, not a generative one
-  //        i.e. no noise is added to the point cloud, the noise model is merely
-  //        allow for errors at intermediate locations between the points and penalize
-  //        errors offset from the surface
-  double PointCloudNoisePerpPlane = 0.5;  // noise model for point cloud using mesh constructor
-                                          //  Note: in-plane noise set automatically relative to triangle size
+	// Target Noise Model (for point cloud target only)
+	//  NOTE: this is a descriptive model, not a generative one
+	//        i.e. no noise is added to the point cloud, the noise model is merely
+	//        allow for errors at intermediate locations between the points and penalize
+	//        errors offset from the surface
+	double PointCloudNoisePerpPlane = 0.5;  // noise model for point cloud using mesh constructor
+	//  Note: in-plane noise set automatically relative to triangle size
 
-  double minOffsetPos = 50.0;
-  double maxOffsetPos = 100.0;
-  double minOffsetAng = 30.0;
-  double maxOffsetAng = 60.0;
-  
-  double percentOutliers = 0.05;
-  double minPosOffsetOutlier = 5.0;
-  double maxPosOffsetOutlier = 10.0;
-  double minAngOffsetOutlier = 0.0;
-  double maxAngOffsetOutlier = 0.0;
+	double minOffsetPos = 50.0;
+	double maxOffsetPos = 100.0;
+	double minOffsetAng = 30.0;
+	double maxOffsetAng = 60.0;
 
-  unsigned int randSeed1 = 0;       // generates samples
-  unsigned int randSeqPos1 = 0;
-  unsigned int randSeed2 = 17;      // generates offsets
-  unsigned int randSeqPos2 = 28;
+	double percentOutliers = 0.05;
+	double minPosOffsetOutlier = 5.0;
+	double maxPosOffsetOutlier = 10.0;
+	double minAngOffsetOutlier = 0.0;
+	double maxAngOffsetOutlier = 0.0;
 
-  // load mesh
-  CreateMesh( mesh, loadMeshPath, &saveMeshPath );
+	unsigned int randSeed1 = 0;       // generates samples
+	unsigned int randSeqPos1 = 0;
+	unsigned int randSeed2 = 17;      // generates offsets
+	unsigned int randSeqPos2 = 28;
 
-  // Create target shape from mesh (as a PD tree)
-  if (TargetShapeAsMesh)
-  {
-    // build PD tree on the mesh directly
-    //  Note: defines measurement noise to be zero
-    printf("Building mesh PD tree .... ");
-    pTree = new PDTree_Mesh(mesh, nThresh, diagThresh);
-    //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
-    printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
-  }
-  else
-  {
-    // build Point Cloud PD tree from mesh
-    // (uses triangle center points as the point cloud)
-    //  Note: the mesh constructor for the point cloud PD tree
-    //        assumes the specified noise in direction perpendicular to surface
-    //        and sets the in-plane noise based on the triangle size in order
-    //        to allow for greater freedom of match anywhere along the triangle surface
-    //        even though each triangle surface is represented by only one point.
-    printf("Building point cloud PD tree .... ");
-    cisstPointCloud pointCloud(mesh, PointCloudNoisePerpPlane);
-    PDTree_PointCloud *pPointCloudTree;
-    pPointCloudTree = new PDTree_PointCloud(pointCloud, nThresh, diagThresh);
-    pTree = pPointCloudTree;
-    //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
-    printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
-    //printf(" Point Cloud Noise Model:\n  perp-plane variance = %f\n  in-plane variance = %f (avg)\n\n", 
-    //  PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
-  }
+	// load mesh
+	CreateMesh(mesh, loadMeshPath, &saveMeshPath);
 
-  // Random Numbers: Normal RV's
-  std::string normRVFile = workingDir + "GaussianValues.txt";
-  std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
+	// Create target shape from mesh (as a PD tree)
+	if (TargetShapeAsMesh)
+	{
+		// build PD tree on the mesh directly
+		//  Note: defines measurement noise to be zero
+		printf("Building mesh PD tree .... ");
+		pTree = new PDTree_Mesh(mesh, nThresh, diagThresh);
+		//tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
+		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
+	}
+	else
+	{
+		// build Point Cloud PD tree from mesh
+		// (uses triangle center points as the point cloud)
+		//  Note: the mesh constructor for the point cloud PD tree
+		//        assumes the specified noise in direction perpendicular to surface
+		//        and sets the in-plane noise based on the triangle size in order
+		//        to allow for greater freedom of match anywhere along the triangle surface
+		//        even though each triangle surface is represented by only one point.
+		printf("Building point cloud PD tree .... ");
+		cisstPointCloud pointCloud(mesh, PointCloudNoisePerpPlane);
+		PDTree_PointCloud *pPointCloudTree;
+		pPointCloudTree = new PDTree_PointCloud(pointCloud, nThresh, diagThresh);
+		pTree = pPointCloudTree;
+		//tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
+		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
+		//printf(" Point Cloud Noise Model:\n  perp-plane variance = %f\n  in-plane variance = %f (avg)\n\n", 
+		//  PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
+	}
 
-  //// initialize random numbers
-  //cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
-  //cisstRandomSeq.SetSeed( randSeed1 );
-  //cisstRandomSeq.SetSequencePosition( randSeqPos1 );
+	// Random Numbers: Normal RV's
+	std::string normRVFile = workingDir + "GaussianValues.txt";
+	std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
 
-  // Generate random samples from mesh
-  GenerateSamples(mesh, randSeed1, randSeqPos1, nSamples,
-                   samples, sampleNorms, sampleDatums,
-                   &saveSamplesPath );
+	//// initialize random numbers
+	//cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	//cisstRandomSeq.SetSeed( randSeed1 );
+	//cisstRandomSeq.SetSequencePosition( randSeqPos1 );
 
-  // Add noise to samples
-  GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
-      sampleNoiseInPlane, sampleNoisePerpPlane, 0.0, 0.0,
-      samples, sampleNorms,
-      noisySamples, noisySampleNorms,
-      sampleNoiseCov, sampleNoiseInvCov, sampleNoiseL,
-      percentOutliers,
-      minPosOffsetOutlier, maxPosOffsetOutlier,
-      minAngOffsetOutlier, maxAngOffsetOutlier,
-      &saveNoisySamplesPath,
-      &saveCovPath);
+	// Generate random samples from mesh
+	GenerateSamples(mesh, randSeed1, randSeqPos1, nSamples,
+		samples, sampleNorms, sampleDatums,
+		&saveSamplesPath);
 
-  //// initialize random numbers
-  //cisstRandomSeq.SetSeed( randSeed2 );
-  //cisstRandomSeq.SetSequencePosition( randSeqPos2 );
+	// Add noise to samples
+	GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
+		sampleNoiseInPlane, sampleNoisePerpPlane, 0.0, 0.0,
+		samples, sampleNorms,
+		noisySamples, noisySampleNorms,
+		sampleNoiseCov, sampleNoiseInvCov, sampleNoiseL,
+		percentOutliers,
+		minPosOffsetOutlier, maxPosOffsetOutlier,
+		minAngOffsetOutlier, maxAngOffsetOutlier,
+		&saveNoisySamplesPath,
+		&saveCovPath);
 
-  // Generate random initial offset
-  vctFrm3 Fi;
-  GenerateRandomTransform( randSeed2, randSeqPos2,
-                           minOffsetPos, maxOffsetPos,
-                           minOffsetAng, maxOffsetAng,
-                           Fi );
-  // save initial offset
-  transform_write(Fi, saveOffsetXfmPath);
+	//// initialize random numbers
+	//cisstRandomSeq.SetSeed( randSeed2 );
+	//cisstRandomSeq.SetSequencePosition( randSeqPos2 );
 
-  //ReadShapeModel(mesh, loadModelPath, 2);
+	// Generate random initial offset
+	vctFrm3 Fi;
+	GenerateRandomTransform(randSeed2, randSeqPos2,
+		minOffsetPos, maxOffsetPos,
+		minOffsetAng, maxOffsetAng,
+		Fi);
+	// save initial offset
+	transform_write(Fi, saveOffsetXfmPath);
+
+	if (algType == AlgType_DIMLP){
+		int check = ReadShapeModel(mesh, loadModelPath, 2);
+		if (check != 1) {
+			std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
+			algType = AlgType_IMLP;
+		}
+	}
 
 
   noisySamples2d.SetSize(1);
