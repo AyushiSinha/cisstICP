@@ -75,7 +75,7 @@ if any(ind_arr)
   vertex_indices = field.(propertyName);
   
   % vertex indices
-  % convert vertex indices lists to triangle connectivity
+  % convert vertex index lists to triangle connectivity
   N = length(vertex_indices);
   indices = zeros(N*2,3);  % add extra length in case of multiple faces per row
   Extra = 0;
@@ -129,7 +129,8 @@ if any(ind_arr)
 
   % face neighbors
   if ( any(strcmp(prop_names,'nb1')) & any(strcmp(prop_names,'nb2')) & any(strcmp(prop_names,'nb3')) )
-    data.face_neighbors = [field.nb1, field.nb2, field.nb3];
+    % add one for base-1 indexing
+    data.face_neighbors = [field.nb1, field.nb2, field.nb3] + 1;
   else
     error('properties for face neighbors field are unrecognized')
   end

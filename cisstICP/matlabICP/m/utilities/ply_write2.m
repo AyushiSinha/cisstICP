@@ -70,9 +70,10 @@ end
 
 %% face neighbors
 if isfield(data,'face_neighbors')
-  ply_data.face_neighbors.nb1 = data.face_neighbors(:,1);
-  ply_data.face_neighbors.nb2 = data.face_neighbors(:,2);
-  ply_data.face_neighbors.nb3 = data.face_neighbors(:,3);  
+  % subtract one to convert from 1-base to 0-base indexing
+  ply_data.face_neighbor.nb1 = data.face_neighbors(:,1) - 1;
+  ply_data.face_neighbor.nb2 = data.face_neighbors(:,2) - 1;
+  ply_data.face_neighbor.nb3 = data.face_neighbors(:,3) - 1;  
 end
 
 
