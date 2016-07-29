@@ -531,7 +531,7 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 
 #if 1
 	// Find the closest point on this triangle in a Mahalanobis distance sense
-	TCPS.FindMostLikelyPointOnTriangle(v, datum, N, Ninv, closest);
+	TCPS.FindMostLikelyPointOnTriangle(v, datum, N, Ninv, closest); 
 #else
 	// Find the closest point on this triangle in a Euclidean distance sense
 	//   Euclidean Distance:   ||x-v||
@@ -542,9 +542,6 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 	//  log term plus square Mahalanobis distance
 	d = (v - closest);
 
-	//BoundingBox BB;
-	//pTree->EnlargeBounds(Freg, datum, BB);
-
 	return log(det_M) + vctDotProduct(d, Minv*d);
 }
 
@@ -554,5 +551,11 @@ int algICP_DIMLP::NodeMightBeCloser(const vct3 &v,
 	PDTreeNode *node,
 	double ErrorBound)
 {
-	return algICP_IMLP::NodeMightBeCloser(v, node, ErrorBound);
+	int r = algICP_IMLP::NodeMightBeCloser(v, node, ErrorBound);
+	//if (r == 1)
+	//{
+	//	for (int i = 0; i < matchDatums.size(); i++)
+	//		pTree->EnlargeBounds(Freg, matchDatums[i], node->Bounds);
+	//}
+	return r;
 }
