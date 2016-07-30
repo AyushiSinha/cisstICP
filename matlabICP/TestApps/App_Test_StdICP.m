@@ -1,11 +1,11 @@
 clear, clc
 
-inputDir = '../../../test_data';
+inputDir = '../../test_data';
 meshPath = [inputDir,'/','ProximalFemur.ply'];
 
 % dependencies
 dep = {
-  '../../../matlabICP_build/Release'  % mex interface to cisstICP
+  '../../matlabICP_build/Release'  % mex interface to cisstICP
   '../m'            % matlab component of cisstICP
   '../m/utilities'  % utilities for transformations, etc.
   };

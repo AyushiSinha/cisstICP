@@ -86,7 +86,8 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
 #if 1
 
-  std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  std::string loadMeshPath = workingDir + "ProximalFemur.ply";
+  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
 

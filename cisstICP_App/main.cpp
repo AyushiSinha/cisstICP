@@ -51,8 +51,8 @@ int main(void)
 
   bool TargetShapeAsMesh = true;
   ICPAlgType algType;
-  algType = AlgType_StdICP;
-  //algType = AlgType_IMLP;
+  //algType = AlgType_StdICP;
+  algType = AlgType_IMLP;
   testICP(TargetShapeAsMesh, algType);
 
   TargetShapeAsMesh = true;

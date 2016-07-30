@@ -1,6 +1,8 @@
-clear, clc
+%clear, clc
 
-inputDir = '../../';
+addpath('..\..\..\dependencies\Matlab Dependencies\PLY_IO');
+
+inputDir = '..\..\..\test_data';
 plyFile = 'ProximalFemur.ply';
 plyPath = [inputDir,'\',plyFile];
 
