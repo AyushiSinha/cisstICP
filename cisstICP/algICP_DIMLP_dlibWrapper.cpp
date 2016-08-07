@@ -52,10 +52,10 @@ namespace
   //  (needed for function pointers)
   double fValue(const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct9 x;
+    static vct7 x;
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
       x_dlib(3), x_dlib(4), x_dlib(5),
-	  x_dlib(6), x_dlib(7), x_dlib(8));
+	  x_dlib(6));
 
     return alg->CostFunctionValue(x);
   }
@@ -63,13 +63,13 @@ namespace
   algICP_DIMLP_dlibWrapper::dlib_vector fDerivative(
 	  const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct9   x;
-    static vct9   g;
-	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(9);  // 9-element vector
+    static vct7   x;
+    static vct7   g;
+	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
 
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
 		x_dlib(3), x_dlib(4), x_dlib(5),
-		x_dlib(6), x_dlib(7), x_dlib(8));
+		x_dlib(6));
 
     alg->CostFunctionGradient(x, g);
     g_dlib(0) = g[0];
@@ -79,8 +79,6 @@ namespace
     g_dlib(4) = g[4];
 	g_dlib(5) = g[5];
 	g_dlib(6) = g[6];
-	g_dlib(7) = g[7];
-	g_dlib(8) = g[8];
 
     return g_dlib;
   }
@@ -99,9 +97,9 @@ algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
 }
 
 
-vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
+vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
 {
-  dlib_vector x_dlib(9);  // 6-element vector
+  dlib_vector x_dlib(7);  // 7-element vector
 
   //std::cout << "[1.1]" << std::endl;
   try
@@ -123,9 +121,7 @@ vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
     x_dlib(3) = x0[3];
     x_dlib(4) = x0[4];
 	x_dlib(5) = x0[5];
-	x_dlib(6) = 0;
-	x_dlib(7) = 0;
-	x_dlib(8) = 1;
+	x_dlib(6) = x0[6];
 
 #ifdef DLIB_VERIFY_DERIVATIVE
     std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 
@@ -164,7 +160,8 @@ vct6 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct6 &x0)
   }
 
   //std::cout << "[1.4]" << std::endl;
-  return vct6( x_dlib(0), x_dlib(1), x_dlib(2), 
-			   x_dlib(3), x_dlib(4), x_dlib(5) );
+  return vct7( x_dlib(0), x_dlib(1), x_dlib(2), 
+			   x_dlib(3), x_dlib(4), x_dlib(5),
+			   x_dlib(6));
   //std::cout << "[1.5]" << std::endl;
 }

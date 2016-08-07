@@ -56,10 +56,11 @@ public:
 	algICP_DIMLP_dlibWrapper dlib;
 
 	vctDynamicVector<vct3>  Tssm_matchPts;
+	vctDynamicVector<vct3>	Tssm_wi;
 	vct3 eta; 
 
 	// -- Optimizer calculations common to both cost and gradient function
-	vct9 x_prev;
+	vct7 x_prev;
 	vct3 a, t;
 	vctRot3 Ra;
 	vctDynamicVector<vct3> Tssm_Y_t;
@@ -77,8 +78,8 @@ protected:
 	vctDynamicVector<vct3>	sampleModes;
 	vctDynamicVector<double> sampleModeWts;	
 
-	vctDynamicVector<vct3>	wi;
-	vctDynamicVector<vct3>	Si;		// shape parameter
+	vctDynamicVector<vct3>		wi;
+	vctDynamicVector<double>	Si;		// shape parameter
 
 	// -- Algorithm Methods -- //
 public:
@@ -106,34 +107,32 @@ public:
 		vctDynamicVector<double> &argSampleModeWts);
 
 
-	void    UpdateOptimizerCalculations(const vct9 &x);
-	void    CostFunctionGradient(const vct9 &x, vct9 &g);
-	double  CostFunctionValue(const vct9 &x);
+	void    UpdateOptimizerCalculations(const vct7 &x);
+	void    CostFunctionGradient(const vct7 &x, vct7 &g);
+	double  CostFunctionValue(const vct7 &x);
 
 protected:
 	// -- Deformable Methods -- //
-	void T_ssm(vctDynamicVector<vct3> v, vctDynamicVector<vct3> &Tv, 
-		vctDynamicVector<vct3> y, vctDynamicVector<vct3> &Ty);
-	void T_ssm(vctDynamicVector<vct3> &v, vctDynamicVector<vct3> &Tv); 
+	void T_ssm(); 
 
 	// -- ICP Interface Methods -- //
 
 public:
-	virtual void ICP_InitializeParameters(vctFrm3 &FGuess);
+	//virtual void ICP_InitializeParameters(vctFrm3 &FGuess);
 	virtual void ICP_UpdateParameters_PostMatch();
-	virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
+	//virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
 
 	virtual vctFrm3 ICP_RegisterMatches();
-	virtual unsigned int ICP_FilterMatches();
+	//virtual unsigned int ICP_FilterMatches();
 
 	virtual double  ICP_EvaluateErrorFunction();
 	virtual bool    ICP_Terminate(vctFrm3 &Freg);
 
 	// -- PD Tree Interface Methods -- //
-	int  NodeMightBeCloser(
-		const vct3 &v,
-		PDTreeNode *node,
-		double ErrorBound);
+	//int  NodeMightBeCloser(
+	//	const vct3 &v,
+	//	PDTreeNode *node,
+	//	double ErrorBound);
 
 	virtual double FindClosestPointOnDatum(
 		const vct3 &v,

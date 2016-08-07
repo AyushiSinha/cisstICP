@@ -918,7 +918,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		meanShape.resize(mOffset + numVertices);
 		mode.resize(mOffset + numVertices);
 		wi.resize(mOffset + numVertices);
-		Si.resize(mOffset + numVertices);
+		Si.resize(mOffset + modes);
 
 		while (vertCount < numVertices)
 		{
@@ -958,11 +958,12 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			return -1;
 		}
 		// si = wi*(V-meanV)
+		int tmp_si = 0;
 		if (modeCount > 0) {
 			for (int i = 0; i < vertCount; i++)
-				Si[i] = wi[i].DotProduct(vertices[i] - meanShape[i]);
+				tmp_si += wi[i].DotProduct(vertices[i] - meanShape[i]);
 		}
-			//Si = wi.DotProduct(vertices - meanShape);
+		Si[modeCount] = tmp_si;
 		modeCount++;
 	}
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)

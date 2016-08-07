@@ -116,41 +116,28 @@ void algICP_DIMLP::SetSamples(
 	Tssm_Y_t.resize(nSamples);
 	Rat_Tssm_Y_t_x.resize(nSamples);
 	invMx_Rat_Tssm_Y_t_x.resize(nSamples);
-
-	// Moved to cisstMesh
-	// 
-	//wi.SetSize(sampleModes.size());
-	//Si.SetSize(sampleModes.size());
-	//for (unsigned int s = 0; s < sampleModes.size(); s++)
-	//{
-	//	for (unsigned int c = 0; c < 3; c++)
-	//	{
-	//		// wi = sqrt(lambda_i*mi)
-	//		wi[s].Element(c) = sqrt(sampleModeWts.Element(0)*sampleModes[s].Element(c));
-	//	}
-	//}
-	//// si = wi*(V-meanV)
-	//Si = wi * (pTree->MeshP->vertices - meanShape);
 	
 	eta = vct3(0.33, 0.33, 0.33);
 }
 
-void algICP_DIMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
-{
-	// initialize base class 
-	algICP_IMLP::ICP_InitializeParameters(FGuess);
-	this->FGuess = FGuess;
-
-	//Tssm_Y_t.SetAll(vct3(0.0));
-	//Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
-	//invMx_Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
-}
+//void algICP_DIMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
+//{
+//	// initialize base class 
+//	algICP_IMLP::ICP_InitializeParameters(FGuess);
+//	this->FGuess = FGuess;
+//
+//	Tssm_Y_t.SetAll(vct3(0.0));
+//	Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
+//	invMx_Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
+//}
 
 void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 {
 	// base class
-	//algICP_IMLP::ICP_UpdateParameters_PostMatch();
-	T_ssm(matchPts, Tssm_matchPts);
+	//algICP_IMLP::ICP_UpdateParameters_PostMatch();	
+	Tssm_matchPts.resize(nSamples);
+	Tssm_wi.resize(nSamples);
+	T_ssm();
 	// compute sum of square distances of inliers
 	sumSqrDist_Inliers = 0.0;
 	for (unsigned int s = 0; s < nSamples; s++)
@@ -209,12 +196,11 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 	bFirstIter_Matches = false;
 }
 
-void algICP_DIMLP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
-{
-	// base class
-	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
-	//pTree = new PDTree_Mesh(*pMesh, 5, 5.0);
-}
+//void algICP_DIMLP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
+//{
+//	// base class
+//	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
+//}
 
 double algICP_DIMLP::ICP_EvaluateErrorFunction()
 {
@@ -253,7 +239,7 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 
 	// compute mahalanobis distances of the matches
 	vct3 residual;
-	T_ssm(matchPts, Tssm_matchPts);
+	//T_ssm();
 	//std::cout << "R_Mxi_Rt: " << R_Mxi_Rt.Element(50) << " Myi_sigma2: " << Myi_sigma2.Element(50) << std::endl;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
@@ -275,10 +261,10 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 	for (unsigned int i = 0; i<nSamples; i++)
 	{
 		// Compute error contribution for this sample
-		ssmCost += Si.Element(i).NormSquare();
 		expCost += SqrMahalDist.Element(i);
 		logCost += log(det_Mi.Element(i));
 	}
+	ssmCost += Si.NormSquare();
 
 	prevCostFuncValue = costFuncValue;
 	//std::cout << costFuncValue << std::endl;
@@ -316,34 +302,24 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 #endif
 }
 
-
-void algICP_DIMLP::T_ssm(vctDynamicVector<vct3> v, vctDynamicVector<vct3> &Tv, 
-	vctDynamicVector<vct3> y, vctDynamicVector<vct3> &Ty)
-{
-	T_ssm(v, Tv);
-	// temporary assignment of eta: equal weights for each vertex on triangle
-	// TODO : For each y, find triangle v's closest to it, and compute eta
-	// as the ratio of importance of the v's on y
-	for (unsigned int s = 0; s < nSamples; s++)
-	{
-		Ty.Element(s) = eta.DotProduct(Tv.Element(s));
-	}
-}
-void algICP_DIMLP::T_ssm(vctDynamicVector<vct3> &v, vctDynamicVector<vct3> &Tv)
+void algICP_DIMLP::T_ssm()
 {
 	vctDynamicVector<vct3> tmpMean(nSamples);
-	vctDynamicVector<vct3> tmpSi(nSamples);
-	vctDynamicVector<vct3> tmpWi(nSamples);
-	Tv.SetSize(nSamples);
+	vct3 tmpv0, tmpv1, tmpv2;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		tmpMean.Element(s) = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]); // Change this to average the vertices
-		tmpWi.Element(s) = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]);
-	}
-	tmpSi = tmpWi.DotProduct(v - tmpMean); 
-	for (unsigned int s = 0; s < nSamples; s++)
-	{
-		Tv.Element(s) = tmpMean.Element(s) + (tmpSi.DotProduct(tmpWi));
+		// Find the 3 vertices of the triangle that the matchPoint lies on, i.e., of the matchDatum
+		tmpv0 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]);
+		tmpv1 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][1]);
+		tmpv2 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]);
+		tmpMean.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2; //For now, average the three points, later weight it depending on distance from matchPoint
+
+		tmpv0 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]);
+		tmpv1 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][1]);
+		tmpv2 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]);
+		Tssm_wi.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2;
+
+		Tssm_matchPts.Element(s) = tmpMean.Element(s) + (Si[0] * Tssm_wi.Element(s));
 	}
 }
 
@@ -365,8 +341,8 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 {
 	vctFrm3 dF;
 #if 1
-	vct6 x0(0.0);
-	vct6 x;
+	vct7 x0(0.0);
+	vct7 x;
 
 	// x_prev must be at a different value that x0
 	x_prev.SetAll(std::numeric_limits<double>::max());
@@ -390,7 +366,7 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	return Freg;
 }
 
-void algICP_DIMLP::UpdateOptimizerCalculations(const vct9 &x)
+void algICP_DIMLP::UpdateOptimizerCalculations(const vct7 &x)
 {
 	//std::cout << "[1.2.1]" << std::endl;
 	a.Assign(x[0], x[1], x[2]);
@@ -420,7 +396,7 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vct9 &x)
 	x_prev = x;
 }
 
-double algICP_DIMLP::CostFunctionValue(const vct9 &x)
+double algICP_DIMLP::CostFunctionValue(const vct7 &x)
 {
 	// don't recompute these if already computed for gradient
 	if (x.NotEqual(x_prev))
@@ -432,15 +408,16 @@ double algICP_DIMLP::CostFunctionValue(const vct9 &x)
 	double f = 0.0;
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		f += Rat_Tssm_Y_t_x[i] * invMx_Rat_Tssm_Y_t_x[i]
-			+ nSamples*Si[i].DotProduct(Si[i]);
+		f += Rat_Tssm_Y_t_x[i].DotProduct(invMx_Rat_Tssm_Y_t_x[i]);
 	}
+
+	f += nSamples*Si.DotProduct(Si);
 
 	//std::cout << "[1.2.2]" << std::endl;
 	return f;
 }
 
-void algICP_DIMLP::CostFunctionGradient(const vct9 &x, vct9 &g)
+void algICP_DIMLP::CostFunctionGradient(const vct7 &x, vct7 &g)
 {
 	vctFixedSizeVector<vctRot3, 3> dRa;  // Rodrigues Jacobians of R(a) wrt ax,ay,az
 
@@ -457,7 +434,7 @@ void algICP_DIMLP::CostFunctionGradient(const vct9 &x, vct9 &g)
 	g.SetAll(0.0);
 	vctFixedSizeVectorRef<double, 3, 1> ga(g, 0);
 	vctFixedSizeVectorRef<double, 3, 1> gt(g, 3);
-	vctFixedSizeVectorRef<double, 3, 1> gs(g, 6);
+	vctFixedSizeVectorRef<double, 1, 1> gs(g, 6);
 	vct3x3 Jz_a;
 
 	for (unsigned int s = 0; s < nSamples; s++)
@@ -469,21 +446,22 @@ void algICP_DIMLP::CostFunctionGradient(const vct9 &x, vct9 &g)
 
 		ga += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * Jz_a;
 		gt -= Ra * invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0);
-		gs += Ra * eta*wi[s] * invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0);	// Cmatch component
-
-		gs += 2 * (double)nSamples*Si[s];								// Cshape component
+		gs += Ra * Tssm_wi[s] * invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0);	// Cmatch component
+		
 	}
+
+	gs += 2 * (double)nSamples*Si[0];								// Cshape component
 	//std::cout << "[1.2.4]" << std::endl;
 }
 
-unsigned int algICP_DIMLP::ICP_FilterMatches()
-{
-	//
-	// Filter Matches for Outliers
-	//
-	
-	return algICP_IMLP::ICP_FilterMatches();
-}
+//unsigned int algICP_DIMLP::ICP_FilterMatches()
+//{
+//	//
+//	// Filter Matches for Outliers
+//	//
+//	
+//	return algICP_IMLP::ICP_FilterMatches();
+//}
 
 
 // PDTree Methods
@@ -547,15 +525,10 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 
 // fast check if a node might contain a datum having smaller match error
 //  than the error bound
-int algICP_DIMLP::NodeMightBeCloser(const vct3 &v,
-	PDTreeNode *node,
-	double ErrorBound)
-{
-	int r = algICP_IMLP::NodeMightBeCloser(v, node, ErrorBound);
-	//if (r == 1)
-	//{
-	//	for (int i = 0; i < matchDatums.size(); i++)
-	//		pTree->EnlargeBounds(Freg, matchDatums[i], node->Bounds);
-	//}
-	return r;
-}
+//int algICP_DIMLP::NodeMightBeCloser(const vct3 &v,
+//	PDTreeNode *node,
+//	double ErrorBound)
+//{
+//	return algICP_IMLP::NodeMightBeCloser(v, node, ErrorBound);
+//	//pTree->EnlargeBounds(Freg, matchDatums[i], node->Bounds); 
+//}
