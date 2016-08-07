@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <cisstVector.h>
 #include <cisstCommon.h>
+#include <ply_io.h>
 //#include "cisstTriangle.h"
 
 class cisstMesh 
@@ -46,7 +47,7 @@ public:
 
   //--- Variables ---//
 
-  vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
+	vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
   vctDynamicVector<vctInt3>   faces;          // the vertex indices for each triangle in the mesh
   vctDynamicVector<vct3>      faceNormals;    // the face normal for each triangle in the mesh
 
@@ -68,6 +69,11 @@ public:
   vctDynamicVector<vct3x3>  TriangleCov;        // triangle covariances
   vctDynamicVector<vct3>    TriangleCovEig;     // triangle covariance eigenvalues (in decreasing size)
 
+private:
+
+  ply_io ply_obj; 
+
+public:
 
   //--- Methods ---//
 
@@ -134,52 +140,52 @@ public:
 	//inline void SetVertexCoord(int vx, float x, float y, float z) {VertexCoordinates[vx].Assign(x,y,z);}
 	//inline void SetVertexCoord(int vx, double x, double y, double z) {VertexCoordinates[vx].Assign(x,y,z);}
 
+
   // Mesh I/O
 
-  // Build mesh from an array of vertices and faces;
-  // face normals are computed from the vertex positions assuming
-  // vertex order follows the right-hand rule relative to the face normal
+  // Build mesh from data arrays
   int  LoadMesh(
-    const vctDynamicVector<vct3> &V,
-    const vctDynamicVector<vctInt3> &T);
+    const vctDynamicVector<vct3> *vertices,
+    const vctDynamicVector<vctInt3> *faces,
+    const vctDynamicVector<vct3> *face_normals = NULL, 
+    const vctDynamicVector<vctInt3> *face_neighbors = NULL,
+    const vctDynamicVector<vct3> *vertex_normals = NULL
+    );
 
-  // Build mesh from an array of vertices, faces, and face normals
-  int  LoadMesh(
-    const vctDynamicVector<vct3> &V,
-    const vctDynamicVector<vctInt3> &T,
-    const vctDynamicVector<vct3> &N);
+  // Load mesh from PLY file
+  void LoadPLY(const std::string &input_file);
 
+  // Save mesh to PLY fle
+  void SavePLY(const std::string &output_file);
   // Build new mesh from a single .mesh file
-  int  LoadMeshFile(const std::string &meshFilePath);
+  //int  LoadMeshFile(const std::string &meshFilePath);
 
   int  LoadModelFile(const std::string &modelFilePath, int numModes);
 
-  // Build new mesh from multiple .mesh files
-  int  LoadMeshFileMultiple( const std::vector<std::string> &meshFilePaths ); 
 
-  // Save mesh to .mesh file
-  int  SaveMeshFile( const std::string &filePath );
+  //// Save mesh to .mesh file
+  //int  SaveMeshFile( const std::string &filePath );
 
-  // Build new mesh from .stl file
-  int  LoadMeshFromSTLFile(const std::string &stlFilePath);
+  //// Build new mesh from .stl file
+  //int  LoadMeshFromSTLFile(const std::string &stlFilePath);
 
 private:
 
   // Load .mesh file, adding it to the current mesh while preserving all
   //  data currently existing in the mesh
-	int  AddMeshFile(const std::string &meshFilePath);
+	//int  AddMeshFile(const std::string &meshFilePath);
 
 	int  AddModelFile(const std::string &modelFilePath, int numModes);
 
-public:
-
-  // Legacy Mesh I/O
-	void ReadMeshFile(const char *fn);
-  void ReadMeshMeshFile( const std::string &meshFilePath );
-	void ReadSURMeshFile(const char *fn);
-	void ReadSFCMeshFile(const char *fn);
-	void WriteMeshFile(const char *fn);
-	void WriteSURMeshFile(const char *fn);
+//public:
+//
+//  // Legacy Mesh I/O
+//	void ReadMeshFile(const char *fn);
+//  void ReadMeshMeshFile( const std::string &meshFilePath );
+//	void ReadSURMeshFile(const char *fn);
+//	void ReadSFCMeshFile(const char *fn);
+//	void WriteMeshFile(const char *fn);
+//	void WriteSURMeshFile(const char *fn);
 };
 
 #endif // _cisstMesh_h_

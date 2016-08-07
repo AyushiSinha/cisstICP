@@ -158,7 +158,7 @@ public:
   void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   double  ComputeRpos();
 
-  void  SetNoiseModel(
+  void SetNoiseModel(
     double initK, double initSigma2, double wRpos, bool dynamicallyEstParams);
 
   void SetSamples(

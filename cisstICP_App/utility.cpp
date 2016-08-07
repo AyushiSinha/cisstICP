@@ -682,7 +682,7 @@ void CreateMesh(cisstMesh &mesh,
   std::string *SavePath_Mesh)
 {
   // load mesh
-  mesh.LoadMeshFile(meshLoadPath);
+  mesh.LoadPLY(meshLoadPath);
   if (mesh.NumVertices() == 0)
   {
     printf("ERROR: Read mesh resulted in 0 triangles\n");
@@ -692,7 +692,8 @@ void CreateMesh(cisstMesh &mesh,
   // save mesh
   if (SavePath_Mesh)
   {
-    if (mesh.SaveMeshFile((*SavePath_Mesh).append(".mesh")) < 0)
+    // TODO: update
+    //if (mesh.SaveMeshFile((*SavePath_Mesh).append(".mesh")) < 0)
     {
       std::cout << "ERROR: Save mesh failed" << std::endl;
       assert(0);

@@ -27,6 +27,16 @@ IF (cisst_FOUND_AS_REQUIRED)
   # load cisst configuration
   include (${CISST_USE_FILE})
 
+  # rply library
+  find_path( RPLY_DIR
+    NAMES rply.c
+    HINTS ../rply-1.1.4
+    DOC  "path to the rply library directory"
+    )
+  IF (RPLY_DIR)
+    include_directories(${RPLY_DIR})
+  ENDIF (RPLY_DIR)  
+  
   # dlib library
   #  (this library consists only of header files)
   find_path( DLIB_INCLUDE
@@ -115,7 +125,9 @@ IF (cisst_FOUND_AS_REQUIRED)
     RegisterP2P.h
     Ellipsoid_OBB_Intersection_Solver.cpp
     Ellipsoid_OBB_Intersection_Solver.h
-    cisstException.h    
+    cisstException.h
+    ply_io.cpp
+    ply_io.h
     # 3D Registration
     # non-oriented point routines
     PDTreeBase.cpp
@@ -253,6 +265,15 @@ IF (cisst_FOUND_AS_REQUIRED)
       ExtraAlgorithms/algICP_RobustICP_PointCloud.h
       )
   ENDIF (USE_EXTRA_ALGORITHMS)
+    
+  IF (RPLY_DIR)
+    set( cisstICP_FILES
+      ${cisstICP_FILES}
+      ${RPLY_DIR}/rply.c
+      #rply.h
+      #rplyfile.h
+      )
+  ENDIF (RPLY_DIR)
     
   # Algorithms requiring dlib (for quasi-Newton optimizer)
   IF (DLIB_INCLUDE)

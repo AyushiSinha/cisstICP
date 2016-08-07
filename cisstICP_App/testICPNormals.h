@@ -122,9 +122,10 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   vctDynamicVector<vct3x2>  sampleNoiseL;
 
 #if 1
-
-  std::string loadSourceMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  std::string loadTargetMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  std::string loadSourceMeshPath = workingDir + "ProximalFemur.ply";
+  std::string loadTargetMeshPath = workingDir + "ProximalFemur.ply";
+  //std::string loadSourceMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  //std::string loadTargetMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
