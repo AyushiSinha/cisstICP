@@ -122,13 +122,13 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
 #if 1
 
-  std::string loadMeshPath = workingDir + "ProximalFemur.ply";
-  //std::string loadMeshPath = workingDir + "Warped_MT.ply";
+  //std::string loadMeshPath = workingDir + "ProximalFemur.ply";
+  std::string loadMeshPath = workingDir + "MiddleTurbinate.ply";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
 
-	std::string loadModelPath = workingDir + "atlas_mt.txt";
+  std::string loadModelPath = workingDir + "atlas_mt.txt";
 
   const int nSamples = 100;
 
@@ -147,10 +147,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   double PointCloudNoisePerpPlane = 0.5;  // noise model for point cloud using mesh constructor
                                           //  Note: in-plane noise set automatically relative to triangle size
 
-  double minOffsetPos = 50.0;
-  double maxOffsetPos = 100.0;
-  double minOffsetAng = 30.0;
-  double maxOffsetAng = 60.0;
+  double minOffsetPos = 25.0; // 50.0;
+  double maxOffsetPos = 50.0; // 100.0;
+  double minOffsetAng = 15.0; // 30.0;
+  double maxOffsetAng = 30.0; // 60.0;
   
   double percentOutliers = 0.05;
   double minPosOffsetOutlier = 5.0;
@@ -164,7 +164,17 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   unsigned int randSeqPos2 = 28;
 
   // load mesh
-	CreateMesh(mesh, loadMeshPath, &saveMeshPath);
+  CreateMesh(mesh, loadMeshPath, &saveMeshPath);
+
+  if (algType == AlgType_DIMLP){
+	  int check = ReadShapeModel(mesh, loadModelPath, 2);
+	  if (check != 1) {
+		  std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
+		  algType = AlgType_IMLP;
+	  }
+  }
+
+  mesh.SavePLY("newer_estVertices.ply");
 
   // Create target shape from mesh (as a PD tree)
   if (TargetShapeAsMesh)
@@ -234,15 +244,6 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		Fi);
   // save initial offset
   transform_write(Fi, saveOffsetXfmPath);
-
-	if (algType == AlgType_DIMLP){
-		int check = ReadShapeModel(mesh, loadModelPath, 2);
-		if (check != 1) {
-			std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
-			algType = AlgType_IMLP;
-		}
-	}
-
 
   noisySamples2d.SetSize(1);
   noisyNorms2d.SetSize(1);

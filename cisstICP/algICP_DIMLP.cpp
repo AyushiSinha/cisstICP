@@ -306,6 +306,7 @@ void algICP_DIMLP::T_ssm()
 {
 	vctDynamicVector<vct3> tmpMean(nSamples);
 	vct3 tmpv0, tmpv1, tmpv2;
+	float tmp_si = 0;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
 		// Find the 3 vertices of the triangle that the matchPoint lies on, i.e., of the matchDatum
@@ -319,6 +320,12 @@ void algICP_DIMLP::T_ssm()
 		tmpv2 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]);
 		Tssm_wi.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2;
 
+		tmp_si = Tssm_wi[s].DotProduct(matchPts[s] - tmpMean[s]);
+	}
+
+	Si[0] = tmp_si;
+	for (unsigned int s = 0; s < nSamples; s++)
+	{
 		Tssm_matchPts.Element(s) = tmpMean.Element(s) + (Si[0] * Tssm_wi.Element(s));
 	}
 }
@@ -347,17 +354,17 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	// x_prev must be at a different value that x0
 	x_prev.SetAll(std::numeric_limits<double>::max());
 
-	//std::cout << "[1]" << std::endl;
 	x = dlib.ComputeRegistration(x0);
 
-	//std::cout << "[2]" << std::endl;
 	//update transform
 	vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
 	vctFixedSizeVectorRef<double, 3, 1> t(x, 3);
 	dF.Rotation() = vctRot3(vctRodRot3(alpha));
 	dF.Translation() = t;
-	Freg = dF * Freg;
-	//std::cout << "[3]" << std::endl;
+	Freg = dF;// *Freg;
+	//Si[0] = x[6];
+
+	//std::cout << Si << "\n" << x << std::endl;
 #else
 	RegisterP2P_TLS(samplePtsXfmd, Tssm_matchPts, //matchPts,
 		R_Mxi_Rt, Myi_sigma2, dF);

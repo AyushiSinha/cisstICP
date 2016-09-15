@@ -88,6 +88,9 @@ void cisstMesh::ResetModel()
 	meanShape.SetSize(0);
 	mode.SetSize(0);
 	modeWeight.SetSize(0);
+	wi.SetSize(0);
+	Si.SetSize(0);
+	estVertices.SetSize(0);
 }
 
 void cisstMesh::InitializeNoiseModel()
@@ -314,7 +317,8 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		meanShape.resize(mOffset + numVertices);
 		mode.resize(mOffset + numVertices);
 		wi.resize(mOffset + numVertices);
-		Si.resize(mOffset + modes);
+		Si.resize(mOffset + modes - 1);
+		estVertices.resize(mOffset + numVertices);
 
 		while (vertCount < numVertices)
 		{
@@ -334,10 +338,10 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			{
 				mode.at(mOffset + vertCount).Assign(m);
 
-				// wi = sqrt(lambda_i*mi)
-				w[0] = f1*sqrt(modeWt);
-				w[1] = f2*sqrt(modeWt);
-				w[2] = f3*sqrt(modeWt);
+				// wi = sqrt(lambda_i)*mi
+				w[0] = f1*sqrt(modeWt); //sqrt(modeWt);
+				w[1] = f2*sqrt(modeWt); //sqrt(modeWt);
+				w[2] = f3*sqrt(modeWt); //sqrt(modeWt);
 				/*if (vertCount == 50) {
 				std::cout << w[0] << " = sqrt( " << f1 << " * " << modeWt << ")" << std::endl;
 				std::cout << w[1] << " = sqrt( " << f2 << " * " << modeWt << ")" << std::endl;
@@ -354,14 +358,34 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			return -1;
 		}
 		// si = wi*(V-meanV)
-		int tmp_si = 0;
-		if (modeCount > 0) {
-			for (int i = 0; i < vertCount; i++)
-				tmp_si += wi[i].DotProduct(vertices[i] - meanShape[i]);
+		if (modeCount >= 1)
+		{
+			float tmp_si = 0;
+			if (modeCount > 0) {
+				for (int i = 0; i < numVertices; i++)
+				{
+					tmp_si += wi[i].DotProduct(vertices[i] - meanShape[i]); // stack into a long 1 vector (rather than a 3 vector) and compute si, see if it's the same - it should be.
+
+					//if (i<10) {
+					//	std::cout << wi[i] << " dot " << vertices[i] << " - " << meanShape[i] << "=" << wi[0].DotProduct(vertices[i] - meanShape[i]) << "=" << tmp_si << std::endl;
+					//}
+				}
+			}
+			Si[modeCount-1] = tmp_si;
+			//std::cout << tmp_si << "\t" << modeCount << "\t" << Si[modeCount-1] << std::endl;
 		}
-		Si[modeCount] = tmp_si;
 		modeCount++;
 	}
+
+	std::cout << Si[0] << std::endl;
+	for (int i = 0; i < numVertices; i++)
+	{
+		estVertices[i] = meanShape[i] + (Si[0] * wi[i]);
+		//std::cout << wi[i] << "*" << Si[0] << "=" << Si[0] * wi[i] << std::endl;
+	}
+
+	//vertices = estVertices;
+
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)
 	{
 		std::cout << "ERROR: read points from model file failed; last line read: " << line << std::endl;

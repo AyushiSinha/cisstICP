@@ -53,8 +53,8 @@ int main(void)
   ICPAlgType algType;
   //algType = AlgType_StdICP;
   //algType = AlgType_IMLP;
-  //algType = AlgType_DIMLP;
-  algType = AlgType_VIMLOP;
+  algType = AlgType_DIMLP;
+  //algType = AlgType_VIMLOP;
   testICP(TargetShapeAsMesh, algType);
 
   TargetShapeAsMesh = true;
