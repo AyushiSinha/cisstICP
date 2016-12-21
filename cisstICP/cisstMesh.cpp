@@ -1,7 +1,8 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
-//    All rights reserved.
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University. 
+//	  All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
 //    modification, are permitted provided that the following conditions are
@@ -286,6 +287,15 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 	}
 
 	unsigned int modeCount = 0;
+	vctDynamicVector<float> W;
+	vctDynamicVector<float> V;
+	vctDynamicVector<float> M;
+	vctDynamicVector<float> E;
+	W.SetSize(numVertices * 3);
+	V.SetSize(numVertices * 3);
+	M.SetSize(numVertices * 3);
+	E.SetSize(numVertices * 3);
+	float tmp_si = 0;
 	while (modelFile.good() && modeCount < modes)
 	{
 		unsigned int vertCount = 0;
@@ -339,9 +349,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				mode.at(mOffset + vertCount).Assign(m);
 
 				// wi = sqrt(lambda_i)*mi
-				w[0] = f1*sqrt(modeWt); //sqrt(modeWt);
-				w[1] = f2*sqrt(modeWt); //sqrt(modeWt);
-				w[2] = f3*sqrt(modeWt); //sqrt(modeWt);
+				w = m * sqrt(modeWeight[modeCount - 1]);
 				/*if (vertCount == 50) {
 				std::cout << w[0] << " = sqrt( " << f1 << " * " << modeWt << ")" << std::endl;
 				std::cout << w[1] << " = sqrt( " << f2 << " * " << modeWt << ")" << std::endl;
@@ -360,30 +368,45 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		// si = wi*(V-meanV)
 		if (modeCount >= 1)
 		{
-			float tmp_si = 0;
 			if (modeCount > 0) {
-				for (int i = 0; i < numVertices; i++)
+				for (int i = 0; i < 3; i++)
 				{
-					tmp_si += wi[i].DotProduct(vertices[i] - meanShape[i]); // stack into a long 1 vector (rather than a 3 vector) and compute si, see if it's the same - it should be.
-
-					//if (i<10) {
-					//	std::cout << wi[i] << " dot " << vertices[i] << " - " << meanShape[i] << "=" << wi[0].DotProduct(vertices[i] - meanShape[i]) << "=" << tmp_si << std::endl;
-					//}
+					for (int j = 0; j < numVertices; j++)
+					{
+						W[numVertices*i + j] = wi[j][i];
+						V[numVertices*i + j] = vertices[j][i];
+						M[numVertices*i + j] = meanShape[j][i];
+					}
 				}
+				tmp_si = W.DotProduct(V - M);
+				//for (int i = 0; i < numVertices; i++)
+				//{
+				//	tmp_si += wi[i].DotProduct(vertices[i] - meanShape[i]); // stack into a long 1 vector (rather than a 3 vector) and compute si, see if it's the same - it should be.
+
+				//	//if (i<10) {
+				//	//	std::cout << wi[i] << " dot " << vertices[i] << " - " << meanShape[i] << "=" << wi[0].DotProduct(vertices[i] - meanShape[i]) << "=" << tmp_si << std::endl;
+				//	//}
+				//}
 			}
 			Si[modeCount-1] = tmp_si;
-			//std::cout << tmp_si << "\t" << modeCount << "\t" << Si[modeCount-1] << std::endl;
+			//std::cout << "Si = " << tmp_si << /*"\t" << modeCount << "\t" << Si[modeCount-1] <<*/ std::endl;
 		}
 		modeCount++;
 	}
 
-	std::cout << Si[0] << std::endl;
+	//std::cout << Si[0] << std::endl;
+	E = M + (tmp_si * W);
 	for (int i = 0; i < numVertices; i++)
 	{
-		estVertices[i] = meanShape[i] + (Si[0] * wi[i]);
+		estVertices[i][0] = E[0 * numVertices + i];//meanShape[i] + (Si[0] * wi[i]);
+		estVertices[i][1] = E[1 * numVertices + i];
+		estVertices[i][2] = E[2 * numVertices + i];
 		//std::cout << wi[i] << "*" << Si[0] << "=" << Si[0] * wi[i] << std::endl;
 	}
-
+	//cisstMesh meanMesh;
+	//meanMesh.vertices = estVertices;
+	//meanMesh.faces = this->faces;
+	//meanMesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/test.ply");
 	//vertices = estVertices;
 
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)

@@ -62,6 +62,7 @@ public:
 	// -- Optimizer calculations common to both cost and gradient function
 	vct7 x_prev;
 	vct3 a, t;
+	vct1 s;
 	vctRot3 Ra;
 	vctDynamicVector<vct3> Tssm_Y_t;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
@@ -75,8 +76,8 @@ protected:
 
 	// Deformable Variables
 	vctDynamicVector<vct3>	meanShape;
-	vctDynamicVector<vct3>	sampleModes;
-	vctDynamicVector<double> sampleModeWts;	
+	//vctDynamicVector<vct3>	sampleModes;
+	//vctDynamicVector<double> sampleModeWts;	
 
 	vctDynamicVector<vct3>		wi;
 	vctDynamicVector<double>	Si;		// shape parameter
@@ -91,8 +92,8 @@ public:
 		vctDynamicVector<vct3x3> &sampleCov,      // full noise model (measurement noise + surface model)
 		vctDynamicVector<vct3x3> &sampleMsmtCov,  // partial noise model (measurement noise only)
 		vctDynamicVector<vct3> &meanShape,
-		vctDynamicVector<vct3> &sampleModes,
-		vctDynamicVector<double> &sampleModeWts,
+		//vctDynamicVector<vct3> &sampleModes,
+		//vctDynamicVector<double> &sampleModeWts,
 		double outlierChiSquareThreshold = 7.81,
 		double sigma2Max = std::numeric_limits<double>::max());
 
@@ -102,9 +103,9 @@ public:
 		vctDynamicVector<vct3> &argSamplePts,
 		vctDynamicVector<vct3x3> &argMxi,
 		vctDynamicVector<vct3x3> &argMsmtMxi,
-		vctDynamicVector<vct3> &argmeanShape,
+		vctDynamicVector<vct3> &argmeanShape/*,
 		vctDynamicVector<vct3> &argSampleModes,
-		vctDynamicVector<double> &argSampleModeWts);
+		vctDynamicVector<double> &argSampleModeWts*/);
 
 
 	void    UpdateOptimizerCalculations(const vct7 &x);

@@ -1,8 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, 
-//	  Johns Hopkins University. 
-//	  All rights reserved.
+//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
 //    modification, are permitted provided that the following conditions are
@@ -32,8 +31,8 @@
 //    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 // ****************************************************************************
-#include "algICP_DIMLP_dlibWrapper.h"
-#include "algICP_DIMLP.h"
+#include "algDirICP_VIMLOP_dlibWrapper.h"
+#include "algDirICP_VIMLOP.h"
 
 #include <assert.h>
 #undef NDEBUG       // enable debug in release mode
@@ -47,11 +46,11 @@ namespace
 {
   // Global variables
   //  (referenced from global functions)
-	algICP_DIMLP *alg = NULL;
+	algDirICP_VIMLOP *alg = NULL;
 
   // Global functions
   //  (needed for function pointers)
-  double fValue(const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
+  double fValue(const algDirICP_VIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
     static vct7 x;
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
@@ -61,12 +60,12 @@ namespace
     return alg->CostFunctionValue(x);
   }
 
-  algICP_DIMLP_dlibWrapper::dlib_vector fDerivative(
-	  const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
+  algDirICP_VIMLOP_dlibWrapper::dlib_vector fDerivative(
+	  const algDirICP_VIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
     static vct7   x;
     static vct7   g;
-	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
+	static algDirICP_VIMLOP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
 
     x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
 		x_dlib(3), x_dlib(4), x_dlib(5),
@@ -89,7 +88,7 @@ namespace
 //--- Non-Globals ---//
 
 // Constructor
-algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
+algDirICP_VIMLOP_dlibWrapper::algDirICP_VIMLOP_dlibWrapper(algDirICP_VIMLOP *argAlg)
   : maxIter( 20 ),
   //tol_df( 1.0e-6 ),
   gradientNormThresh( 1.0e-3 )
@@ -98,10 +97,11 @@ algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
 }
 
 
-vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
+vct7 algDirICP_VIMLOP_dlibWrapper::ComputeRegistration(const vct7 &x0)
 {
   dlib_vector x_dlib(7);  // 7-element vector
 
+  //std::cout << "[1.1]" << std::endl;
   try
   {
     // Now we use the find_min() function to find the minimum point.  The first argument
@@ -124,9 +124,8 @@ vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
 	x_dlib(6) = x0[6];
 
 #ifdef DLIB_VERIFY_DERIVATIVE
-    std::cout << "Difference between analytic derivative and numerical approximation of derivative: \n" 
-		<< dlib::derivative(fValue)(x_dlib) << " - " << fDerivative(x_dlib) << " = "
-      << dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib) << std::endl;
+    std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 
+      << dlib::length(dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib)) << std::endl;
 #endif
 
 
@@ -138,12 +137,14 @@ vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
       fValue, fDerivative,
       x_dlib, -1.0);
 #else
+	//std::cout << "[1.2]" << std::endl;
     dlib::find_min( 
       dlib::bfgs_search_strategy(),
       //dlib::objective_delta_stop_strategy( Tol_df,maxIter ),
       dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
-	  fValue, dlib::derivative(fValue),//fDerivative, 
+      fValue, fDerivative,
 	  x_dlib, -1.0);
+	//std::cout << "[1.3]" << std::endl;
 #endif
 
     //dlib::find_min_using_approximate_derivatives(
@@ -158,7 +159,9 @@ vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
     assert(0);
   }
 
+  //std::cout << "[1.4]" << std::endl;
   return vct7( x_dlib(0), x_dlib(1), x_dlib(2), 
 			   x_dlib(3), x_dlib(4), x_dlib(5),
 			   x_dlib(6));
+  //std::cout << "[1.5]" << std::endl;
 }

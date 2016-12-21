@@ -47,22 +47,27 @@
 
 algDirICP_VIMLOP::algDirICP_VIMLOP(
   PDTree_Mesh *pTree,
-  //DirPDTree2DBase *pDirTree,
+  DirPDTree2D_Edges *pDirTree,
   vctDynamicVector<vct3> &samplePts, 
   vctDynamicVector<vct3x3> &sampleCov,
   vctDynamicVector<vct3x3> &sampleMsmtCov, 
-  vctDynamicVector<vct2> &sample2dPts,
-  vctDynamicVector<vct2> &sample2dNorms,
+  vctDynamicVector<vct2> &sampleEdgesV1,
+  vctDynamicVector<vct2> &sampleEdgesV2,
+  vctDynamicVector<vct2> &sampleEdgesNorm,
   vctDynamicVector<vct2x2> &sample2dMsmtCov,
   vctDynamicVector<vct2x2> &sample2dNormCov,
   camera cam,
   double outlierChiSquareThreshold,
   double sigma2Max)
-  : algICP_IMLP_Mesh(pTree, samplePts, sampleCov, sampleMsmtCov, outlierChiSquareThreshold, sigma2Max)//, 
+  : algICP_IMLP_Mesh(pTree, samplePts, sampleCov, sampleMsmtCov, outlierChiSquareThreshold, sigma2Max),
+  alg2D_DirPDTree_vonMises_Edges(pDirTree, sampleEdgesV1, sampleEdgesV2, sampleEdgesNorm),
+  cam(1920, 1080, 1.5, 1.5, 0, 0),
+  dlib(this) //, 
   //alg2D_DirICP(pDirTree, sample2dPts, sample2dNorms),
   //alg2D_DirPDTree_vonMises(pDirTree)
 {
-	SetSamples(samplePts, sampleCov, sampleMsmtCov, sample2dPts, sample2dNorms, sample2dMsmtCov, sample2dNormCov);
+	SetSamples(samplePts, sampleCov, sampleMsmtCov, sampleEdgesV1, sampleEdgesV2, sampleEdgesNorm, sample2dMsmtCov, sample2dNormCov);
+	cam.SetSamples(1920, 1080, 1.5, 1.5, 0, 0);
 }
 
 
@@ -70,7 +75,7 @@ void algDirICP_VIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 {
   // base class
 	algICP_IMLP_Mesh::ComputeMatchStatistics(Avg, StdDev);
-	//alg2D_DirICP::ComputeCircErrorStatistics()
+	//alg2D_DirICP::ComputeCircErrorStatistics() 
 }
 
 // TODO: change this so that covariances for measurement noise
@@ -83,18 +88,29 @@ void algDirICP_VIMLOP::SetSamples(
   vctDynamicVector<vct3> &argSamplePts,
   vctDynamicVector<vct3x3> &argMxi,
   vctDynamicVector<vct3x3> &argMsmtMxi,
-  vctDynamicVector<vct2> &argSample2dPts,
-  vctDynamicVector<vct2> &argSample2dNorms,
+  vctDynamicVector<vct2> &argSampleEdgesV1,
+  vctDynamicVector<vct2> &argSampleEdgesV2,
+  vctDynamicVector<vct2> &argSampleEdgesNorm,
   vctDynamicVector<vct2x2> &arg2dMsmtMxi,
   vctDynamicVector<vct2x2> &arg2dNormMxi)
 {
 	algICP_IMLP_Mesh::SetSamples(argSamplePts, argMxi, argMsmtMxi);
-	//alg2D_DirICP::SetSamples(argSample2dPts, argSample2dNorms);
+	alg2D_DirPDTree_vonMises_Edges::SetSamples(argSampleEdgesV1, argSampleEdgesV2, argSampleEdgesNorm);
 
 	// 2D
-	//MsmtMxi = arg2dMsmtMxi; 
-	//NormMxi = arg2dNormMxi;
+	MsmtMxi = arg2dMsmtMxi; 
+	NormMxi = arg2dNormMxi;
 
+	Ysfm_t.resize(algICP_IMLP::nSamples);
+	Rat_Ysfm_t_x.resize(algICP_IMLP::nSamples);
+	invMx_Rat_Ysfm_t_x.resize(algICP_IMLP::nSamples);
+
+	Y3dp_t.resize(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	F_R_Rat_Y3dp_t_x_st_2d_Xxfmd.resize(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd.resize(alg2D_DirPDTree_vonMises_Edges::nSamples);
+
+	S_R_Rat_Y3dn_2d(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	k_S_R_Rat_Y3dn_2d_Xxfmd.resize(alg2D_DirPDTree_vonMises_Edges::nSamples);
 	//outlierFlags.SetSize(alg2D_DirICP::nSamples);
 }
 
@@ -242,11 +258,187 @@ double algDirICP_VIMLOP::ICP_EvaluateErrorFunction()
 //  even better: return registration rather than pass-by-reference
 vctFrm3 algDirICP_VIMLOP::ICP_RegisterMatches()
 {
-	return algICP_IMLP_Mesh::ICP_RegisterMatches();
+	return algICP_IMLP_Mesh::ICP_RegisterMatches(); // this won't do, write your own that calls dlib.ComputerRegistration
 	//Freg = alg2D_DirICP::ICP_RegisterMatches();
 
 	//return Freg; // TODO
 	// TODO: implement the 2D version here
+}
+
+void algDirICP_VIMLOP::UpdateOptimizerCalculations(const vct7 &x)
+{
+	a.Assign(x[0], x[1], x[2]);
+	t.Assign(x[3], x[4], x[5]);
+	s = (x[6]);
+
+	Ra = vctRot3(vctRodRot3(a));
+	
+	vctDynamicVectorRef<vct3>   Ysfm(algICP_IMLP::matchPts);
+	vctDynamicVectorRef<vct3>   Xsfm_xfmd(algICP_IMLP::samplePtsXfmd);
+	vctDynamicVector<vct3x3>  inv_Mxi(algICP_IMLP::nSamples);       // inverse noise covariances of match Mxi^-1
+	vctDynamicVector<double>  det_Mxi(algICP_IMLP::nSamples);       // determinant of noise covariances of match |Mxi|
+	
+	vctDynamicVectorRef<vct3>   Y3dp(alg2D_DirPDTree_vonMises_Edges::matchPts);
+	vctDynamicVectorRef<vct2>   X3dp_xfmd(alg2D_DirPDTree_vonMises_Edges::samplePtsXfmd);
+	vctDynamicVector<vct3>   R_Rat_Y3dp_t(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	vctDynamicVector<vct2>   R_Rat_Y3dp_t_st_2d(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	vctDynamicVector<vct2x2>  inv_MsmtMxi(algICP_IMLP::nSamples);       // inverse noise covariances of match Mxi^-1
+	vctDynamicVector<double>  det_MsmtMxi(algICP_IMLP::nSamples);       // determinant of noise covariances of match |Mxi|
+
+	vctDynamicVectorRef<vct3>   Y3dn(alg2D_DirPDTree_vonMises_Edges::matchNorms);
+	vctDynamicVectorRef<vct2>   X3dn_xfmd(alg2D_DirPDTree_vonMises_Edges::sampleNormsXfmd);
+	vctDynamicVector<vct3>   R_Rat_Y3dn(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	vctDynamicVector<vct2>   R_Rat_Y3dn_2d(alg2D_DirPDTree_vonMises_Edges::nSamples);
+
+	// C_sfm_i
+	for (unsigned int i = 0; i < algICP_IMLP::nSamples; i++)
+	{
+		Ysfm_t = Ysfm.Element(i) - t;
+		Rat_Ysfm_t_x.Element(i) = Ra.TransposeRef() * Ysfm_t.Element(i) - Xsfm_xfmd.Element(i).Multiply(s);
+		ComputeCovDecomposition_NonIter(algICP_IMLP::Mxi.Element(i), inv_Mxi.Element(i), det_Mxi.Element(i));
+		invMx_Rat_Ysfm_t_x.Element(i) = inv_Mxi.Element(i) * Rat_Ysfm_t_x.Element(i);
+	}
+	
+	// C_ctrp_ji
+	for (unsigned int i = 0; i < alg2D_DirPDTree_vonMises_Edges::nSamples; i++)
+	{
+		cam.GetPose_Xfm(Freg); //set cam correctly
+
+		Y3dp_t = Y3dp.Element(i) - t;
+		R_Rat_Y3dp_t.Element(i) = Freg.Rotation() * Ra.TransposeRef() * Y3dp_t.Element(i);
+		R_Rat_Y3dp_t_st.Element(i) = R_Rat_Y3dp_t.Element(i) + s*Freg.Translation();
+	}
+	cam.camGetPerspectiveProjection(R_Rat_Y3dp_t_st_2d, R_Rat_Y3dp_t_st);
+
+	for (unsigned int i = 0; i < alg2D_DirPDTree_vonMises_Edges::nSamples; i++)
+	{
+		vct2x2 F;
+		F.SetAll(0);
+		F.Element(0, 0) = cam.fx;
+		F.Element(1, 1) = cam.fy;
+
+		F_R_Rat_Y3dp_t_x_st_2d_Xxfmd.Element(i) = F*R_Rat_Y3dp_t_st_2d.Element(i) - s*X3dp_xfmd.Element(i); //this is the other way around in matlab, but not in thesis
+		ComputeCovDecomposition_NonIter(MsmtMxi.Element(i), inv_MsmtMxi.Element(i), det_MsmtMxi.Element(i));
+		invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd.Element(i) = F_R_Rat_Y3dp_t_x_st_2d_Xxfmd.Element(i) * inv_MsmtMxi.Element(i);
+	}
+
+	// C_ctrn_ji
+	for (unsigned int i = 0; i < alg2D_DirPDTree_vonMises_Edges::nSamples; i++)
+	{
+		cam.GetPose_Xfm(Freg); //set cam correctly
+
+		R_Rat_Y3dn.Element(i) = Freg.Rotation() * Ra.TransposeRef() * Y3dn.Element(i);
+	}
+	cam.camGetOrthographicProjection(R_Rat_Y3dn_2d, R_Rat_Y3dn);
+
+	for (unsigned int i = 0; i < alg2D_DirPDTree_vonMises_Edges::nSamples; i++)
+	{
+		vct2x2 S;
+		S.SetAll(0);
+		S.Element(0, 0) = cam.fx;
+		S.Element(1, 1) = cam.fy;
+
+		S_R_Rat_Y3dn_2d.Element(i) = S*R_Rat_Y3dn_2d.Element(i); 
+		k_S_R_Rat_Y3dn_2d_Xxfmd.Element(i) = -concentration * S_R_Rat_Y3dn_2d.Element(i).Normalized() * X3dn_xfmd.Element(i); // .Normalized();
+	}
+
+	x_prev = x;
+}
+
+double algDirICP_VIMLOP::CostFunctionValue(const vct7 &x)
+{
+	// don't recompute these if already computed for gradient
+	if (x.NotEqual(x_prev))
+	{
+		UpdateOptimizerCalculations(x);
+	}
+
+	double f = 0.0;
+	for (unsigned int i = 0; i < algICP_IMLP::nSamples; i++)
+	{
+		f += 0.5*invMx_Rat_Ysfm_t_x[i] * Rat_Ysfm_t_x[i];
+	}
+	for (unsigned int i = 0; i < alg2D_DirPDTree_vonMises_Edges::nSamples; i++)
+	{
+		f += 0.5*invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd[i] * F_R_Rat_Y3dp_t_x_st_2d_Xxfmd[i];
+		f += k_S_R_Rat_Y3dn_2d_Xxfmd[i];
+	}
+	return f;
+}
+
+void algDirICP_VIMLOP::CostFunctionGradient(const vct7 &x, vct7 &g)
+{
+	vct2x2 F;
+	F.SetAll(0);
+	F.Element(0, 0) = cam.fx;
+	F.Element(1, 1) = cam.fy;
+
+	vctDynamicVectorRef<vct3>   Xsfm_xfmd(algICP_IMLP::samplePtsXfmd);
+	vctFixedSizeVector<vctRot3, 3> dRa;  // Rodrigues Jacobians of R(a) wrt ax,ay,az
+	cam.GetPose_Xfm(Freg); //set cam correctly
+
+	// don't recompute these if already computed for cost function value
+	if (x.NotEqual(x_prev))
+	{
+		UpdateOptimizerCalculations(x);
+	}
+
+	ComputeRodriguesJacobians(a, dRa);
+
+	// form the cost function gradient
+	g.SetAll(0.0);
+	vctDynamicVector<double> Norm_S_R_Rat_Y3dn_2d(alg2D_DirPDTree_vonMises_Edges::nSamples);
+	vctFixedSizeVectorRef<double, 3, 1> ga(g, 0);
+	vctFixedSizeVectorRef<double, 3, 1> gt(g, 3);
+	vctFixedSizeVectorRef<double, 1, 1> gs(g, 6);
+	vctDynamicVector<vct2x3> J_PP;
+	vct3x3 Jz_a, Jyp_a, Jyn_a;
+	vct2x3 Jz_y, Jy_y, J_Pxy;
+	vct2x2 I;
+	vct2 Jc_y;
+
+	for (unsigned int s = 0; s < algICP_IMLP::nSamples; s++)
+	{
+		for (unsigned int c = 0; c < 3; c++)
+		{
+			Jz_a.Column(c) = dRa[c].TransposeRef() * Ysfm_t[s];
+		}
+
+		ga += invMx_Rat_Ysfm_t_x[s] * Jz_a;
+		gt += invMx_Rat_Ysfm_t_x[s] * (-Ra.Transpose());
+		gs += invMx_Rat_Ysfm_t_x[s] * (-Xsfm_xfmd[s]);	// Cmatch component
+
+	}
+
+	I.SetAll(0.0);
+	I(0, 0) = 1;
+	I(1, 1) = 1;
+	J_Pxy.SetAll(0.0);
+	J_Pxy(0, 0) = 1;
+	J_Pxy(1, 1) = 1;
+	cam.camGetPerspectiveProjectionJacobian(J_PP, R_Rat_Y3dp_t_st);
+	for (unsigned int s = 0; s < alg2D_DirPDTree_vonMises_Edges::nSamples; s++)
+	{
+		Jz_y = F * J_PP[s];
+		for (unsigned int c = 0; c < 3; c++)
+		{
+			Jyp_a.Column(c) = dRa[c].TransposeRef() * Y3dp_t[s];
+			Jyn_a.Column(c) = dRa[c].TransposeRef() * matchNorms[s];
+		}
+		Jyp_a = Freg.Rotation() * Jyp_a;
+		Jyn_a = Freg.Rotation() * Jyn_a;
+		
+		ga += invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd[s] * Jz_y * Jyp_a;
+		gt += invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd[s] * Jz_y * (-Freg.Rotation() * Ra.Transpose());
+		gs += invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd[s] * Jz_y * Freg.Translation();	// Cmatch component
+
+		// Maybe do some of the matrix multiplications element by element to ensure you have the right dimensions?
+		Norm_S_R_Rat_Y3dn_2d[s] = S_R_Rat_Y3dn_2d[s].Norm();
+		Jc_y = -concentration * sampleNormsXfmd.Element(s) * (I.Multiply(1.0 / Norm_S_R_Rat_Y3dn_2d[s]) - (S_R_Rat_Y3dn_2d[s] * S_R_Rat_Y3dn_2d[s]) / (Norm_S_R_Rat_Y3dn_2d[s]));
+		Jy_y = F*J_Pxy;
+
+		ga -= Jc_y * Jy_y * Jyn_a;
+	}
 }
 
 unsigned int algDirICP_VIMLOP::ICP_FilterMatches()
@@ -368,11 +560,24 @@ void algDirICP_VIMLOP::ComputeCovDecomposition_NonIter(const vct3x3 &M, vct3x3 &
 	algICP_IMLP_Mesh::ComputeCovDecomposition_NonIter(M, Minv, det_M);
 }
 
+
+void algDirICP_VIMLOP::ComputeCovDecomposition_NonIter(const vct2x2 &M, vct2x2 &Minv, double &det_M)
+{
+	vct2x2 tmp_Minv;
+	tmp_Minv.SetAll(0);
+	tmp_Minv.Element(0, 0) =  M.Element(1, 1);
+	tmp_Minv.Element(0, 1) = -M.Element(0, 1);
+	tmp_Minv.Element(1, 0) = -M.Element(1, 0);
+	tmp_Minv.Element(1, 1) =  M.Element(0, 0);
+
+	det_M = 1.0 / (M.Element(0,0)*M.Element(1,1) - M.Element(0,1)*M.Element(1,0));
+	Minv = det_M * tmp_Minv;
+}
+
 void algDirICP_VIMLOP::ComputeCovDecomposition_NonIter(const vct3x3 &M, vct3x3 &Minv, vct3x3 &N, vct3x3 &Ninv, double &det_M)
 {
 	algICP_IMLP_Mesh::ComputeCovDecomposition_NonIter(M, Minv, N, Ninv, det_M);
 }
-
 
 void algDirICP_VIMLOP::ComputeCovDecomposition_SVD(const vct3x3 &M, vct3x3 &Minv, double &det_M)
 {

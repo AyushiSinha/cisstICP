@@ -133,7 +133,7 @@ public:
       : termMsg(msg), runTime(time), runTimeFirstMatch(timeFirstIter), numIter(numIterations),
         MatchPosErrAvg(PosErrAvg), MatchNormErrAvg(NormErrAvg),
         MatchPosErrSD(PosErrorSD), MatchNormErrSD(NormErrSD),
-        nOutliers(nOutliers)
+        nOutliers((unsigned int)nOutliers)
         {};
   };
 

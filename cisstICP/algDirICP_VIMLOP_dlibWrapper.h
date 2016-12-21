@@ -31,64 +31,35 @@
 //    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 // ****************************************************************************
-#ifndef _alg2D_DirPDTree_h
-#define _alg2D_DirPDTree_h
+#ifndef _algDirICP_VIMLOP_dlibWrapper_h
+#define _algDirICP_VIMLOP_dlibWrapper_h
 
-#include <cisstVector.h>
-#include "cisstException.h"
-#include "DirPDTree2DNode.h"
+#include "cisstVector.h"
+#include "dlib/optimization.h"
 
-class DirPDTree2DBase;     // forward decleration for mutual dependency
+class algDirICP_VIMLOP;  // forward decleration
 
 
-class alg2D_DirPDTree
+class algDirICP_VIMLOP_dlibWrapper
 {
-  //
-  // This is the base class for a family of Directional PD Tree search algorithms
-  //
-
-
-  //--- Algorithm Parameters ---//
-
 public:
 
-  DirPDTree2DBase  *pDirTree;   // the PD tree
+  typedef dlib::matrix<double,0,1> dlib_vector;
 
-  //--- Algorithm Methods ---//
 
-public:
+  // -- Variables -- //
+
+  double maxIter;
+  double gradientNormThresh;
+  //double tol_df;
+
+
+  // -- Methods -- //
 
   // constructor
-  alg2D_DirPDTree(DirPDTree2DBase *pDirTree);
+  algDirICP_VIMLOP_dlibWrapper(algDirICP_VIMLOP *alg);
 
-  // destructor
-  virtual ~alg2D_DirPDTree() {}
-
-  virtual void SetSamples(const vctDynamicVector<vct2> &argSamplePts);
-
-
-  //--- PD Tree Interface Methods ---//
-
-  // fast check if a node might contain a datum having smaller match error
-  //  than the error bound
-  virtual int  NodeMightBeCloser(
-    const vct2 &sample, const vct2 &sampleNorm,
-    DirPDTree2DNode const *node,
-    double ErrorBound) = 0;
-
-  // fast check if a datum might have smaller match error than error bound
-  virtual int  DatumMightBeCloser(
-    const vct2 &sample, const vct2 &sampleNorm,
-    int datum,
-    double ErrorBound) = 0;
-
-  // finds the point on this datum with lowest match error
-  //  and returns the match error and closest point
-  virtual double FindClosestPointOnDatum(
-    const vct2 &sample, const vct2 &sampleNorm,
-    vct2 &closest, vct2 &closestNorm,
-    int datum) = 0;
-
+  vct7  ComputeRegistration( const vct7 &x0 );
 };
 
 #endif

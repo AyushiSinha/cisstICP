@@ -197,8 +197,6 @@ IF (cisst_FOUND_AS_REQUIRED)
     algDirICP_IMLOP.h
     algDirICP_IMLOP_Mesh.cpp
     algDirICP_IMLOP_Mesh.h
-    algDirICP_VIMLOP.cpp
-    algDirICP_VIMLOP.h
     # 2D Registration
     DirPDTree2DBase.cpp
     DirPDTree2DBase.h
@@ -291,6 +289,10 @@ IF (cisst_FOUND_AS_REQUIRED)
       algICP_DIMLP.h
       algICP_DIMLP_dlibWrapper.cpp
       algICP_DIMLP_dlibWrapper.h
+      algDirICP_VIMLOP.cpp
+      algDirICP_VIMLOP.h
+      algDirICP_VIMLOP_dlibWrapper.cpp
+      algDirICP_VIMLOP_dlibWrapper.h
       )
   
     # GIMLOP also requires Numerical Recipes (for 1D Brent Search)

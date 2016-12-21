@@ -65,7 +65,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   int    nThresh = 5;       // Cov Tree Params
   double diagThresh = 5.0;  //  ''
 
-	std::string workingDir = "F:/Registration_Framework/cissticp/test_data/";
+	std::string workingDir = "F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/";
 	std::string outputDir;
 	switch (algType)
 	{
@@ -104,7 +104,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 	std::string saveRegXfmPath = workingDir + outputDir + "SaveRegXfm.txt";
   //std::string saveLPath =             workingDir + outputDir + "SaveSampleL";
 
-  cisstMesh         mesh;
+  cisstMesh         mesh, orig_mesh, samplePts;
   PDTreeBase*         pTree;
   vctDynamicVector<vct3>    samples;
   vctDynamicVector<vct3>    sampleNorms;
@@ -115,7 +115,8 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   vctDynamicVector<vct3x3>  sampleNoiseInvCov;
   vctDynamicVector<vct3x2>  sampleNoiseL;
 
-	vctDynamicVector<vct2> noisySamples2d;
+	vctDynamicVector<vct2> noisyEdgesV1;
+	vctDynamicVector<vct2> noisyEdgesV2;
 	vctDynamicVector<vct2> noisyNorms2d;
 	vctDynamicVector<vct2x2>  sampleNoiseCov2d;
 	vctDynamicVector<vct2x2>  normNoiseCov2d;
@@ -123,7 +124,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 #if 1
 
   //std::string loadMeshPath = workingDir + "ProximalFemur.ply";
-  std::string loadMeshPath = workingDir + "MiddleTurbinate.ply";
+  std::string loadMeshPath = workingDir + "MT.ply";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
   //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
   //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
@@ -147,10 +148,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   double PointCloudNoisePerpPlane = 0.5;  // noise model for point cloud using mesh constructor
                                           //  Note: in-plane noise set automatically relative to triangle size
 
-  double minOffsetPos = 25.0; // 50.0;
-  double maxOffsetPos = 50.0; // 100.0;
-  double minOffsetAng = 15.0; // 30.0;
-  double maxOffsetAng = 30.0; // 60.0;
+  double minOffsetPos = 50.0; // 50.0;
+  double maxOffsetPos = 100.0; // 100.0;
+  double minOffsetAng = 30.0; // 30.0;
+  double maxOffsetAng = 60.0; // 60.0;
   
   double percentOutliers = 0.05;
   double minPosOffsetOutlier = 5.0;
@@ -172,9 +173,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		  std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
 		  algType = AlgType_IMLP;
 	  }
+	  orig_mesh = mesh;
+	  //for (int i = 0; i < mesh.NumVertices(); i ++)
+		 // mesh.vertices[i] = mesh.vertices[i] + mesh.mode[i].Multiply(0.1*mesh.modeWeight[0]);
   }
 
-  mesh.SavePLY("newer_estVertices.ply");
+  //mesh.SavePLY("newer_estVertices.ply");
 
   // Create target shape from mesh (as a PD tree)
   if (TargetShapeAsMesh)
@@ -216,11 +220,13 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   //cisstRandomSeq.SetSequencePosition( randSeqPos1 );
 
   // Generate random samples from mesh
-  GenerateSamples(mesh, randSeed1, randSeqPos1, nSamples,
+  printf("Generating sample points...\n");
+  GenerateSamples(orig_mesh, randSeed1, randSeqPos1, nSamples,
                    samples, sampleNorms, sampleDatums,
 		&saveSamplesPath);
 
   // Add noise to samples
+  printf("Generating sample noise...\n");
   GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
       sampleNoiseInPlane, sampleNoisePerpPlane, 0.0, 0.0,
       samples, sampleNorms,
@@ -238,6 +244,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 
   // Generate random initial offset
   vctFrm3 Fi;
+  printf("Generating sample transform...\n");
 	GenerateRandomTransform(randSeed2, randSeqPos2,
                            minOffsetPos, maxOffsetPos,
                            minOffsetAng, maxOffsetAng,
@@ -245,7 +252,9 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   // save initial offset
   transform_write(Fi, saveOffsetXfmPath);
 
-  noisySamples2d.SetSize(1);
+  //noisySamples2d.SetSize(1);
+  noisyEdgesV1.SetSize(1);
+  noisyEdgesV2.SetSize(1);
   noisyNorms2d.SetSize(1);
   sampleNoiseCov2d.SetSize(1);
   normNoiseCov2d.SetSize(1);
@@ -318,6 +327,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   xfmCallback.userData = (void*)(&xfmFileStream);
   userCallbacks.push_back( xfmCallback );
 
+  printf("Applying sample offset Fi... \n");
   std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
   vctFrm3 FGuess = Fi;
 
@@ -377,7 +387,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   {
 	  PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
 	  algICP_DIMLP *pAlg;
-	  pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, mesh.mode, mesh.modeWeight);
+	  pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape);
 
 	  mesh.TriangleCov.SetSize(mesh.NumTriangles());
 	  mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
@@ -390,9 +400,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   case AlgType_VIMLOP:
   {
 	  PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+	  DirPDTree2D_Edges *pDirTree = dynamic_cast<DirPDTree2D_Edges*>(pDirTree);
 	  camera cam(500, 500, 1, 1, 0, 0);
 	  algDirICP_VIMLOP *pAlg;
-	  pAlg = new algDirICP_VIMLOP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, noisySamples2d, noisyNorms2d, sampleNoiseCov2d, normNoiseCov2d, cam);
+	  pAlg = new algDirICP_VIMLOP(pTreeMesh, pDirTree, noisySamples, sampleNoiseCov, sampleNoiseCov, noisyEdgesV1, noisyEdgesV2, noisyNorms2d, sampleNoiseCov2d, normNoiseCov2d, cam);
 
 	  mesh.TriangleCov.SetSize(mesh.NumTriangles());
 	  mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
@@ -456,6 +467,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
   resultStream << "Registration Error:\tdAng: " << rerr*180/cmnPI << "\tdPos: " << terr << std::endl << std::endl;
   std::cout << resultStream.str();
   iterFileStream << resultStream.str();
+
+  //mesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/finalMesh.ply");
+  //samplePts.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/finalPts.ply");
+
 
   if (pICPAlg) delete pICPAlg;
 

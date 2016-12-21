@@ -36,13 +36,14 @@
 
 #include "algICP_IMLP_Mesh.h"
 #include "alg2D_DirICP.h"
-#include "alg2D_DirPDTree_vonMises.h"
+#include "alg2D_DirPDTree_vonMises_Edges.h"
 #include "Ellipsoid_OBB_Intersection_Solver.h"
+#include "algDirICP_VIMLOP_dlibWrapper.h"
 #include "utilities.h"
 #include "camera.h"
 #include <limits.h>
 
-class algDirICP_VIMLOP : public algICP_IMLP_Mesh//, public alg2D_DirICP, public alg2D_DirPDTree_vonMises
+class algDirICP_VIMLOP : public algICP_IMLP_Mesh, public alg2D_DirPDTree_vonMises_Edges//, public camera
 {
   //
   // This class implements algorithms for Iterative Most Likely Point
@@ -64,7 +65,28 @@ class algDirICP_VIMLOP : public algICP_IMLP_Mesh//, public alg2D_DirICP, public 
   //         are possible (in case of very small |Mi|)
   //
 
+public:
 
+	algDirICP_VIMLOP_dlibWrapper dlib;
+
+	// -- Optimizer calculations common to both cost and gradient function
+	vct7 x_prev;
+	vct3 a, t;
+	double s;
+	vctRot3 Ra;
+	camera cam;
+
+	vctDynamicVector<vct3>   Ysfm_t;
+	vctDynamicVector<vct3>   Rat_Ysfm_t_x;
+	vctDynamicVector<vct3>   R_Rat_Y3dp_t_st;
+	vctDynamicVector<vct3>   invMx_Rat_Ysfm_t_x;
+
+	vctDynamicVector<vct3>   Y3dp_t;
+	vctDynamicVector<vct2>   F_R_Rat_Y3dp_t_x_st_2d_Xxfmd;
+	vctDynamicVector<vct2>   invMx_F_R_Rat_Y3dp_t_x_st_2d_Xxfmd;
+
+	vctDynamicVector<vct2>		S_R_Rat_Y3dn_2d;
+	vctDynamicVector<double>	k_S_R_Rat_Y3dn_2d_Xxfmd;
   //-- Algorithm Parameters --//
 
 protected:
@@ -109,6 +131,7 @@ protected:
   // covariance model for outlier tests
   //  (does not include planar noise model)
   vctDynamicVector<vct2x2> R_MsmtMxi_Rt;
+  double concentration;
 
   // algorithm-specific termination
   bool bTerminateAlgorithm;
@@ -142,12 +165,13 @@ public:
   // constructor
   algDirICP_VIMLOP(
     PDTree_Mesh *pTree,
-	//DirPDTree2DBase *pDirTree,
+	DirPDTree2D_Edges *pDirTree,
     vctDynamicVector<vct3> &samplePts, 
     vctDynamicVector<vct3x3> &sampleCov,      // full noise model (measurement noise + surface model)
     vctDynamicVector<vct3x3> &sampleMsmtCov,  // partial noise model (measurement noise only)
-	vctDynamicVector<vct2> &sample2dPts,
-	vctDynamicVector<vct2> &sample2dNorms,
+	vctDynamicVector<vct2> &sampleEdgesV1,
+	vctDynamicVector<vct2> &sampleEdgesV2,
+	vctDynamicVector<vct2> &sampleEdgesNorm,
 	vctDynamicVector<vct2x2> &sample2dMsmtCov,
 	vctDynamicVector<vct2x2> &sample2dNormCov,
 	camera cam,
@@ -164,8 +188,9 @@ public:
     vctDynamicVector<vct3> &argSamplePts, 
     vctDynamicVector<vct3x3> &argMxi, 
 	vctDynamicVector<vct3x3> &argMsmtMxi,
-	vctDynamicVector<vct2> &argSample2dPts,
-	vctDynamicVector<vct2> &argSample2dNorms,
+	vctDynamicVector<vct2> &argSampleEdgesV1,
+	vctDynamicVector<vct2> &argSampleEdgesV2,
+	vctDynamicVector<vct2> &argSampleEdgesNorm,
 	vctDynamicVector<vct2x2> &arg2dMsmtMxi,
 	vctDynamicVector<vct2x2> &arg2dNormMxi);
 
@@ -185,6 +210,10 @@ public:
   void SetChiSquareThreshold(double ChiSquareValue) { ChiSquareThresh = ChiSquareValue; }
   void SetSigma2Max(double sigma2MaxValue) { sigma2Max = sigma2MaxValue; }
 
+  void    UpdateOptimizerCalculations(const vct7 &x); 
+  void    CostFunctionGradient(const vct7 &x, vct7 &g);
+  double  CostFunctionValue(const vct7 &x);
+
 protected:
 
   void UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg);
@@ -196,6 +225,8 @@ protected:
 
   void ComputeCovDecomposition_SVD(const vct3x3 &M, vct3x3 &Minv, double &det_M);
   void ComputeCovDecomposition_SVD(const vct3x3 &M, vct3x3 &Minv, vct3x3 &N, vct3x3 &Ninv, double &det_M);
+
+  void algDirICP_VIMLOP::ComputeCovDecomposition_NonIter(const vct2x2 &M, vct2x2 &Minv, double &det_M);
 
   bool IntersectionSphereFace(const vct3 &n,
     const vct3 &v0, const vct3 &v1,

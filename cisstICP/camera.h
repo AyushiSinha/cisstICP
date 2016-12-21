@@ -37,6 +37,8 @@
 
 #include <cisstVector.h>
 
+class algDirICP_VIMLOP;  // forward decleration
+
 class camera
 {
   //
@@ -90,7 +92,23 @@ public:
   virtual void camGetPose_Xfm2Cam(vctFrm3 F);
   virtual void SetPose_Cam(vct3 cpos, vct3 ctar, vct3 cup);
   virtual void camGetPose_Cam2Xfm(vct3 cpos, vct3 ctar, vct3 cup);
-  virtual void GetCoord_Pix2imPix(vctDynamicVector<vct2> pPixel);
+
+  virtual void GetPose_Xfm(vctFrm3 &F);
+  virtual void GetPose_Cam(vct3 &cpos, vct3 &ctar, vct3 &cup);
+
+  virtual void MoveScene_Xfm(vctFrm3 dF);
+  virtual void GetXfmScenePose_Xfm(vctFrm3 dF);
+  virtual void GetScaledExtrinsics(float scale, vctFrm3 &Fs);
+  virtual void GetFocalLengthMatrix(vct2x2 &FL);
+
+  virtual void GetCoord_Pix2World(vctDynamicVector<vct2> pPixel, vctDynamicVector<vct1> Z, vctDynamicVector<vct3> &pWorld);
+  virtual void GetCoord_Pix2imPix(vctDynamicVector<vct2> pPixel, vctDynamicVector<vct2> &pImPix);
+  virtual void GetCoord_imPix2Pix(vctDynamicVector<vct2> pImPixel, vctDynamicVector<vct2> &pPix);
+
+  virtual void camGetProjectionMatrix(vct4x4& xfmProj, float zNear, float zFar);
+  virtual void camGetPerspectiveProjection(vctDynamicVector<vct2>& point2d, vctDynamicVector<vct3> point3d);
+  virtual void camGetPerspectiveProjectionJacobian(vctDynamicVector<vct2x3>& J_PP, vctDynamicVector<vct3> point3d);
+  virtual void camGetOrthographicProjection(vctDynamicVector<vct2>& point2d, vctDynamicVector<vct3> point3d);
 
 protected:
 

@@ -696,7 +696,7 @@ void CreateMesh(cisstMesh &mesh,
     //if (mesh.SaveMeshFile((*SavePath_Mesh).append(".mesh")) < 0)
     {
       std::cout << "ERROR: Save mesh failed" << std::endl;
-      assert(0);
+      //assert(0);
     }
   }
 }

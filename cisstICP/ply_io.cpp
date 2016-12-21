@@ -273,8 +273,8 @@ int ply_io::write_ply(const std::string &output_ply,
   )
 {
   e_ply_type type;
-  e_ply_type length_type = PLY_UINT;
-  e_ply_type list_type = PLY_UINT;
+  e_ply_type length_type = PLY_UCHAR; // PLY_UINT;
+  e_ply_type list_type = PLY_SHORT; // PLY_UINT;
 
   // create PLY object
   p_ply oply = ply_create(output_ply.c_str(), PLY_ASCII, NULL, 0, NULL);
@@ -290,7 +290,7 @@ int ply_io::write_ply(const std::string &output_ply,
 
   // add elements and properties
   // vertices
-  long nVertices = !vertices.empty() ? vertices.size() : vertex_normals.size();
+  long nVertices = !vertices.empty() ? (long)vertices.size() : (long)vertex_normals.size();
   if (nVertices > 0) {
     // add element
     ply_add_element(oply, "vertex", nVertices);
@@ -311,7 +311,7 @@ int ply_io::write_ply(const std::string &output_ply,
   // faces
   if (!faces.empty()) {
     // add element
-    ply_add_element(oply, "face", faces.size());
+    ply_add_element(oply, "face", (long)faces.size());
 
     // add element properties
     ply_add_property(oply, "vertex_indices", PLY_LIST, length_type, list_type);
@@ -320,7 +320,7 @@ int ply_io::write_ply(const std::string &output_ply,
   // face normals
   if (!face_normals.empty()) {
     // add element
-    ply_add_element(oply, "face_normal", face_normals.size());
+    ply_add_element(oply, "face_normal", (long)face_normals.size());
 
     // add element properties
     if (!face_normals.empty()) {
@@ -333,7 +333,7 @@ int ply_io::write_ply(const std::string &output_ply,
   // face neighbors
   if (!face_neighbors.empty()) {
     // add element
-    ply_add_element(oply, "face_neighbor", face_neighbors.size());
+    ply_add_element(oply, "face_neighbor", (long)face_neighbors.size());
 
     // add element properties
     if (!face_normals.empty()) {
@@ -368,7 +368,7 @@ int ply_io::write_ply(const std::string &output_ply,
 
   // faces
   if (!faces.empty()) {
-    long nFaces = faces.size();
+    long nFaces = (long)faces.size();
     for (long i = 0; i < nFaces; i++) {
       ply_write(oply, 3.0); // list length
       ply_write(oply, (double)faces(i)[0]);
@@ -379,7 +379,7 @@ int ply_io::write_ply(const std::string &output_ply,
 
   // face normals
   if (!face_normals.empty()) {
-    long nFaces = face_normals.size();
+    long nFaces = (long)face_normals.size();
     for (long i = 0; i < nFaces; i++) {
       ply_write(oply, (double)face_normals(i)[0]);
       ply_write(oply, (double)face_normals(i)[1]);
@@ -389,7 +389,7 @@ int ply_io::write_ply(const std::string &output_ply,
 
   // face neighbors
   if (!face_neighbors.empty()) {
-    long nFaces = face_neighbors.size();
+    long nFaces = (long)face_neighbors.size();
     for (long i = 0; i < nFaces; i++) {
       ply_write(oply, (double)face_neighbors(i)[0]);
       ply_write(oply, (double)face_neighbors(i)[1]);

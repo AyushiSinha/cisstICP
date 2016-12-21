@@ -1,7 +1,8 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
-//    All rights reserved.
+//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, 
+//	  Johns Hopkins University. 
+//	  All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
 //    modification, are permitted provided that the following conditions are
@@ -48,8 +49,6 @@ algICP_DIMLP::algICP_DIMLP(
 	vctDynamicVector<vct3x3> &sampleCov,
 	vctDynamicVector<vct3x3> &sampleMsmtCov,
 	vctDynamicVector<vct3> &meanShape,
-	vctDynamicVector<vct3> &sampleModes,
-	vctDynamicVector<double> &sampleModeWts,
 	double outlierChiSquareThreshold,
 	double sigma2Max)
 	: algICP_IMLP(pTree, samplePts, sampleCov, sampleMsmtCov, outlierChiSquareThreshold, sigma2Max),
@@ -58,7 +57,7 @@ algICP_DIMLP::algICP_DIMLP(
 	pMesh(pTree->MeshP),
 	TCPS(*(pTree->MeshP))
 {
-	SetSamples(samplePts, sampleCov, sampleMsmtCov, meanShape, sampleModes, sampleModeWts);
+	SetSamples(samplePts, sampleCov, sampleMsmtCov, meanShape);
 }
 
 void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
@@ -78,7 +77,7 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 		if (outlierFlags[i])	continue;	// skip outliers
 
 		residual = Tssm_matchPts[i] - Freg * samplePts[i];
-		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
+		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().TransposeRef() + *Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
 		sqrMahalDist = residual*Minv*residual;
 
@@ -94,50 +93,38 @@ void algICP_DIMLP::SetSamples(
 	vctDynamicVector<vct3> &argSamplePts,
 	vctDynamicVector<vct3x3> &argMxi,
 	vctDynamicVector<vct3x3> &argMsmtMxi,
-	vctDynamicVector<vct3> &argMeanShape,
-	vctDynamicVector<vct3> &argSampleModes,
-	vctDynamicVector<double> &argSampleModeWts)
+	vctDynamicVector<vct3> &argMeanShape)
 {
-	/*if (argSampleModes.size() != nSamples)
+	if (pMesh->mode.size() != nSamples)
 	{
-		std::cout << "ERROR: number of sample mode matrices (" << argSampleModes.size() << ") does not match number of samples (" << nSamples << ")" << std::endl;
-	}*/
+		std::cout << "ERROR: number of sample mode matrices (" << pMesh->mode.size() << ") does not match number of samples (" << nSamples << ")" << std::endl;
+	}
 
 	// base class
 	algICP_IMLP::SetSamples(argSamplePts, argMxi, argMsmtMxi);
 
 	meanShape = argMeanShape;
-	sampleModes = argSampleModes;
-	sampleModeWts = argSampleModeWts;
 
 	Si = pTree->MeshP->Si;
+	std::cout << "Si = " << Si << std::endl;
 	wi = pTree->MeshP->wi;
+
+	Tssm_wi.resize(nSamples);
+	Tssm_matchPts.resize(nSamples);
 
 	Tssm_Y_t.resize(nSamples);
 	Rat_Tssm_Y_t_x.resize(nSamples);
 	invMx_Rat_Tssm_Y_t_x.resize(nSamples);
 	
-	eta = vct3(0.33, 0.33, 0.33);
+	eta = vct3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
 }
-
-//void algICP_DIMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
-//{
-//	// initialize base class 
-//	algICP_IMLP::ICP_InitializeParameters(FGuess);
-//	this->FGuess = FGuess;
-//
-//	Tssm_Y_t.SetAll(vct3(0.0));
-//	Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
-//	invMx_Rat_Tssm_Y_t_x.SetAll(vct3(0.0));
-//}
 
 void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 {
 	// base class
-	//algICP_IMLP::ICP_UpdateParameters_PostMatch();	
-	Tssm_matchPts.resize(nSamples);
-	Tssm_wi.resize(nSamples);
+	algICP::ICP_UpdateParameters_PostMatch();
 	T_ssm();
+
 	// compute sum of square distances of inliers
 	sumSqrDist_Inliers = 0.0;
 	for (unsigned int s = 0; s < nSamples; s++)
@@ -150,8 +137,6 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 			sumSqrDist_Inliers += sqrDist_PostMatch.Element(s);
 		}
 	}
-	//std::cout << "Here: " << samplePtsXfmd.Element(50) << " " << Tssm_matchPts.Element(50) << " "
-		//<< residuals_PostMatch.Element(50) << " " << sqrDist_PostMatch.Element(50) << " " << sumSqrDist_Inliers << " " << std::endl;
 
 	// update the match uncertainty factor
 	sigma2 = sumSqrDist_Inliers / (nSamples - nOutliers);
@@ -163,7 +148,6 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 	}
 
 	// update noise models of the matches
-	//std::cout << "Match Datums: " << matchDatums.Element(50) << " Sigma: " << sigma2 << std::endl;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
 		//update target covariances
@@ -175,7 +159,6 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 		Myi_sigma2[s].Element(1, 1) += sigma2;
 		Myi_sigma2[s].Element(2, 2) += sigma2;
 	}
-	//std::cout << "Myi: " << Myi_sigma2.Element(50) << std::endl;
 
 	if (bFirstIter_Matches)
 	{
@@ -185,7 +168,7 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 	vctRot3 R(FGuess.Rotation());
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.Transpose();
+		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.TransposeRef();
 	}
 
 #ifdef DEBUG_IMLP
@@ -200,6 +183,8 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 //{
 //	// base class
 //	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
+//	for (int i = 0; i < pMesh->NumVertices(); i++)
+//		pMesh->vertices[i] = pMesh->vertices[i] + Si[0] / sqrt(pMesh->modeWeight[0]) * pMesh->mode[i];
 //}
 
 double algICP_DIMLP::ICP_EvaluateErrorFunction()
@@ -240,7 +225,7 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 	// compute mahalanobis distances of the matches
 	vct3 residual;
 	//T_ssm();
-	//std::cout << "R_Mxi_Rt: " << R_Mxi_Rt.Element(50) << " Myi_sigma2: " << Myi_sigma2.Element(50) << std::endl;
+
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
 		residual = samplePtsXfmd.Element(s) - Tssm_matchPts.Element(s);
@@ -267,10 +252,8 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 	ssmCost += Si.NormSquare();
 
 	prevCostFuncValue = costFuncValue;
-	//std::cout << costFuncValue << std::endl;
-	//std::cout << nklog2PI << " " << logCost << " " << expCost << " " << ssmCost << std::endl;
 	costFuncValue = nklog2PI + (logCost + expCost + nSamples*ssmCost) / 2.0;
-	//std::cout << costFuncValue << std::endl;
+	//costFuncValue = (nklog2PI + logCost + expCost) / 2.0; // IMLP cost func
 	
 	//-- Test for algorithm-specific termination --//
 
@@ -305,22 +288,35 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 void algICP_DIMLP::T_ssm()
 {
 	vctDynamicVector<vct3> tmpMean(nSamples);
-	vct3 tmpv0, tmpv1, tmpv2;
-	float tmp_si = 0;
+	vct3 tmpv0, tmpv1, tmpv2; 
+	vct3 tmpv0_matchPt, tmpv1_matchPt, tmpv2_matchPt;
+	double tmpv0_norm, tmpv1_norm, tmpv2_norm;
+	double tmp_si = 0;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
 		// Find the 3 vertices of the triangle that the matchPoint lies on, i.e., of the matchDatum
 		tmpv0 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]);
+		tmpv0_matchPt = tmpv0 - matchPts.Element(s);
+		tmpv0_norm = tmpv0_matchPt.Norm();
 		tmpv1 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][1]);
+		tmpv1_matchPt = tmpv1 - matchPts.Element(s);
+		tmpv1_norm = tmpv1_matchPt.Norm();
 		tmpv2 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]);
-		tmpMean.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2; //For now, average the three points, later weight it depending on distance from matchPoint
+		tmpv2_matchPt = tmpv2 - matchPts.Element(s);
+		tmpv2_norm = tmpv2_matchPt.Norm();
+
+		eta.Element(0) = tmpv0_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm);
+		eta.Element(1) = tmpv1_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm);
+		eta.Element(2) = tmpv2_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm);
+
+		tmpMean.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2; 
 
 		tmpv0 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]);
 		tmpv1 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][1]);
 		tmpv2 = wi.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]);
 		Tssm_wi.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2;
 
-		tmp_si = Tssm_wi[s].DotProduct(matchPts[s] - tmpMean[s]);
+		tmp_si += Tssm_wi[s].DotProduct(matchPts[s] - tmpMean[s]);
 	}
 
 	Si[0] = tmp_si;
@@ -328,6 +324,7 @@ void algICP_DIMLP::T_ssm()
 	{
 		Tssm_matchPts.Element(s) = tmpMean.Element(s) + (Si[0] * Tssm_wi.Element(s));
 	}
+	//Tssm_matchPts = matchPts;
 }
 
 bool algICP_DIMLP::ICP_Terminate(vctFrm3 &F)
@@ -346,7 +343,7 @@ bool algICP_DIMLP::ICP_Terminate(vctFrm3 &F)
 
 vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 {
-	vctFrm3 dF;
+	vctFrm3 F;
 #if 1
 	vct7 x0(0.0);
 	vct7 x;
@@ -359,27 +356,26 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	//update transform
 	vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
 	vctFixedSizeVectorRef<double, 3, 1> t(x, 3);
-	dF.Rotation() = vctRot3(vctRodRot3(alpha));
-	dF.Translation() = t;
-	Freg = dF;// *Freg;
-	//Si[0] = x[6];
-
-	//std::cout << Si << "\n" << x << std::endl;
+	vctFixedSizeVectorRef<double, 1, 1> s(x, 6);
+	F.Rotation() = vctRot3(vctRodRot3(alpha));
+	F.Translation() = t;
+	Freg = F;// *Freg;
+	Si[0] = x[6];
 #else
 	RegisterP2P_TLS(samplePtsXfmd, Tssm_matchPts, //matchPts,
-		R_Mxi_Rt, Myi_sigma2, dF);
-	Freg = dF*Freg;
+		R_Mxi_Rt, Myi_sigma2, F);
+	Freg = F*Freg;
 #endif
 	return Freg;
 }
 
 void algICP_DIMLP::UpdateOptimizerCalculations(const vct7 &x)
 {
-	//std::cout << "[1.2.1]" << std::endl;
 	a.Assign(x[0], x[1], x[2]);
 	t.Assign(x[3], x[4], x[5]);
+	s.Assign(x[6]);
 
-	// incremental rotation matrix
+	// Rodrigues formulation
 	Ra = vctRot3(vctRodRot3(a));
 
 	vctDynamicVectorRef<vct3>   X_xfm(samplePtsXfmd); 
@@ -387,19 +383,13 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vct7 &x)
 	vctDynamicVector<vct3x3>  inv_Mxi(nSamples);       // inverse noise covariances of match Mxi^-1
 	vctDynamicVector<double>  det_Mxi(nSamples);       // determinant of noise covariances of match |Mxi|
 
-	//std::cout << "[1.2.2]" << std::endl;
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
 		Tssm_Y_t = Tssm_Y.Element(i) - t;
-		//std::cout << "[1.2.3]" << std::endl;
-		//std::cout << Tssm_Y.size() << ", " <</* samplePts.size() <<*/ std::endl;
-		Rat_Tssm_Y_t_x.Element(i) = Ra.TransposeRef() * Tssm_Y_t.Element(i) - samplePts.Element(i);
-		//std::cout << "[1.2.4]" << std::endl;
+		Rat_Tssm_Y_t_x.Element(i) = Ra.TransposeRef() * Tssm_Y_t.Element(i) - X_xfm.Element(i); 
 		ComputeCovDecomposition_NonIter(Mxi.Element(i), inv_Mxi.Element(i), det_Mxi.Element(i));
-		//std::cout << "[1.2.5]" << std::endl;
 		invMx_Rat_Tssm_Y_t_x.Element(i) = inv_Mxi.Element(i) * Rat_Tssm_Y_t_x.Element(i);
 	}
-	//std::cout << "[1.2.6]" << std::endl;
 	x_prev = x;
 }
 
@@ -410,17 +400,15 @@ double algICP_DIMLP::CostFunctionValue(const vct7 &x)
 	{
 		UpdateOptimizerCalculations(x);
 	}
-	//std::cout << "[1.2.1]" << std::endl;
 
 	double f = 0.0;
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		f += Rat_Tssm_Y_t_x[i].DotProduct(invMx_Rat_Tssm_Y_t_x[i]);
+		f += Rat_Tssm_Y_t_x.Element(i) * invMx_Rat_Tssm_Y_t_x.Element(i);
 	}
 
-	f += nSamples*Si.DotProduct(Si);
+	f +=nSamples*(Si*Si);
 
-	//std::cout << "[1.2.2]" << std::endl;
 	return f;
 }
 
@@ -434,7 +422,6 @@ void algICP_DIMLP::CostFunctionGradient(const vct7 &x, vct7 &g)
 		UpdateOptimizerCalculations(x);
 	}
 
-	//std::cout << "[1.2.3]" << std::endl;
 	ComputeRodriguesJacobians(a, dRa);
 
 	// form the cost function gradient
@@ -452,23 +439,13 @@ void algICP_DIMLP::CostFunctionGradient(const vct7 &x, vct7 &g)
 		}
 
 		ga += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * Jz_a;
-		gt -= Ra * invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0);
-		gs += Ra * Tssm_wi[s] * invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0);	// Cmatch component
+		gt += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * (-Ra.TransposeRef());
+		gs += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * (Ra.TransposeRef() * Tssm_wi[s]);	// Cmatch component
 		
 	}
 
-	gs += 2 * (double)nSamples*Si[0];								// Cshape component
-	//std::cout << "[1.2.4]" << std::endl;
+	gs += 2 * (double)nSamples*Si[0];	// Cshape component
 }
-
-//unsigned int algICP_DIMLP::ICP_FilterMatches()
-//{
-//	//
-//	// Filter Matches for Outliers
-//	//
-//	
-//	return algICP_IMLP::ICP_FilterMatches();
-//}
 
 
 // PDTree Methods
@@ -528,6 +505,7 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 	d = (v - closest);
 
 	return log(det_M) + vctDotProduct(d, Minv*d);
+	//return vctDotProduct(d, Minv*d);   // rather than: log(det_M) + vctDotProduct(d,Minv*d);
 }
 
 // fast check if a node might contain a datum having smaller match error

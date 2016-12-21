@@ -1,6 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2015, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2015, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University. 
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -93,8 +94,8 @@ public:
   void ResetMesh();
   void ResetModel();
 
-  inline int NumVertices() const { return vertices.size(); }
-  inline int NumTriangles() const { return faces.size(); }
+  inline int NumVertices() const { return (int)vertices.size(); }
+  inline int NumTriangles() const { return (int)faces.size(); }
 
   // initializes triangle noise models to zero (default initializer)
   void InitializeNoiseModel();
