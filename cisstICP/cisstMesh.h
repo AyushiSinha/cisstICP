@@ -48,28 +48,28 @@ public:
 
   //--- Variables ---//
 
-  vctDynamicVector<vct3>      vertices;       // the coordinates for each vertex in the mesh
-  vctDynamicVector<vctInt3>   faces;          // the vertex indices for each triangle in the mesh
-  vctDynamicVector<vct3>      faceNormals;    // the face normal for each triangle in the mesh
+  vctDynamicVector<vct3>      vertices;					// the coordinates for each vertex in the mesh
+  vctDynamicVector<vctInt3>   faces;					// the vertex indices for each triangle in the mesh
+  vctDynamicVector<vct3>      faceNormals;				// the face normal for each triangle in the mesh
 
   // optional mesh properties
-  vctDynamicVector<vct3>      vertexNormals;  // a normal orientation associated with each vertex  
-  vctDynamicVector<vctInt3>   faceNeighbors;  // the face indices for the neighbors of each triangle
-                                              //  in the mesh
+  vctDynamicVector<vct3>      vertexNormals;			// a normal orientation associated with each vertex  
+  vctDynamicVector<vctInt3>   faceNeighbors;			// the face indices for the neighbors of each triangle
+														//  in the mesh
+  // mode properties
+  vctDynamicVector<vct3>					meanShape;	// the coordinates for each vertex in the mean mesh
+  vctDynamicVector<vctDynamicVector<vct3>>	mode;		// the modes per vertex 
+  vctDynamicVector<double>					modeWeight;	// weights per mode
 
-  vctDynamicVector<vct3>	meanShape;			// the coordinates for each vertex in the mean mesh
-  vctDynamicVector<vct3>	mode;				// the modes per vertex 
-  vctDynamicVector<double>	modeWeight;			// weights per mode
-
-  vctDynamicVector<vct3>	wi;
-  vctDynamicVector<double>	Si;					// shape parameter
-  vctDynamicVector<vct3>	estVertices;		// estimated shape using shape parameters and weighted modes
+  vctDynamicVector<vctDynamicVector<vct3>>	wi;
+  vctDynamicVector<double>					Si;			// shape parameter
+  vctDynamicVector<vct3>					estVertices;// estimated shape using shape parameters and weighted modes
 
   // mesh noise model
   //  NOTE: if used, this must be set manually by the user AFTER loading the mesh file
   //        (defaults to all zeroes, i.e. zero measurement noise on the mesh)
-  vctDynamicVector<vct3x3>  TriangleCov;        // triangle covariances
-  vctDynamicVector<vct3>    TriangleCovEig;     // triangle covariance eigenvalues (in decreasing size)
+  vctDynamicVector<vct3x3>  TriangleCov;				// triangle covariances
+  vctDynamicVector<vct3>    TriangleCovEig;				// triangle covariance eigenvalues (in decreasing size)
 
 private:
 

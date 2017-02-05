@@ -265,7 +265,8 @@ cisstICP::ReturnType cisstICP::IterateICP()
     // compute registration
 	//std::cout << "Registering matches... ";
 	Freg = pAlgorithm->ICP_RegisterMatches();
-	//std::cout << "Done." << std::endl;
+	//std::cout << "\n" << Freg.Rotation().Row(0) << "\n" << Freg.Rotation().Row(1) << "\n" << Freg.Rotation().Row(2) << std::endl;
+	//std::cout << "\n" << Freg.Translation()(0) << "\n" << Freg.Translation()(1) << "\n" << Freg.Translation()(2) << std::endl;
     Freg0 = Freg1;
     Freg1 = Freg2;
     Freg2 = Freg;
@@ -276,7 +277,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
 
     // dF = xfm from Freg1 to Freg2
     //  first go back along Freg1 then go forward along Freg2
-    dF = Freg2 * Freg1.Inverse();
+	dF = Freg2 * Freg1.Inverse();
+	//std::cout << "\n" << dF.Rotation().Row(0) << "\n" << dF.Rotation().Row(1) << "\n" << dF.Rotation().Row(2) << std::endl;
+	//std::cout << "\n" << dF.Translation()(0) << "\n" << dF.Translation()(1) << "\n" << dF.Translation()(2) << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_Register = codeProfiler.GetElapsedTime();

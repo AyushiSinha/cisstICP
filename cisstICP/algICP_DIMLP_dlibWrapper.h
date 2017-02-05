@@ -59,7 +59,8 @@ public:
   // constructor
   algICP_DIMLP_dlibWrapper(algICP_DIMLP *alg);
 
-  vct7  ComputeRegistration( const vct7 &x0 );
+  //vct7  ComputeRegistration( const vct7 &x0 );
+  vctDynamicVector<double> ComputeRegistration(const vctDynamicVector<double> &x0);
 };
 
 #endif

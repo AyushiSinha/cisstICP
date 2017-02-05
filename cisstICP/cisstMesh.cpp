@@ -296,10 +296,18 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 	M.SetSize(numVertices * 3);
 	E.SetSize(numVertices * 3);
 	float tmp_si = 0;
+
+	vct3 m, w;
+	modeWeight.resize(wOffset + modes - 1);
+	meanShape.resize(mOffset + numVertices);
+	mode.resize(wOffset + modes - 1);
+	wi.resize(wOffset + modes - 1);
+	Si.resize(mOffset + modes - 1);
+	estVertices.resize(mOffset + numVertices);
+
 	while (modelFile.good() && modeCount < modes)
 	{
 		unsigned int vertCount = 0;
-		modeWeight.resize(wOffset + modes - 1);
 		std::getline(modelFile, line);
 		if (modeCount < 1)
 		{
@@ -313,6 +321,8 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		}
 		else
 		{
+			mode[wOffset + modeCount - 1].resize(mOffset + numVertices);
+			wi[wOffset + modeCount - 1].resize(mOffset + numVertices);
 			itemsRead = std::sscanf(line.c_str(), "Mode %u :Vertex Displacements %f", &modeNum, &modeWt);
 			modeWeight[modeCount - 1] = modeWt;
 			if (itemsRead != 2)
@@ -322,13 +332,6 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			}
 			std::cout << "Mode : " << modeNum << " Mode weight : " << modeWeight[modeCount - 1] << std::endl;
 		}
-
-		vct3 m, w;
-		meanShape.resize(mOffset + numVertices);
-		mode.resize(mOffset + numVertices);
-		wi.resize(mOffset + numVertices);
-		Si.resize(mOffset + modes - 1);
-		estVertices.resize(mOffset + numVertices);
 
 		while (vertCount < numVertices)
 		{
@@ -346,7 +349,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				meanShape.at(mOffset + vertCount).Assign(m);
 			else
 			{
-				mode.at(mOffset + vertCount).Assign(m);
+				mode[wOffset + modeCount - 1].at(mOffset + vertCount).Assign(m);
 
 				// wi = sqrt(lambda_i)*mi
 				w = m * sqrt(modeWeight[modeCount - 1]);
@@ -355,7 +358,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				std::cout << w[1] << " = sqrt( " << f2 << " * " << modeWt << ")" << std::endl;
 				std::cout << w[2] << " = sqrt( " << f3 << " * " << modeWt << ")" << std::endl;
 				}*/
-				wi.at(mOffset + vertCount).Assign(w);
+				wi[wOffset + modeCount - 1].at(mOffset + vertCount).Assign(w);
 			}
 			vertCount++;
 		}
@@ -373,7 +376,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				{
 					for (int j = 0; j < numVertices; j++)
 					{
-						W[numVertices*i + j] = wi[j][i];
+						W[numVertices*i + j] = wi[wOffset + modeCount - 1][j][i];
 						V[numVertices*i + j] = vertices[j][i];
 						M[numVertices*i + j] = meanShape[j][i];
 					}
@@ -388,25 +391,40 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				//	//}
 				//}
 			}
-			Si[modeCount-1] = tmp_si;
+			Si[wOffset + modeCount - 1] = tmp_si;
 			//std::cout << "Si = " << tmp_si << /*"\t" << modeCount << "\t" << Si[modeCount-1] <<*/ std::endl;
 		}
 		modeCount++;
 	}
 
 	//std::cout << Si[0] << std::endl;
-	E = M + (tmp_si * W);
+	E = M;
+	for (int mc = 0; mc < modes - 1; mc++)
+	{
+		std::cout << "Processing mode " << mc + 1 << " out of " << modes-1 << std::endl;
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < numVertices; j++)
+			{
+				W[numVertices*i + j] = wi[wOffset + mc][j][i];
+				E += (W.Multiply(Si[wOffset + mc] / modeWeight[wOffset + mc]));
+			}
+		}
+		std::cout << "S_i" << "=" << Si[wOffset + mc] << std::endl;
+	}
+
+	std::cout << "Computed E" << std::endl;
 	for (int i = 0; i < numVertices; i++)
 	{
-		estVertices[i][0] = E[0 * numVertices + i];//meanShape[i] + (Si[0] * wi[i]);
+		estVertices[i][0] = E[0 * numVertices + i];	
 		estVertices[i][1] = E[1 * numVertices + i];
 		estVertices[i][2] = E[2 * numVertices + i];
-		//std::cout << wi[i] << "*" << Si[0] << "=" << Si[0] * wi[i] << std::endl;
 	}
-	//cisstMesh meanMesh;
-	//meanMesh.vertices = estVertices;
-	//meanMesh.faces = this->faces;
-	//meanMesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/test.ply");
+	
+	cisstMesh meanMesh;
+	meanMesh.vertices = estVertices;
+	meanMesh.faces = this->faces;
+	meanMesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/test.ply");
 	//vertices = estVertices;
 
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)
@@ -414,6 +432,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		std::cout << "ERROR: read points from model file failed; last line read: " << line << std::endl;
 		return -1;
 	}
+	std::cout << "Returning from cisstMesh.cpp" << std::endl;
 	return 1;
 }
 

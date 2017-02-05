@@ -36,7 +36,7 @@
 
 
 PDTree_Mesh::PDTree_Mesh(cisstMesh &mesh, int countThresh, double diagThresh)
-  : MeshP(&mesh)
+	: MeshP(&mesh), Bounds()
 {
   NData = MeshP->NumTriangles();
   DataIndices = new int[NData];

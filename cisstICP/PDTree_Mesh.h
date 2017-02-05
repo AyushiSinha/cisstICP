@@ -50,7 +50,7 @@ class PDTree_Mesh : public PDTreeBase
 public:
 
   cisstMesh *MeshP;
-
+  BoundingBox Bounds;
 
   //--- Methods ---//
 

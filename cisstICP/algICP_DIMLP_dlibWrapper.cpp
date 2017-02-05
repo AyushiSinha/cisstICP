@@ -53,10 +53,15 @@ namespace
   //  (needed for function pointers)
   double fValue(const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct7 x;
-    x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-      x_dlib(3), x_dlib(4), x_dlib(5),
-	  x_dlib(6));
+    //static vct7 x;
+	  static vctDynamicVector<double> x;
+	  x.SetSize(x_dlib.size());
+   // x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
+   //   x_dlib(3), x_dlib(4), x_dlib(5),
+	  //x_dlib(6));
+
+	  for (int i = 0; i < x_dlib.size(); i++)
+		  x[i] = x_dlib(i);
 
     return alg->CostFunctionValue(x);
   }
@@ -64,22 +69,33 @@ namespace
   algICP_DIMLP_dlibWrapper::dlib_vector fDerivative(
 	  const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
   {
-    static vct7   x;
-    static vct7   g;
-	static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
+    //static vct7   x;
+    //static vct7   g;
+	  static vctDynamicVector<double> x;
+	  static vctDynamicVector<double> g;
+	//static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
+	  static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib;
+	  x.SetSize(x_dlib.size());
+	  g.SetSize(x_dlib.size());
+	  g_dlib.set_size(x_dlib.size());
 
-    x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-		x_dlib(3), x_dlib(4), x_dlib(5),
-		x_dlib(6));
+  //  x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
+		//x_dlib(3), x_dlib(4), x_dlib(5),
+		//x_dlib(6));
+	  for (int i = 0; i < x_dlib.size(); i++)
+		  x[i] = x_dlib(i);
 
     alg->CostFunctionGradient(x, g);
-    g_dlib(0) = g[0];
-    g_dlib(1) = g[1];
-    g_dlib(2) = g[2];
-    g_dlib(3) = g[3];
-    g_dlib(4) = g[4];
-	g_dlib(5) = g[5];
-	g_dlib(6) = g[6];
+ //   g_dlib(0) = g[0];
+ //   g_dlib(1) = g[1];
+ //   g_dlib(2) = g[2];
+ //   g_dlib(3) = g[3];
+ //   g_dlib(4) = g[4];
+	//g_dlib(5) = g[5];
+	//g_dlib(6) = g[6];
+
+	for (int i = 0; i < x_dlib.size(); i++)
+		g_dlib(i) = g[i];
 
     return g_dlib;
   }
@@ -98,9 +114,14 @@ algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
 }
 
 
-vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
+//vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
+vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vctDynamicVector<double> &x0)
 {
-  dlib_vector x_dlib(7);  // 7-element vector
+  //dlib_vector x_dlib(7);  // 7-element vector
+	int nComponents = x0.size();
+	dlib_vector x_dlib(nComponents); // 6+n_modes-element vector
+	vctDynamicVector<double> x;
+	x.SetSize(nComponents);
 
   try
   {
@@ -115,15 +136,20 @@ vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
     // this then it will stop immediately.  Usually you supply a number smaller than 
     // the actual global minimum.
 
-    x_dlib(0) = x0[0];
-    x_dlib(1) = x0[1];
-    x_dlib(2) = x0[2];
-    x_dlib(3) = x0[3];
-    x_dlib(4) = x0[4];
-	x_dlib(5) = x0[5];
-	x_dlib(6) = x0[6];
+ //   x_dlib(0) = x0[0];
+ //   x_dlib(1) = x0[1];
+ //   x_dlib(2) = x0[2];
+ //   x_dlib(3) = x0[3];
+ //   x_dlib(4) = x0[4];
+	//x_dlib(5) = x0[5];
+	//x_dlib(6) = x0[6];
 
-#ifdef DLIB_VERIFY_DERIVATIVE
+	  for (int i = 0; i < nComponents; i++)
+	  {
+		  x_dlib(i) = x0[i];
+	  }
+
+#if 0 //#ifdef DLIB_VERIFY_DERIVATIVE
     std::cout << "Difference between analytic derivative and numerical approximation of derivative: \n" 
 		<< dlib::derivative(fValue)(x_dlib) << " - " << fDerivative(x_dlib) << " = "
       << dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib) << std::endl;
@@ -158,7 +184,14 @@ vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
     assert(0);
   }
 
-  return vct7( x_dlib(0), x_dlib(1), x_dlib(2), 
-			   x_dlib(3), x_dlib(4), x_dlib(5),
-			   x_dlib(6));
+  //return vct7( x_dlib(0), x_dlib(1), x_dlib(2), 
+		//	   x_dlib(3), x_dlib(4), x_dlib(5),
+		//	   x_dlib(6));
+
+  for (int i = 0; i < nComponents; i++)
+  {
+	  x[i] = x_dlib(i);
+  }
+
+  return x;
 }

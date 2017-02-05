@@ -56,13 +56,15 @@ public:
 	algICP_DIMLP_dlibWrapper dlib;
 
 	vctDynamicVector<vct3>  Tssm_matchPts;
-	vctDynamicVector<vct3>	Tssm_wi;
+	vctDynamicVector<vctDynamicVector<vct3>>	Tssm_wi;
 	vct3 eta; 
 
 	// -- Optimizer calculations common to both cost and gradient function
-	vct7 x_prev;
+	//vct7 x_prev;
+	vctDynamicVector<double> x_prev;
 	vct3 a, t;
-	vct1 s;
+	//vct1 s;
+	vctDynamicVector<double> s;
 	vctRot3 Ra;
 	vctDynamicVector<vct3> Tssm_Y_t;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
@@ -76,10 +78,11 @@ protected:
 
 	// Deformable Variables
 	vctDynamicVector<vct3>	meanShape;
+	unsigned int  nModes;
 	//vctDynamicVector<vct3>	sampleModes;
 	//vctDynamicVector<double> sampleModeWts;	
 
-	vctDynamicVector<vct3>		wi;
+	vctDynamicVector<vctDynamicVector<vct3>>		wi;
 	vctDynamicVector<double>	Si;		// shape parameter
 
 	// -- Algorithm Methods -- //
@@ -108,9 +111,12 @@ public:
 		vctDynamicVector<double> &argSampleModeWts*/);
 
 
-	void    UpdateOptimizerCalculations(const vct7 &x);
-	void    CostFunctionGradient(const vct7 &x, vct7 &g);
-	double  CostFunctionValue(const vct7 &x);
+	//void    UpdateOptimizerCalculations(const vct7 &x);
+	void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
+	//void    CostFunctionGradient(const vct7 &x, vct7 &g);
+	void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
+	//double  CostFunctionValue(const vct7 &x);
+	double CostFunctionValue(const vctDynamicVector<double> &x);
 
 protected:
 	// -- Deformable Methods -- //
@@ -121,7 +127,7 @@ protected:
 public:
 	//virtual void ICP_InitializeParameters(vctFrm3 &FGuess);
 	virtual void ICP_UpdateParameters_PostMatch();
-	//virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
+	virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
 
 	virtual vctFrm3 ICP_RegisterMatches();
 	//virtual unsigned int ICP_FilterMatches();
