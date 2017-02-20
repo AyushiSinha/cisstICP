@@ -68,7 +68,7 @@ public:
 	vctRot3 Ra;
 	vctDynamicVector<vct3> Tssm_Y_t;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
-	vctDynamicVector<vct3> invMx_Rat_Tssm_Y_t_x;
+	vctDynamicVector<vct3> Rat_Tssm_Y_t_x_invMx;
 
 	// -- Algorithm Parameters -- //
 protected:
@@ -129,6 +129,7 @@ public:
 	virtual void ICP_UpdateParameters_PostMatch();
 	virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
 
+	virtual void ICP_ComputeMatches();
 	virtual vctFrm3 ICP_RegisterMatches();
 	//virtual unsigned int ICP_FilterMatches();
 

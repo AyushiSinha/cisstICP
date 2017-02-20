@@ -113,9 +113,14 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		std::string saveCovPath = workingDir + outputDir + testDir + std::to_string(test_iter) + "/SaveSampleCov.txt";
 		std::string saveOffsetXfmPath = workingDir + outputDir + testDir + std::to_string(test_iter) + "/SaveOffsetXfm.txt";
 		std::string saveRegXfmPath = workingDir + outputDir + testDir + std::to_string(test_iter) + "/SaveRegXfm.txt";
+
+		std::string testLoc = workingDir + outputDir + testDir;
+		CreateDirectory(testLoc.c_str(), NULL);
+		std::string meshLoc = testLoc + std::to_string(test_iter);
+		CreateDirectory(meshLoc.c_str(), NULL);
 		//std::string saveLPath =             workingDir + outputDir + "SaveSampleL";
 
-		cisstMesh         mesh, mesh_est, orig_mesh;
+		cisstMesh         mesh, mesh_est;
 		PDTreeBase*         pTree;
 		vctDynamicVector<vct3>    samples;
 		vctDynamicVector<vct3>    sampleNorms;
@@ -159,10 +164,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		double PointCloudNoisePerpPlane = 0.5;  // noise model for point cloud using mesh constructor
 		//  Note: in-plane noise set automatically relative to triangle size
 
-		double minOffsetPos = 5.0; // 50.0;
-		double maxOffsetPos = 10.0; // 100.0;
-		double minOffsetAng = 3.0; // 30.0;
-		double maxOffsetAng = 6.0; // 60.0;
+		double minOffsetPos = 0.0; // 50.0;
+		double maxOffsetPos = 0.0; // 100.0;
+		double minOffsetAng = 0.0; // 30.0;
+		double maxOffsetAng = 0.0; // 60.0;
 
 		double percentOutliers = 0.05;
 		double minPosOffsetOutlier = 5.0;
@@ -173,14 +178,14 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		unsigned int randSeed1 = 0;       // generates samples
 		unsigned int randSeqPos1 = 0;
 		std::srand(time(NULL));
-		unsigned int randSeed2 = std::rand(); // 17;      // generates offsets
+		unsigned int randSeed2 =  17; //std::rand();      // generates offsets
 		std::srand(time(NULL));
-		unsigned int randSeqPos2 = std::rand(); //28;
+		unsigned int randSeqPos2 = 28; //std::rand();
 
 		// load mesh
 		CreateMesh(mesh, loadMeshPath, &saveMeshPath);
 		mesh_est = mesh;
-		int modes = 5;
+		int modes = 2;
 
 		if (algType == AlgType_DIMLP){
 			int check = ReadShapeModel(mesh, loadModelPath, modes);
@@ -188,22 +193,20 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 				std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
 				algType = AlgType_IMLP;
 			}
-			mesh_est = mesh;
 			mesh_est.vertices = mesh.meanShape;
+			std::string meanMesh = meshLoc + "/meanMesh.ply";
+			mesh_est.SavePLY(meanMesh);
+
+			double weight = 20;
 			for (int j = 0; j < modes - 1; j++)
 			{
-				std::cout << "Initial Si = " << mesh.Si[j] * 3.0 /*/ mesh.modeWeight[j]*/ << std::endl;
+				std::cout << "Initial Si = " << mesh.Si[j] * weight / mesh.modeWeight[j] << std::endl;
 				for (int i = 0; i < mesh.NumVertices(); i++)
-					mesh_est.vertices[i] += mesh.Si[j] * 13.0 * mesh.wi[j][i] / mesh.modeWeight[j];
+				{
+					mesh_est.vertices[i] += mesh.Si[j] * weight * mesh.wi[j][i] / mesh.modeWeight[j];
+				}
 			}
 		}
-		orig_mesh = mesh;
-		//mesh = mesh_est;
-
-		std::string testLoc = workingDir + outputDir + testDir;
-		CreateDirectory(testLoc.c_str(), NULL);
-		std::string meshLoc = testLoc + std::to_string(test_iter);
-		CreateDirectory(meshLoc.c_str(), NULL);
 
 		std::string meshDir = meshLoc + "/estimatedMesh.ply";
 		mesh_est.SavePLY(meshDir);
@@ -494,11 +497,21 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType)
 		std::stringstream resultStream;
 		resultStream << std::endl;
 		resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << std::endl;
-		resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << std::endl << std::endl;
+		resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << std::endl;
+		resultStream << "Final Si = " << mesh.Si << std::endl;
 		std::cout << resultStream.str();
 		iterFileStream << resultStream.str();
 
+		//mesh.vertices = mesh.meanShape;
+		//for (int s = 0; s < mesh.NumVertices(); s++)
+		//{
+		//	for (unsigned int i = 0; i < modes-1; i++)
+		//	{
+		//		mesh.vertices(s) += (mesh.Si[i] * mesh.wi[i].Element(s) / (2.0*mesh.modeWeight[i]));
+		//	}
+		//}
 		mesh.SavePLY(workingDir + outputDir + testDir + std::to_string(test_iter) + "/finalMesh.ply");
+
 		cisstMesh samplePts;
 		samplePts.vertices.SetSize(samples.size());
 		for (int i = 0; i < samples.size(); i++)

@@ -107,7 +107,7 @@ namespace
 // Constructor
 algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
   : maxIter( 20 ),
-  //tol_df( 1.0e-6 ),
+  tol_df( 1.0e-6 ),
   gradientNormThresh( 1.0e-3 )
 {
   alg = argAlg;  // initialize global reference to algorithm object
@@ -151,7 +151,7 @@ vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct
 
 #if 0 //#ifdef DLIB_VERIFY_DERIVATIVE
     std::cout << "Difference between analytic derivative and numerical approximation of derivative: \n" 
-		<< dlib::derivative(fValue)(x_dlib) << " - " << fDerivative(x_dlib) << " = "
+		<< dlib::derivative(fValue)(x_dlib) << " - \n" << fDerivative(x_dlib) << " = \n"
       << dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib) << std::endl;
 #endif
 
@@ -163,12 +163,12 @@ vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct
       dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
       fValue, fDerivative,
       x_dlib, -1.0);
-#else
-    dlib::find_min( 
-      dlib::bfgs_search_strategy(),
-      //dlib::objective_delta_stop_strategy( Tol_df,maxIter ),
-      dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
-	  fValue, dlib::derivative(fValue),//fDerivative, 
+#else 
+	dlib::find_min(
+	  dlib::bfgs_search_strategy(),
+	  //dlib::objective_delta_stop_strategy( tol_df,maxIter ),
+	  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter)/*.be_verbose()*/,
+	  fValue, dlib::derivative(fValue), //fDerivative,
 	  x_dlib, -1.0);
 #endif
 
@@ -191,7 +191,7 @@ vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct
   for (int i = 0; i < nComponents; i++)
   {
 	  x[i] = x_dlib(i);
-  }
+  } 
 
   return x;
 }

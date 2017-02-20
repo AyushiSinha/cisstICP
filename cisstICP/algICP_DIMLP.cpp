@@ -76,8 +76,8 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	{
 		if (outlierFlags[i])	continue;	// skip outliers
 
-		residual = /*Tssm_*/matchPts[i] - Freg * samplePts[i];
-		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().TransposeRef() + *Myi[i];
+		residual = Tssm_matchPts[i] - Freg * samplePts[i];
+		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
 		sqrMahalDist = residual*Minv*residual;
 
@@ -119,7 +119,7 @@ void algICP_DIMLP::SetSamples(
 
 	Tssm_Y_t.resize(nSamples);
 	Rat_Tssm_Y_t_x.resize(nSamples);
-	invMx_Rat_Tssm_Y_t_x.resize(nSamples);
+	Rat_Tssm_Y_t_x_invMx.resize(nSamples);
 
 	x_prev.SetSize(6+nModes); // 3 for rotation, 3 for translation, and n modes
 	s.SetSize(nModes);
@@ -137,7 +137,7 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 	sumSqrDist_Inliers = 0.0;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		residuals_PostMatch.Element(s) = samplePtsXfmd.Element(s) - /*Tssm_*/matchPts.Element(s);
+		residuals_PostMatch.Element(s) = samplePtsXfmd.Element(s) - Tssm_matchPts.Element(s);
 		sqrDist_PostMatch.Element(s) = residuals_PostMatch.Element(s).NormSquare();
 
 		if (!outlierFlags[s])
@@ -176,7 +176,7 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 	vctRot3 R(FGuess.Rotation());
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.TransposeRef();
+		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.Transpose();
 	}
 
 #ifdef DEBUG_IMLP
@@ -191,11 +191,42 @@ void algICP_DIMLP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
 	// base class
 	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
-/*
-	for (int i = 0; i < pMesh->NumVertices(); i++)
-		pMesh->vertices[i] = pMesh->vertices[i] + Si[0] * pMesh->wi[i] / pMesh->modeWeight[0];	*/
-	/*for (int i = 0; i < pTree->MeshP->NumVertices(); i++)
-		pTree->MeshP->vertices[i] = pTree->MeshP->meanShape[i] + Si[0] * pTree->MeshP->wi[0][i] / pTree->MeshP->modeWeight[0];*/
+}
+
+void algICP_DIMLP::ICP_ComputeMatches()
+{
+	///*** At the beginning of each correspondence phase, the positions 
+	///*** of the representing the model shape must be recomputed based 
+	///*** on the current values of the model-shape parameters, s 
+
+	//static int itermesh = 0;
+	//for (unsigned int i = 0; i < nModes; i++)
+	//	if (bFirstIter_Matches)
+	//		Si[i] = Si[i] / pTree->MeshP->modeWeight[i];
+
+	// deformably transform each mesh vertex
+	//pTree->MeshP->vertices = pMesh->meanShape;
+	for (int s = 0; s < pMesh->NumVertices(); s++) 
+		for (unsigned int i = 0; i < nModes; i++) 
+			pTree->MeshP->vertices(s) += (Si[i] * wi[i].Element(s) / pTree->MeshP->modeWeight[i]);
+
+		
+	std::cout << "Si = " << Si[0] << " ";
+	pMesh->Si = Si;
+	//std::string imesh = std::to_string(itermesh) + ".ply";
+	//cisstMesh currMesh;
+	//currMesh.vertices = pTree->MeshP->vertices;
+	//currMesh.faces = pTree->MeshP->faces;
+	//currMesh.SavePLY(imesh);
+	//itermesh++;
+
+	// TODO: fix this so you're updating for all vertices,
+	// TODO: and recursively for all parent bounding boxes
+	for (unsigned int s = 0; s < pMesh->NumTriangles(); s++)
+		pTree->EnlargeBounds(Freg, s, pTree->Bounds);
+	
+	// base class
+	algICP_IMLP::ICP_ComputeMatches();
 }
 
 double algICP_DIMLP::ICP_EvaluateErrorFunction()
@@ -235,11 +266,10 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 
 	// compute mahalanobis distances of the matches
 	vct3 residual;
-	//T_ssm();
 
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		residual = samplePtsXfmd.Element(s) - /*Tssm_*/matchPts.Element(s);
+		residual = samplePtsXfmd.Element(s) - Tssm_matchPts.Element(s);
 
 		// match covariance
 		Mi.Element(s) = R_Mxi_Rt.Element(s) + Myi_sigma2.Element(s);
@@ -299,88 +329,91 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 void algICP_DIMLP::T_ssm()
 {
 	vctDynamicVector<vct3> tmpMean(nSamples);
-	vct3 tmpv0, tmpv1, tmpv2; 
-	vct3 tmpv0_matchPt, tmpv1_matchPt, tmpv2_matchPt;
+	vct3 tmpv0, tmpv1, tmpv2;
+	vct3 tmpw0, tmpw1, tmpw2;
+	vct3 tmpm0, tmpm1, tmpm2;
+	vct3 tmpv0_matchPt, 
+		tmpv1_matchPt, 
+		tmpv2_matchPt;
 	double tmpv0_norm, tmpv1_norm, tmpv2_norm;
 	vctDynamicVector<double> tmp_si;
 	tmp_si.resize(nModes);
 	tmp_si.SetAll(0.0);
 
+	//std::cout << "Before: " << matchPts[0] << std::endl;
+	//std::cout << "Before: " << Si << std::endl;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		// Find the 3 vertices of the triangle that the matchPoint lies on, i.e., of the matchDatum on estimated shape 
-		pTree->MeshP->FaceCoords(matchDatums[s], tmpv0, tmpv1, tmpv2);
-		tmpv0_matchPt = tmpv0 - matchPts.Element(s);
-		tmpv0_norm = tmpv0_matchPt.Norm();
-		tmpv1_matchPt = tmpv1 - matchPts.Element(s);
-		tmpv1_norm = tmpv1_matchPt.Norm();
-		tmpv2_matchPt = tmpv2 - matchPts.Element(s);
-		tmpv2_norm = tmpv2_matchPt.Norm();
+		// Find the 3 vertices of the triangle that the matchPoint lies on,
+		// i.e., of the matchDatum on estimated shape 
+		algICP_DIMLP::pTree->MeshP->FaceCoords(matchDatums[s], tmpv0, tmpv1, tmpv2);
+		vctInt3 f = pTree->MeshP->faces[matchDatums.Element(s)];
+		//tmpv0 = pMesh->vertices.Element(f[0]);
+		//tmpv1 = pMesh->vertices.Element(f[1]);
+		//tmpv2 = pMesh->vertices.Element(f[2]);
 
+		// find distance between triangle vertices and matchPts
+		tmpv0_matchPt = tmpv0 - matchPts.Element(s);
+		tmpv1_matchPt = tmpv1 - matchPts.Element(s);
+		tmpv2_matchPt = tmpv2 - matchPts.Element(s);
+
+		double areaTri = vctCrossProduct(tmpv1 - tmpv0, tmpv2 - tmpv0).Norm();
+
+		tmpv0_norm = vctCrossProduct(tmpv1_matchPt, tmpv2_matchPt).Norm() / areaTri;
+		tmpv1_norm = vctCrossProduct(tmpv2_matchPt, tmpv0_matchPt).Norm() / areaTri;
+		tmpv2_norm = vctCrossProduct(tmpv0_matchPt, tmpv1_matchPt).Norm() / areaTri;
+		// Why aren't the barycentric coordinates summing to 1?
+		//std::cout << eta[0] << "+" << eta[1] << "+" << eta[2] << "=" << eta[0] + eta[1] + eta[2] << std::endl;
+
+		//// compute norm
+		//tmpv0_norm = tmpv0_matchPt.Norm();
+		//tmpv1_norm = tmpv1_matchPt.Norm();
+		//tmpv2_norm = tmpv2_matchPt.Norm();
+
+		// ensure sum of eta elements = 1
 		eta.Element(0) = tmpv0_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm); // j = 1
 		eta.Element(1) = tmpv1_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm); // j = 2
 		eta.Element(2) = tmpv2_norm / (tmpv0_norm + tmpv1_norm + tmpv2_norm); // j = 3
+
+		tmpm0 = meanShape.Element(f[0]); // j = 1
+		tmpm1 = meanShape.Element(f[1]); // j = 2
+		tmpm2 = meanShape.Element(f[2]); // j = 3
+		tmpMean.Element(s) = eta.Element(0)*tmpm0 + eta.Element(1)*tmpm1 + eta.Element(2)*tmpm2; 
 		
+		tmpv0 = tmpm0;
+		tmpv1 = tmpm1;
+		tmpv2 = tmpm2;
+
 		for (unsigned int i = 0; i < nModes; i++)
 		{
 			double curr_si = Si[i];
 			double curr_modeweight = pTree->MeshP->modeWeight[i];
-			tmpv0 += curr_si * wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][0]) / curr_modeweight; // j = 1
-			tmpv1 += curr_si * wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][1]) / curr_modeweight; // j = 2
-			tmpv2 += curr_si * wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][2]) / curr_modeweight; // j = 3
 
-			//Tssm_matchPts.Element(s) += (Si[i] * Tssm_wi[i].Element(s) / pTree->MeshP->modeWeight[i]);
+			tmpw0 = wi[i].Element(f[0]); // j = 1
+			tmpw1 = wi[i].Element(f[1]); // j = 2
+			tmpw2 = wi[i].Element(f[2]); // j = 3
+
+			// TODO: Update the mean mesh not the current mesh
+			tmpv0 += curr_si * tmpw0 /*/ curr_modeweight*/; // j = 1
+			tmpv1 += curr_si * tmpw1 /*/ curr_modeweight*/; // j = 2
+			tmpv2 += curr_si * tmpw2 /*/ curr_modeweight*/; // j = 3
+
+			Tssm_wi[i][s] = eta.Element(0)*tmpw0 + eta.Element(1)*tmpw1 + eta.Element(2)*tmpw2;
 		}
+
 		Tssm_matchPts.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2;
-		matchPts[s] = Tssm_matchPts[s];
-
-		for (unsigned int i = 0; i < nModes; i++)
-		{
-			tmpv0 = wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][0]); // j = 1
-			tmpv1 = wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][1]); // j = 2
-			tmpv2 = wi[i].Element(pTree->MeshP->faces[matchDatums.Element(s)][2]); // j = 3
-
-			Tssm_wi[i][s] = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2;
-		}
-
-		tmpv0 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][0]); // j = 1
-		tmpv1 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][1]); // j = 2
-		tmpv2 = meanShape.Element(pTree->MeshP->faces[matchDatums.Element(s)][2]); // j = 3
-
-		tmpMean.Element(s) = eta.Element(0)*tmpv0 + eta.Element(1)*tmpv1 + eta.Element(2)*tmpv2; 
-
-		for (unsigned int i = 0; i < nModes; i++)
-		{
-			tmp_si[i] += Tssm_wi[i][s].DotProduct(matchPts[s] - tmpMean[s]);
-		}
-	}
-
-	for (unsigned int i = 0; i < nModes; i++)
-	{
-		Si[i] = tmp_si[i];
-		//std::cout << "Si[" << i << "] = " << Si[i] /*/ pTree->MeshP->modeWeight[i]*/ << std::endl ;
-	}
-
-	//for (int s = 0; s < pMesh->NumVertices(); s++)
-	//{
-	//	//pTree->MeshP->vertices(s) = meanShape.Element(s);
-	//	for (unsigned int i = 0; i < nModes; i++)
-	//	{
-	//		pTree->MeshP->vertices(s) += (Si[i] * wi[i].Element(s) / pTree->MeshP->modeWeight[i]);
-	//	}
-	//}
-
-	//Tssm_matchPts = matchPts;
-
-	for (unsigned int s = 0; s < nSamples; s++)
-	{
-		//for (unsigned int i = 0; i < nModes; i++)
-		//{
-		//	Tssm_matchPts.Element(s) += (Si[i] * Tssm_wi[i].Element(s) / pTree->MeshP->modeWeight[i]);
-		//}
 		//matchPts[s] = Tssm_matchPts[s];
-		pTree->EnlargeBounds(Freg, matchDatums[s], pTree->Bounds);
+
+		for (unsigned int i = 0; i < nModes; i++)
+			tmp_si[i] += Tssm_wi[i][s].DotProduct(Tssm_matchPts[s] - tmpMean[s]);
 	}
+
+	Si = tmp_si;
+	//pTree->MeshP->Si = Si;
+	//pTree->MeshP->wi = wi;
+
+	//std::cout << "After: " << matchPts[0] << std::endl;
+	//std::cout << "After: " << Si << std::endl;
 }
 
 bool algICP_DIMLP::ICP_Terminate(vctFrm3 &F)
@@ -409,7 +442,9 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	x0.SetSize(6+nModes);
 	x.SetSize(6+nModes);
 	
-	x0.SetAll(0.0);
+	x0.SetAll(0.0); 
+	for (unsigned int i = 0; i < nModes; i++)
+		x0[6+i] = Si[i];
 
 	// x_prev must be at a different value that x0
 	x_prev.SetAll(std::numeric_limits<double>::max());
@@ -421,15 +456,15 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	//update transform
 	vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
 	vctFixedSizeVectorRef<double, 3, 1> t(x, 3);
-	/*vctFixedSizeVectorRef<double, 1, 1> s(x, 6);*/
+	vctDynamicVectorRef<double> s(x, 6, nModes);
 	F.Rotation() = vctRot3(vctRodRot3(alpha));
 	F.Translation() = t;
 	Freg = F;
-	for (unsigned int i = 0; i < nModes; i++) {
-		Si[i] = Si[i] + x[6 + i];
-		//std::cout << "Si[i] = " << Si[i] << std::endl;
-	}
-	//Si[0] = s[0];
+	Si = s;
+
+	//std::cout << "Old = " << x0 << std::endl;
+	//std::cout << "New = " << x << std::endl;
+	//std::cout << "New Si = " << Si << std::endl;
 #else
 	RegisterP2P_TLS(samplePtsXfmd, Tssm_matchPts, //matchPts,
 		R_Mxi_Rt, Myi_sigma2, F);
@@ -443,24 +478,25 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x
 {
 	a.Assign(x[0], x[1], x[2]);
 	t.Assign(x[3], x[4], x[5]);
+	
 	//s.Assign(x[6]);
 	for (unsigned int i = 0; i < nModes; i++)
-		s[i] = s[i] + x[6 + i];
+		s[i] = x[6 + i];
 
 	// Rodrigues formulation
 	Ra = vctRot3(vctRodRot3(a));
 
 	vctDynamicVectorRef<vct3>   X_xfm(samplePtsXfmd); 
-	vctDynamicVectorRef<vct3>   Tssm_Y(/*Tssm_*/matchPts);
+	vctDynamicVectorRef<vct3>   Tssm_Y(Tssm_matchPts);
 	vctDynamicVector<vct3x3>  inv_Mxi(nSamples);       // inverse noise covariances of match Mxi^-1
 	vctDynamicVector<double>  det_Mxi(nSamples);       // determinant of noise covariances of match |Mxi|
 
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
 		Tssm_Y_t = Tssm_Y.Element(i) - t;
-		Rat_Tssm_Y_t_x.Element(i) = Ra.TransposeRef() * Tssm_Y_t.Element(i) - X_xfm.Element(i); 
+		Rat_Tssm_Y_t_x.Element(i) = Ra.Transpose() * Tssm_Y_t.Element(i) - X_xfm.Element(i); 
 		ComputeCovDecomposition_NonIter(Mxi.Element(i), inv_Mxi.Element(i), det_Mxi.Element(i));
-		invMx_Rat_Tssm_Y_t_x.Element(i) = inv_Mxi.Element(i) * Rat_Tssm_Y_t_x.Element(i);
+		Rat_Tssm_Y_t_x_invMx.Element(i) = Rat_Tssm_Y_t_x.Element(i)*inv_Mxi.Element(i);
 	}
 	x_prev = x;
 }
@@ -477,10 +513,11 @@ double algICP_DIMLP::CostFunctionValue(const vctDynamicVector<double> &x)
 	double f = 0.0;
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		f += Rat_Tssm_Y_t_x.Element(i) * invMx_Rat_Tssm_Y_t_x.Element(i);
+		f += Rat_Tssm_Y_t_x_invMx.Element(i)*Rat_Tssm_Y_t_x.Element(i);
 	}
 
-	f +=nSamples*(Si.DotProduct(Si));
+	//f += nSamples*(Si.DotProduct(Si));
+	f += nSamples*(s.DotProduct(s));
 
 	return f;
 }
@@ -502,31 +539,26 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 	g.SetAll(0.0);
 	vctFixedSizeVectorRef<double, 3, 1> ga(g, 0);
 	vctFixedSizeVectorRef<double, 3, 1> gt(g, 3);
-	//vctFixedSizeVectorRef<double, 1, 1> gs(g, 6); 
-	vctDynamicVector<double> gs;
-	gs.SetSize(nModes);
-	for (unsigned int i = 0; i < nModes; i++)
-		gs[i] = g[6 + i];
+	vctDynamicVectorRef<double> gs(g, 6, nModes);
 
 	vct3x3 Jz_a;
 
-	for (unsigned int s = 0; s < nSamples; s++)
+	for (unsigned int j = 0; j < nSamples; j++)
 	{
 		for (unsigned int c = 0; c < 3; c++)
-		{
-			Jz_a.Column(c) = dRa[c].TransposeRef() * Tssm_Y_t[s];
-		}
+			Jz_a.Column(c) = dRa[c].TransposeRef() * Tssm_Y_t[j];
 
-		ga += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * Jz_a;
-		gt += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * (-Ra.TransposeRef());
+		ga += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * Jz_a;
+		gt += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-Ra.Transpose());
 
 		for (unsigned int i = 0; i < nModes; i++)
-			gs[i] += invMx_Rat_Tssm_Y_t_x[s].Multiply(2.0) * (Ra.TransposeRef() * Tssm_wi[i][s]);	// Cmatch component
+			gs[i] += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component
 		
 	}
 
 	for (unsigned int i = 0; i < nModes; i++)
-		gs[i] += 2 * (double)nSamples*Si[i];	// Cshape component
+		gs[i] += 2.0 * (double)nSamples*s[i];	// Cshape component
+		//gs[i] += 2.0 * (double)nSamples*Si[i];	// Cshape component
 }
 
 
@@ -597,5 +629,4 @@ double algICP_DIMLP::FindClosestPointOnDatum(const vct3 &v, vct3 &closest, int d
 //	double ErrorBound)
 //{
 //	return algICP_IMLP::NodeMightBeCloser(v, node, ErrorBound);
-//	//pTree->EnlargeBounds(Freg, matchDatums[i], node->Bounds); 
 //}

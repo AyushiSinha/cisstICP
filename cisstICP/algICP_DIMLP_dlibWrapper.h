@@ -51,7 +51,7 @@ public:
 
   double maxIter;
   double gradientNormThresh;
-  //double tol_df;
+  double tol_df;
 
 
   // -- Methods -- //
