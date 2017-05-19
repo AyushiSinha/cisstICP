@@ -51,26 +51,27 @@ class algICP_DIMLP : public algICP_IMLP
 	// in the presence of deformation.
 	// 
 
-public:
 
+  //--- Algorithm Parameters ---//
+public:
 	algICP_DIMLP_dlibWrapper dlib;
 
-	vctDynamicVector<vct3>  Tssm_matchPts;
+	vctDynamicVector<vct3>		Tssm_matchPts;
+	vctDynamicVector<vct3>		mu;
+	vctDynamicVector<vctInt3>	f;
 	vctDynamicVector<vctDynamicVector<vct3>>	Tssm_wi;
-	vct3 eta; 
 
 	// -- Optimizer calculations common to both cost and gradient function
-	//vct7 x_prev;
-	vctDynamicVector<double> x_prev;
-	vct3 a, t;
-	//vct1 s;
-	vctDynamicVector<double> s;
 	vctRot3 Ra;
+	vct3 a, t;
+	vctDynamicVector<double> s;
+	vctDynamicVector<double> x_prev;
+
+	vctDynamicVector<vct3> Tssm_Y;
 	vctDynamicVector<vct3> Tssm_Y_t;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x_invMx;
 
-	// -- Algorithm Parameters -- //
 protected:
 	TriangleClosestPointSolver TCPS;
 	PDTree_Mesh *pTree;
@@ -84,6 +85,7 @@ protected:
 
 	vctDynamicVector<vctDynamicVector<vct3>>		wi;
 	vctDynamicVector<double>	Si;		// shape parameter
+
 
 	// -- Algorithm Methods -- //
 public:
@@ -100,7 +102,7 @@ public:
 		double outlierChiSquareThreshold = 7.81,
 		double sigma2Max = std::numeric_limits<double>::max());
 
-	virtual void ComputeMatchStatistics(double &Avg, double &stdDev);
+	virtual ~algICP_DIMLP() {}
 
 	virtual void SetSamples(
 		vctDynamicVector<vct3> &argSamplePts,
@@ -110,22 +112,24 @@ public:
 		vctDynamicVector<vct3> &argSampleModes,
 		vctDynamicVector<double> &argSampleModeWts*/);
 
-
+	virtual void ComputeMatchStatistics(double &Avg, double &stdDev);
+	void	UpdateShape(vctDynamicVector<double> &si);
+	void	UpdateTree();
 	//void    UpdateOptimizerCalculations(const vct7 &x);
 	void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
 	//void    CostFunctionGradient(const vct7 &x, vct7 &g);
 	void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
 	//double  CostFunctionValue(const vct7 &x);
-	double CostFunctionValue(const vctDynamicVector<double> &x);
+	double	CostFunctionValue(const vctDynamicVector<double> &x);
 
 protected:
 	// -- Deformable Methods -- //
-	void T_ssm(); 
+	void ComputeMu(); 
 
 	// -- ICP Interface Methods -- //
 
 public:
-	//virtual void ICP_InitializeParameters(vctFrm3 &FGuess);
+	virtual void ICP_InitializeParameters(vctFrm3 &FGuess);
 	virtual void ICP_UpdateParameters_PostMatch();
 	virtual void ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
 
@@ -135,6 +139,8 @@ public:
 
 	virtual double  ICP_EvaluateErrorFunction();
 	virtual bool    ICP_Terminate(vctFrm3 &Freg);
+
+	virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam);
 
 	// -- PD Tree Interface Methods -- //
 	//int  NodeMightBeCloser(

@@ -18,17 +18,18 @@
 #include "algDirICP_IMLOP_Mesh.h"
 //#include "algDirICP_GIMLOP_Mesh.h"
 #include "algDirICP_PIMLOP_Mesh.h"
+#include "algDirICP_DIMLOP.h"
 
 // disable for run-time tests
 #define ENABLE_CALLBACKS
 
-enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_PIMLOP };  // DirAlgType_GIMLOP, 
 
+enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_PIMLOP };  // DirAlgType_GIMLOP, 
 
 void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
 {
   // cast to norm callback arg type
-  cisstICP::CallbackArg *argp = &arg;
+  //cisstICP::CallbackArg *argp = &arg;
   //argp = dynamic_cast<cisstICP::CallbackArgNormals*>(&arg);
   //if (argp==0)
   //{
@@ -43,21 +44,33 @@ void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *user
   //  - residual match errors
   // output format:
   //  err r00 r01 r02 r10 r11 r12 r20 r21 r22 tx ty tz normWeight posWeight avgNormError avgPosError 
-  std::ofstream *fs = (std::ofstream *)(userData);
-  (*fs) << argp->E << " " << argp->dF.Rotation().Row(0) << " " << argp->dF.Rotation().Row(1) << " "
-    << argp->dF.Rotation().Row(2) << " " << argp->dF.Translation() << " "
-    //<< argp->normWeight << " " << argp->posWeight << " "
-    //<< argp->MatchPosErrorAvg << " " << argp->MatchPosErrorSD << " "
-    //<< argp->MatchNormErrorAvg << " " << argp->MatchNormErrorSD 
-    << std::endl;
 
+  //std::ofstream *fs = (std::ofstream *)(userData);
+  //(*fs) << argp->E << " " << argp->dF.Rotation().Row(0) << " " << argp->dF.Rotation().Row(1) << " "
+  //  << argp->dF.Rotation().Row(2) << " " << argp->dF.Translation() << " "
+  //  //<< argp->normWeight << " " << argp->posWeight << " "
+  //  //<< argp->MatchPosErrorAvg << " " << argp->MatchPosErrorSD << " "
+  //  //<< argp->MatchNormErrorAvg << " " << argp->MatchNormErrorSD 
+  //  << std::endl;
+
+  // output format:
+  //  iter err r00 r01 r02 r10 r11 r12 r20 r21 r22 tx ty tz s1 ... sn
+  std::ofstream *fs = (std::ofstream *)(userData);
+  (*fs) << arg.iter << ", , " << arg.E << ", , "
+	  << arg.Freg.Rotation().Row(0)(0) << ", " << arg.Freg.Rotation().Row(0)(1) << ", " << arg.Freg.Rotation().Row(0)(2) << ", , "
+	  << arg.Freg.Rotation().Row(1)(0) << ", " << arg.Freg.Rotation().Row(1)(1) << ", " << arg.Freg.Rotation().Row(1)(2) << ", , "
+	  << arg.Freg.Rotation().Row(2)(0) << ", " << arg.Freg.Rotation().Row(2)(1) << ", " << arg.Freg.Rotation().Row(2)(2) << ", , "
+	  << arg.Freg.Translation()(0) << ", " << arg.Freg.Translation()(1) << ", " << arg.Freg.Translation()(2) << ", ,";
+  for (int m = 0; m < arg.S.size(); m++)
+	  (*fs) << arg.S(m) << ",";
+  (*fs) << std::endl;
 }
 void Callback_SaveIterationsToFile_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
 {
   std::ofstream *fs = (std::ofstream *)(userData);
 
   // cast to norm callback arg type
-  cisstICP::CallbackArg *argp;
+  //cisstICP::CallbackArg *argp;
   //argp = dynamic_cast<cisstICP::CallbackArgNormals*>(&arg);
   //if (argp==0)
   //{
@@ -67,50 +80,115 @@ void Callback_SaveIterationsToFile_testICPNormals(cisstICP::CallbackArg &arg, vo
 
   vctRodRot3 dR(arg.dF.Rotation());
   std::stringstream ss;
-  ss << cmnPrintf("iter=%u  E=%.3f  tolE=%.4f  nW/pW=%.4f/%.4f  (cSD/dSD)=%.2f/%.2f  dTheta=%.2f/%.2f/%.2f  (dAng/dPos)= %.2f/%.2f  t=%.4f NNodes=%u/%u/%u NOut=%u/%u")
-    // (RMS/Res)=%.4f/%.4f
-    //  dTheta=%.2f/%.2f/%.2f  
-    << argp->iter
-    << argp->E
-    << argp->tolE
-    //<< argp->normWeight
-    //<< argp->posWeight
-    //<< argp->circSD*180.0 / cmnPI << sqrt(argp->posVar)
-    //<< argp->dThetaMin*180.0 / cmnPI << argp->dThetaMax*180.0 / cmnPI << argp->dThetaAvg*180.0 / cmnPI
-    << dR.Norm() * 180 / cmnPI << arg.dF.Translation().Norm()
-    << argp->time;
+  //ss << cmnPrintf("iter=%u  E=%.3f  tolE=%.4f  nW/pW=%.4f/%.4f  (cSD/dSD)=%.2f/%.2f  dTheta=%.2f/%.2f/%.2f  (dAng/dPos)= %.2f/%.2f  t=%.4f NNodes=%u/%u/%u NOut=%u/%u")
+  ss << cmnPrintf("iter=%u  E=%.3f  tolE=%.4f  (dAng/dPos)= %.2f/%.2f  t=%.4f  NOut=%u/%u")
+	  // (RMS/Res)=%.4f/%.4f
+	  //  dTheta=%.2f/%.2f/%.2f  
+	  << arg.iter //<< argp->iter
+	  << arg.E //<< argp->E
+	  << arg.tolE //<< argp->tolE
+	  //<< argp->normWeight
+	  //<< argp->posWeight
+	  //<< argp->circSD*180.0 / cmnPI << sqrt(argp->posVar)
+	  //<< argp->dThetaMin*180.0 / cmnPI << argp->dThetaMax*180.0 / cmnPI << argp->dThetaAvg*180.0 / cmnPI
+	  << dR.Norm() * 180 / cmnPI << arg.dF.Translation().Norm()
+	  << arg.time //<< argp->time
+	  << arg.nOutliers; //<< argp->nOutliers;
   //<< argp->maxNodesSearched << argp->avgNodesSearched << argp->minNodesSearched
   //<< argp->nOutliersPos
   //<< argp->nOutliersNorm;    
 
   (*fs) << ss.str() << std::endl;
 }
+void Callback_SaveIterationsToCSV_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
+{
+	std::ofstream *fs = (std::ofstream *)(userData);
+
+	vctRodRot3 dR(arg.dF.Rotation());
+	std::stringstream ss;
+	ss << cmnPrintf("%u ,, %.3f ,, %.4f ,, %.2f,%.2f ,, %.3f ,, %u")
+		<< arg.iter
+		<< arg.E
+		<< arg.tolE
+		<< dR.Norm() * 180 / cmnPI << arg.dF.Translation().Norm()
+		<< arg.time
+		//<< arg.maxNodesSearched << arg.avgNodesSearched << arg.minNodesSearched
+		<< arg.nOutliers;
+
+	(*fs) << ss.str() << std::endl;
+}
 
 // TargetShapeAsMesh    true - uses mesh to represent target shape
 //                      false - uses point cloud (taken from mesh) to represent target shape
-void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
+void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::CmdLineOptions cmdOpts)
 {
   //char k;
   //std::cout << "press key then enter to start:" << std::endl;
   //std::cin >> k;
 
-  int    nThresh = 15;       // Cov Tree Params
-  double diagThresh = 15.0;  //  ''
-  //int    nThresh = 5;       // Cov Tree Params
-  //double diagThresh = 5.0;  //  ''
+  // Set output directories
+  std::string workingDir;
+  std::string algDir; // = "LastRun//";
+  if (cmdOpts.useDefaultOutput)
+	  workingDir = "../../../test_data/";
+  else
+	  workingDir = cmdOpts.output;
 
-  std::string workingDir = "../../..//test_data//";
-  std::string outputDir = "LastRun//";
+  switch (algType)
+  {
+  case DirAlgType_StdICP:
+  {
+	  std::cout << "\nRunning directional ICP\n" << std::endl;
+	  algDir = "LastRun_DirICP/";
+	  break;
+  }
+  case DirAlgType_IMLOP:
+  {
+	  std::cout << "\nRunning IMLOP\n" << std::endl;
+	  algDir = "LastRun_IMLOP/";
+	  break;
+  }
+  case DirAlgType_DIMLOP:
+  {
+	  std::cout << "\nRunning D-IMLOP\n" << std::endl;
+	  algDir = "LastRun_DIMLOP/";
+	  break;
+  }
+  case DirAlgType_PIMLOP:
+  {
+	  std::cout << "\nRunning PIMLOP\n" << std::endl;
+	  algDir = "LastRun_PIMLOP/";
+	  break;
+  }
+  default:
+  {
+	  std::cout << "ERROR: unknown algorithm type" << std::endl;
+	  assert(0);
+  }
+  }
 
-  std::string saveSourceMeshPath = workingDir + outputDir + "SaveMeshSource";
-  std::string saveTargetMeshPath = workingDir + outputDir + "SaveMeshTarget";
-  std::string saveSamplesPath = workingDir + outputDir + "SaveSamples";
-  std::string saveNoisySamplesPath = workingDir + outputDir + "SaveNoisySamples";
-  std::string savePath_L = workingDir + outputDir + "SaveL.pts";
-  std::string savePath_Cov = workingDir + outputDir + "SaveCov.pts";
+  std::string outputDir = workingDir + algDir;
+  CreateDirectory(outputDir.c_str(), NULL);
 
+  // input files
+  std::string normRVFile = workingDir + "GaussianValues.txt";	// Random Numbers: Normal RV's
+
+  // output files
+  std::string saveSourceMeshPath	= outputDir + "SaveMeshSource";
+  std::string saveTargetMeshPath	= outputDir + "SaveMeshTarget";
+  std::string saveSamplesPath		= outputDir + "SaveSamples";
+  std::string saveSubSamplesPath	= outputDir + "SaveSubSamples.pts";
+  std::string saveNoisySamplesPath	= outputDir + "SaveNoisySamples";
+  std::string saveOffsetXfmPath		= outputDir + "SaveOffsetXfm.txt";
+  std::string savePath_L			= outputDir + "SaveL.pts";
+  std::string savePath_Cov			= outputDir + "SaveCov.pts";
+  std::string meshDir				= outputDir + "estimatedMesh.ply";
+  std::string initmeshDir			= outputDir + "initMesh.ply";
+
+  // declare variables
   cisstMesh         mesh_source;
   cisstMesh         mesh_target;
+  cisstMesh			mesh_ssm_target;
   DirPDTreeBase*      pTree;
   vctDynamicVector<vct3>    samples;
   vctDynamicVector<vct3>    sampleNorms;
@@ -120,17 +198,36 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   vctDynamicVector<vct3x3>  sampleNoiseCov;
   vctDynamicVector<vct3x3>  sampleNoiseInvCov;
   vctDynamicVector<vct3x2>  sampleNoiseL;
+  vctDynamicVector<double> weight;
 
 #if 1
-  std::string loadSourceMeshPath = workingDir + "ProximalFemur.ply";
-  std::string loadTargetMeshPath = workingDir + "ProximalFemur.ply";
-  //std::string loadSourceMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  //std::string loadTargetMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
-  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
-  //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
+  // Set default values/initialize variables
+  int nSamples = 300;		// default number of samples (for default input)
+  // const int nSamples = 300;
+  double scale = 1.0;
 
-  const int nSamples = 100;
+  int    nThresh = 15;			// Cov Tree Params
+  double diagThresh = 15.0;		//  ''
+  //int    nThresh = 5;			// Cov Tree Params
+  //double diagThresh = 5.0;	//  ''
+
+  double minOffsetPos = 10.0; // 5.0;
+  double maxOffsetPos = 20.0; // 10.0;
+  double minOffsetAng = 20.0;
+  double maxOffsetAng = 60.0;
+
+  double percentOutliers = 0.0;
+  double minPosOffsetOutlier = 15.0;
+  double maxPosOffsetOutlier = 20.0;
+  double minAngOffsetOutlier = 15.0;
+  double maxAngOffsetOutlier = 20.0;
+
+  std::srand(time(NULL)); unsigned int randSeed1	= 0;			//std::rand();     // generates samples
+  std::srand(time(NULL)); unsigned int randSeqPos1	= 0;			//std::rand();
+  std::srand(time(NULL)); unsigned int randSeed2	= 17; // 1; 	//std::rand();    // generates offsets
+  std::srand(time(NULL)); unsigned int randSeqPos2	= 28; // 0;		//std::rand();
+  std::srand(time(NULL)); unsigned int randSeed3	= 28;			//std::rand();	// generates shape parameters
+  std::srand(time(NULL)); unsigned int randSeqPos3	= 8;			//std::rand();
 
   // Samples Noise Model
   //  NOTE: this is a generative noise model (i.e. noise is generated according
@@ -141,35 +238,66 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   double sampleNoiseCircSDDeg = 2.0;   // noise to apply to sample orientations
   double sampleNoiseCircSD = sampleNoiseCircSDDeg*cmnPI / 180.0;
   double sampleNoiseEccentricity = 0.5; // eccentricity of orientation noise
-
-  double minOffsetPos = 5.0;
-  double maxOffsetPos = 10.0;
-  double minOffsetAng = 10.0;
-  double maxOffsetAng = 20.0;
-
-  unsigned int randSeed1 = 0;     // generates samples
-  unsigned int randSeqPos1 = 0;
-  unsigned int randSeed2 = 1;     // generates offsets
-  unsigned int randSeqPos2 = 0;
-
-  double percentOutliers = 0.0;
-  double minPosOffsetOutlier = 15.0;
-  double maxPosOffsetOutlier = 20.0;
-  double minAngOffsetOutlier = 15.0;
-  double maxAngOffsetOutlier = 20.0;
-
-
-  // load source mesh
-  CreateMesh(mesh_source, loadSourceMeshPath, &saveSourceMeshPath);
+  
   // load target mesh
+  std::string loadTargetMeshPath;
+  if (cmdOpts.useDefaultTarget)
+	  loadTargetMeshPath = workingDir + "MT.ply";
+  else
+	  loadTargetMeshPath = cmdOpts.target;
+	  //std::string loadTargetMeshPath = workingDir + "ProximalFemur.ply";
+	  //std::string loadSourceMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+	  //std::string loadTargetMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS_centered.mesh";
+  //std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
+  //std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
   CreateMesh(mesh_target, loadTargetMeshPath, &saveTargetMeshPath);
+
+  mesh_ssm_target = mesh_target;
+  int modes = 1;
+
+  if (algType == DirAlgType_DIMLOP)
+  {
+	  std::string loadModelPath;
+	  if (cmdOpts.useDefaultSSM)
+		  loadModelPath = workingDir + "atlas_mt.txt";
+	  else
+		  loadModelPath = cmdOpts.ssm;
+
+	  if (cmdOpts.useDefaultNumModes)
+		  modes += 3;
+	  else
+		  modes += cmdOpts.modes;
+	  weight.SetSize(modes - 1);
+	  int check = ReadShapeModel(mesh_target, loadModelPath, modes);
+	  if (check != 1) {
+		  std::cout << "Unsuccessful in reading model data, switching to IMLOP..." << std::endl;
+		  algType = DirAlgType_IMLOP;
+	  }
+	  mesh_ssm_target.vertices = mesh_target.meanShape;
+	  mesh_ssm_target.SavePLY("currentMesh0.ply");
+
+	  if (cmdOpts.useDefaultInput)
+	  {
+		  GenerateRandomShapeParams(randSeed3, randSeqPos3, modes - 1, weight);
+		  // add deformation to mean shape
+		  for (int j = 0; j < modes - 1; j++)
+			  for (int i = 0; i < mesh_target.NumVertices(); i++)
+				  mesh_ssm_target.vertices[i] += weight[j] * mesh_target.wi[j][i];
+		  mesh_ssm_target.SavePLY(meshDir);
+	  }
+	  else
+		  weight.SetAll(0.0);
+  }
+
+  //mesh_target.SavePLY(initmeshDir);
 
   if (TargetShapeAsMesh)
   {
     // build PD tree on the mesh directly
     //  Note: defines measurement noise to be zero
     printf("Building mesh PD tree .... ");
-    pTree = new DirPDTree_Mesh(mesh_target, nThresh, diagThresh);
+    pTree = new DirPDTree_Mesh(mesh_target, nThresh, diagThresh); 
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
@@ -191,12 +319,45 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
 
-  // Random Numbers: Normal RV's
-  std::string normRVFile = workingDir + "GaussianValues.txt";
+  // sub-sample and scale input if need be
+  if (!cmdOpts.useDefaultInput)
+  {
+	  // load source mesh
+	  std::string loadSourceMeshPath;
+	  loadSourceMeshPath = cmdOpts.input;
+	  CreateMesh(mesh_source, loadSourceMeshPath, &saveSourceMeshPath);
+
+	  if (!cmdOpts.useDefaultNumSamples)
+	  {
+		  int nSubSamples = cmdOpts.samples;
+		  vctDynamicVector<vct3> subsampledPts;
+		  vctDynamicVector<bool> selectedPts;
+
+		  subsampledPts.SetSize(nSubSamples);
+		  selectedPts.SetSize(mesh_source.NumVertices());
+
+		  selectedPts.SetAll(false);
+		  subsampledPts.Zeros();
+
+		  GenerateSubSamples(mesh_source, selectedPts, subsampledPts, nSubSamples, &saveSubSamplesPath); // change this to be more similar to generatesamples
+		  //GenerateSamples(pts, randSeed1, randSeqPos1, nSubSamples,		
+		  //	samples, sampleNorms, sampleDatums,
+		  //	&saveSamplesPath);
+	  }
+	  nSamples = mesh_source.NumVertices(); //samples.size();
+
+	  if (!cmdOpts.useDefaultScale)
+	  {
+		  scale = (double)cmdOpts.scale;
+		  for (int i = 0; i < nSamples; i++)
+			  //samples[i] = scale * samples[i];
+			  mesh_source.vertices[i] = scale * mesh_source.vertices[i];
+	  }
+  }
   std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
 
-  // Generate random samples from mesh
-  GenerateSamples(mesh_source, randSeed1, randSeqPos1, nSamples,
+  // Generate random samples from mesh_ssm_target
+  GenerateSamples(mesh_ssm_target, randSeed1, randSeqPos1, nSamples,		// mesh_ssm_target = mesh_target, if registration algorithm is not deformable
     samples, sampleNorms, sampleDatums,
     &saveSamplesPath);
 
@@ -214,12 +375,20 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     &saveNoisySamplesPath,
     &savePath_Cov, &savePath_L);
 
+  if (!cmdOpts.useDefaultInput) {
+	  noisySamples = mesh_source.vertices;
+  }
+  std::cout << "Using " << nSamples << " noisy sample points...\n";
+
   // Generate random initial offset
   vctFrm3 Fi;
   GenerateRandomTransform(randSeed2, randSeqPos2,
     minOffsetPos, maxOffsetPos,
     minOffsetAng, maxOffsetAng,
-    Fi);
+	Fi);
+  // save initial offset
+  transform_write(Fi, saveOffsetXfmPath);
+
 #else
   // Replay Randomized Trial
   vctFrm3 Fi;
@@ -277,26 +446,47 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
 #ifdef ENABLE_CALLBACKS
   // adding ICP callbacks
   std::vector<cisstICP::Callback> callbacks;
-  //  callback: iteration file
+
+  //  callback: iteration file (txt)
   cisstICP::Callback iterCallback;
   iterCallback.cbFunc = Callback_SaveIterationsToFile_testICPNormals;
   std::stringstream iterFile;
-  iterFile << workingDir << outputDir << "SaveIterations.txt";
+  iterFile << outputDir << "SaveIterations.txt";
   std::ofstream iterFileStream(iterFile.str().c_str());
   iterCallback.userData = (void*)(&iterFileStream);
   callbacks.push_back(iterCallback);
+
+  //  callback: iteration file (csv)
+  cisstICP::Callback iterCallbackCSV;
+  iterCallbackCSV.cbFunc = Callback_SaveIterationsToCSV_testICPNormals;
+  std::stringstream iterCSV;
+  iterCSV << outputDir << "SaveIterations.csv";
+  std::ofstream iterCsvStream(iterCSV.str().c_str());
+  iterCallbackCSV.userData = (void*)(&iterCsvStream);
+  callbacks.push_back(iterCallbackCSV);
+
   //  callback: track path file
   cisstICP::Callback xfmCallback;
   xfmCallback.cbFunc = Callback_TrackRegPath_testICPNormals;
   std::stringstream trackPathFile;
-  trackPathFile << workingDir << outputDir << "SaveTrackRegPath.txt";
+  trackPathFile << outputDir << "SaveTrackRegPath.csv"; //"SaveTrackRegPath.txt";
   std::ofstream xfmFileStream(trackPathFile.str().c_str());
   xfmCallback.userData = (void*)(&xfmFileStream);
   callbacks.push_back(xfmCallback);
 #endif
 
-  std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
-  vctFrm3 FGuess = Fi;
+  vctFrm3 FGuess = vctFrm3::Identity();
+  if (!cmdOpts.useDefaultXfm)
+  {
+	  transform_read(Fi, cmdOpts.xfm);
+	  std::cout << std::endl << "Setting initial transform guess: " << std::endl << Fi << std::endl;
+	  FGuess = Fi;
+  }
+  else
+  {
+	  std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
+	  FGuess = Fi;
+  }
 
 
   // ICP Algorithm
@@ -339,6 +529,28 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
       k, sigma2, wRpos, kfactor, dynamicParamEst);
     pICPAlg = pAlg;
     break;
+  }
+  case DirAlgType_DIMLOP:
+  {
+	  std::cout << "shape parameters:\n" << weight << std::endl;
+	  if (!TargetShapeAsMesh)
+	  {
+		  std::cout << "ERROR: Currently only mesh target supported for DIMLOP" << std::endl;
+		  assert(0);
+	  }
+	  DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+	  double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
+	  double sigma2 = sampleNoiseInPlane*sampleNoiseInPlane;
+	  double wRpos = 0.5;
+	  double kfactor = 1.0;
+	  bool dynamicParamEst = true;
+	  algDirICP_DIMLOP *pAlg;
+	  pAlg = new algDirICP_DIMLOP(
+		  pTreeMesh, noisySamples, noisySampleNorms,
+		  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
+		  k, sigma2, wRpos, kfactor, dynamicParamEst);
+	  pICPAlg = pAlg;
+	  break;
   }
   //case DirAlgType_GIMLOP:
   //{
@@ -416,16 +628,21 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   // ICP Options
   //cisstICP::OptionsNormals opt;
   cisstICP::Options opt;
-  opt.auxOutputDir = workingDir + outputDir;
+  opt.auxOutputDir = outputDir;
   opt.maxIter = 100;
   opt.termHoldIter = 2;
+  opt.numShapeParams = modes - 1;
   opt.minE = -std::numeric_limits<double>::max();
   opt.tolE = 0.0;
-  opt.dPosThresh = 0.25;
-  opt.dAngThresh = 0.25*(cmnPI / 180);
+  opt.dPosThresh = 0.1; // 0.25;
+  opt.dAngThresh = 0.1*(cmnPI / 180); // 0.25*(cmnPI / 180);
+  opt.dShapeThresh = 0.1;
   opt.dPosTerm = 0.001;
   opt.dAngTerm = 0.001*(cmnPI / 180);
+  opt.dShapeTerm = 0.001;
   //opt.alg = pICPAlg;
+  if (cmdOpts.deformable)
+	  opt.deformable = true;
 
   // Run ICP
   int numRuns = 1;
@@ -434,7 +651,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
   cisstICP::ReturnType rv;
   for (int i = 0; i < numRuns; i++)
   {
-    rv = ICP.RunICP(pICPAlg, opt, FGuess);
+    rv = ICP.RunICP(pICPAlg, opt, FGuess, &callbacks);
     //rv = ICP.RunICP_Rigid( samples, sampleNorms, *pTree, opt, FGuess, Freg );
     std::cout << rv.termMsg;
 #ifdef ENABLE_CALLBACKS
@@ -444,6 +661,9 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
     Freg = rv.Freg;
   }
   std::cout << std::endl << " ===> Avg RunTime: " << runtime / numRuns << std::endl;
+
+  //// save registration result
+  //transform_write(Freg, saveRegXfmPath);
 
   // Freg now includes Fi as FGuess => Freg should be identity for perfect registration
   vctFrm3 Ferr = Freg;
@@ -456,12 +676,61 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType)
 
   std::stringstream resultStream;
   resultStream << std::endl;
-  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << std::endl;
-  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << std::endl << std::endl;
+  if (algType == DirAlgType_DIMLOP)
+  {
+	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight << std::endl;
+	  pICPAlg->ReturnShapeParam(mesh_target.Si);
+	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << "\tdShp: " << weight - mesh_target.Si << std::endl;
+  }
+  else
+  {
+	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << std::endl;
+	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << std::endl << std::endl;
+  }
+  resultStream << std::endl << "Average Match Error (Mahalanobis):\t" << rv.MatchPosErrAvg << " (+/-" << rv.MatchPosErrSD << ")\n" << std::endl;
   std::cout << resultStream.str();
 #ifdef ENABLE_CALLBACKS
   iterFileStream << resultStream.str();
 #endif
+
+  if (algType == DirAlgType_DIMLOP)
+  {
+	  mesh_target.vertices = mesh_target.meanShape;
+	  for (int s = 0; s < mesh_target.NumVertices(); s++)
+	  {
+		  for (unsigned int i = 0; i < modes - 1; i++)
+		  {
+			  mesh_target.vertices(s) += (mesh_target.Si[i] * mesh_target.wi[i].Element(s));
+		  }
+	  }
+  }
+  mesh_target.SavePLY(outputDir + "/finalMesh.ply");
+
+  for (int i = 0; i < mesh_target.NumVertices(); i++)
+	  mesh_target.vertices(i) = Freg * mesh_target.vertices(i);
+  mesh_target.SavePLY(outputDir + "/finalRegMesh.ply");
+
+  cisstMesh samplePts;
+  samplePts.vertices.SetSize(noisySamples.size());
+  samplePts.vertexNormals.SetSize(noisySamples.size());
+  samplePts.vertices = noisySamples;
+  samplePts.vertexNormals = noisySampleNorms;
+  samplePts.SavePLY(outputDir + "/Pts.ply");
+
+  for (int i = 0; i < noisySamples.size(); i++)
+  {
+	  samplePts.vertices[i] = Fi * noisySamples[i];
+	  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms[i];
+  }
+  samplePts.SavePLY("currentSamples0.ply");
+  samplePts.SavePLY(outputDir + "/initPts.ply");
+
+  for (int i = 0; i < noisySamples.size(); i++)
+  {
+	  samplePts.vertices[i] = Freg * noisySamples[i];
+	  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms[i];
+  }
+  samplePts.SavePLY(outputDir + "/finalPts.ply");
 
   if (pICPAlg) delete pICPAlg;
 

@@ -33,6 +33,7 @@
 // ****************************************************************************
 
 #include <fstream>
+#include <random>
 
 //#include <boost/filesystem.hpp>
 
@@ -66,6 +67,51 @@
 //    assert(0);
 //  }
 //}
+
+void transform_read(vctFrm3 &F, std::string &filepath)
+{
+	unsigned int itemsRead;
+	std::string line;
+	float f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12;
+
+	std::cout << "Reading transformation from file: " << filepath << std::endl;
+	std::ifstream fs(filepath.c_str());
+	if (!fs.is_open())
+	{
+		std::cerr << "ERROR: failed to open file: " << filepath << std::endl;
+		assert(0);
+	}
+
+	// read matrices
+	unsigned int numRot = 0;
+	vctRot3 rot;
+	vct3 trans;
+	while (fs.good())
+	{
+		std::getline(fs, line);
+		itemsRead = std::sscanf(line.c_str(), "%f %f %f %f %f %f %f %f %f %f %f %f",
+			&f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8, &f9, &f10, &f11, &f12);
+		if (itemsRead != 12)
+		{
+			//break;
+			std::cerr << "ERROR: invalid transformation file!\nTransform file format should be as follows:\n"
+				"rotrow1el1 rotrow1el2 rotrow1el3 rotrow2el1 rotrow2el2 rotrow2el3 rotrow3el1 rotrow3el2 rotrow3el3 " 
+				"transel1 transel2 transel3\n" << std::endl;
+			assert(0);
+		}
+		rot.Assign(f1, f2, f3, f4, f5, f6, f7, f8, f9);
+		trans.Assign(f10, f11, f12);
+	}
+	//if (fs.bad() || fs.fail())
+	//{
+	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
+	//  assert(0);
+	//}
+	fs.close();
+
+	F.Rotation() = rot.Normalized();
+	F.Translation() = trans;
+}
 
 void transform_write(vctFrm3 &F, std::string &filename)
 {
@@ -213,7 +259,7 @@ void WriteToFile_Cov(const vctDynamicVector<vct3x3> &cov,
   //
   //  where vx's are indices into the pts array
 
-  std::cout << "Saving cov to file: " << filePath << std::endl;
+  //std::cout << "Saving cov to file: " << filePath << std::endl;
   std::ofstream fs(filePath.c_str());
   if (!fs.is_open())
   {
@@ -440,6 +486,24 @@ void GenerateRandomRotation(unsigned int randSeed, unsigned int &randSeqPos,
 
   randSeqPos = cisstRandomSeq.GetSequencePosition();
   R.Assign(vctRot3(Ri));
+}
+
+void GenerateRandomShapeParams(unsigned int randSeed, unsigned int &randSeqPos, int numModes, 
+	vctDynamicVector<double> &S, double stdDevLim_lower, double stdDevLim_upper)
+{
+	//initialize random numbers
+	cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	cisstRandomSeq.SetSeed(randSeed);
+	cisstRandomSeq.SetSequencePosition(randSeqPos);
+
+	float interval = rand() % 3 + 1;
+	for (int i = 0; i < numModes; i++)
+	{
+		if (i == 0)
+			S[i] = cisstRandomSeq.ExtractRandomDouble(-3.0, 3.0);
+		else
+			S[i] = S[i - 1] / 2;
+	}
 }
 
 void GenerateRandomL(unsigned int randSeed, unsigned int &randSeqPos,
@@ -701,7 +765,6 @@ void CreateMesh(cisstMesh &mesh,
   }
 }
 
-
 void GenerateSamples(cisstMesh &mesh,
   unsigned int randSeed, unsigned int &randSeqPos,
   unsigned int nSamps,
@@ -752,6 +815,43 @@ void GenerateSamples(cisstMesh &mesh,
       assert(0);
     }
   }
+}
+
+void GenerateSubSamples(cisstMesh &pts,
+	vctDynamicVector<bool> &selectedPts,
+	vctDynamicVector<vct3> &subsampledPts,
+	int nSubsamples,
+	std::string *SavePath_Samples)
+{
+	std::random_device rd;	// obtain a random number from hardware
+	std::mt19937 eng(rd());	// seed the generator
+	std::uniform_int_distribution<> distr(0, pts.NumVertices()); // define the range
+
+	for (int i = 0; i < nSubsamples; i++)
+	{
+		int currnum = distr(eng);
+
+		if (!selectedPts[currnum])
+			selectedPts[currnum] = true;
+		else
+		{
+			i--;
+			continue;
+		}
+		subsampledPts[i] = pts.vertices[currnum];
+	}
+
+	pts.vertices = subsampledPts;
+
+	// save samples
+	if (SavePath_Samples)
+	{
+		if (cisstPointCloud::WritePointCloudToFile(*SavePath_Samples, subsampledPts) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
 }
 
 void GenerateNoisySamples_Gaussian(

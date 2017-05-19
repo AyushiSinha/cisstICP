@@ -1,7 +1,8 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
-//    All rights reserved.
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//    Johns Hopkins University. 
+//	  All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
 //    modification, are permitted provided that the following conditions are
@@ -92,13 +93,16 @@ cisstICP::ReturnType cisstICP::IterateICP()
   double dAng01, dAng12 = 0.0;
   double dPos01, dPos12 = 0.0;
   vctFrm3 dF;
+  double dS;
   vctFrm3 F01, F12, F02;
   vctFrm3 Freg0, Freg1, Freg2;
   vctRodRot3 dR;
+  int numModes;
   double E0, E1, E2;
   double tolE;
   ReturnType rt;
   unsigned int terminateIter = 0;  // consecutive iterations satisfying termination
+  vctDynamicVector<double> sp(opt.numShapeParams);
 
 #ifdef ENABLE_CODE_PROFILER
   osaStopwatch codeProfiler;
@@ -131,6 +135,9 @@ cisstICP::ReturnType cisstICP::IterateICP()
   // initialize algorithm
   Freg0 = Freg1 = vctFrm3::Identity();
   dF = Freg2 = Freg = FGuess;
+  sp.SetAll(0.0);
+  ShapeNorm = 0.0;
+  prevShapeNorm = 0.0;
   //std::cout << "Init... ";
   pAlgorithm->ICP_InitializeParameters(FGuess);
   //std::cout << "Done." << std::endl;
@@ -265,11 +272,13 @@ cisstICP::ReturnType cisstICP::IterateICP()
     // compute registration
 	//std::cout << "Registering matches... ";
 	Freg = pAlgorithm->ICP_RegisterMatches();
-	//std::cout << "\n" << Freg.Rotation().Row(0) << "\n" << Freg.Rotation().Row(1) << "\n" << Freg.Rotation().Row(2) << std::endl;
-	//std::cout << "\n" << Freg.Translation()(0) << "\n" << Freg.Translation()(1) << "\n" << Freg.Translation()(2) << std::endl;
     Freg0 = Freg1;
     Freg1 = Freg2;
     Freg2 = Freg;
+
+	pAlgorithm->ReturnShapeParam(sp); 
+	prevShapeNorm = ShapeNorm;
+	ShapeNorm = sp.Norm();
 
 #ifdef ENABLE_CODE_TRACE
     std::cout << "F:" << std::endl << Freg << std::endl;
@@ -278,8 +287,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
     // dF = xfm from Freg1 to Freg2
     //  first go back along Freg1 then go forward along Freg2
 	dF = Freg2 * Freg1.Inverse();
-	//std::cout << "\n" << dF.Rotation().Row(0) << "\n" << dF.Rotation().Row(1) << "\n" << dF.Rotation().Row(2) << std::endl;
-	//std::cout << "\n" << dF.Translation()(0) << "\n" << dF.Translation()(1) << "\n" << dF.Translation()(2) << std::endl;
+	dS = abs(prevShapeNorm - ShapeNorm);
 
 #ifdef ENABLE_CODE_PROFILER
     time_Register = codeProfiler.GetElapsedTime();
@@ -345,6 +353,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
     iterData.tolE = tolE;
     iterData.Freg.Assign(Freg);
     iterData.dF.Assign(dF);
+	iterData.S = sp;
     iterData.time = iterTimer.GetElapsedTime();
     iterData.nOutliers = nOutliers;
     //iterData.isAccelStep = JustDidAccelStep;
@@ -402,14 +411,14 @@ cisstICP::ReturnType cisstICP::IterateICP()
     }
 
     // Consider termination
-    if (dAng < opt.dAngThresh && dPos < opt.dPosThresh)
+    if (dAng < opt.dAngThresh && dPos < opt.dPosThresh && dS < opt.dShapeThresh)
     //if (JustDidAccelStep == false
     //  && (dAng < opt.dAngThresh && dPos < opt.dPosThresh)
     //  )
     {
       // Termination Test
       //  Note: max iterations is enforced by for loop
-      if ((dAng < opt.dAngTerm && dPos < opt.dPosTerm)
+      if ((dAng < opt.dAngTerm && dPos < opt.dPosTerm && dS < opt.dShapeTerm) // TODO: modify the termination condition
         || E < opt.minE
         || tolE < opt.tolE)
       {
@@ -422,7 +431,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
           termMsg << std::endl << "Termination Condition satisfied for " << opt.termHoldIter << " iterations: " << std::endl;
           if (E < opt.minE) termMsg << "reached minE (" << opt.minE << ")" << std::endl;
           else if (tolE < opt.tolE) termMsg << "reached min dE/E (" << opt.tolE << ")" << std::endl;
-          else termMsg << "reached min dAngle & dTrans (" << opt.dAngTerm * 180 / cmnPI << "/" << opt.dPosTerm << ")" << std::endl;
+		  else termMsg << "reached min dAngle & dTrans & dShape (" << opt.dAngTerm * 180 / cmnPI << "/" << opt.dPosTerm << "/" << opt.dShapeTerm << ")" << std::endl;
           break;  // exit iteration loop
         }
       }
@@ -457,9 +466,12 @@ cisstICP::ReturnType cisstICP::IterateICP()
   termMsg << " dE/E: " << tolE << std::endl;
   termMsg << " dAng: " << dAng12 * 180 / cmnPI << " " << dAng01*180.0 / cmnPI << " (deg)" << std::endl;
   termMsg << " dPos: " << dPos12 << " " << dPos01 << std::endl;
+  termMsg << " dShp: " << prevShapeNorm << " " << ShapeNorm << std::endl;
   termMsg << " iter: " << iter << std::endl;
   termMsg << " runtime: " << totalTimer.GetElapsedTime() << std::endl;
   termMsg << std::endl << Freg << std::endl;
+  if (opt.deformable)
+	termMsg << "shape parameters:\n" << sp << std::endl;
   if (iterData.iter != iterBest)
   {
     termMsg << std::endl << "WARNING: best iteration (" << iterBest << ") is not the final iteration" << std::endl;

@@ -55,7 +55,7 @@ void algDirICP_IMLOP::SetSamples(
   // base class
   algDirICP::SetSamples(argSamplePts, argSampleNorms);
 
-  std::cout << "algDirICP_IMLOP::SetSamples()" << std::endl;
+  //std::cout << "algDirICP_IMLOP::SetSamples()" << std::endl;
 
   unsigned int nSamples = samplePts.size();
 

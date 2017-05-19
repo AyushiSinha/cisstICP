@@ -1,6 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without

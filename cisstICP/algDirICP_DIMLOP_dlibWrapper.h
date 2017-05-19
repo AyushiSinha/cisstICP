@@ -31,72 +31,36 @@
 //    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 // ****************************************************************************
-#ifndef _PDTree_Mesh_h
-#define _PDTree_Mesh_h
+#ifndef _algDirICP_DIMLOP_dlibWrapper_h
+#define _algDirICP_DIMLOP_dlibWrapper_h
 
-#include "PDTreeBase.h"
-#include "cisstMesh.h"
-#include <limits>
+#include "cisstVector.h"
+#include "dlib/optimization.h"
 
-class PDTree_Mesh : public PDTreeBase
-{ 
-  //
-  // This class implements a PD tree for a mesh shape
-  //
+class algDirICP_DIMLOP;  // forward decleration
 
 
-  //--- Variables ---//
-
+class algDirICP_DIMLOP_dlibWrapper
+{
 public:
 
-  cisstMesh *MeshP;
-  BoundingBox Bounds;
+  typedef dlib::matrix<double,0,1> dlib_vector;
 
-  //--- Methods ---//
 
-public:
+  // -- Variables -- //
+
+  double maxIter;
+  double gradientNormThresh;
+  //double tol_df;
+
+
+  // -- Methods -- //
 
   // constructor
-  //  mesh       - target shape from which to construct the tree
-  //               (each triangle of the mesh becomes a datum in the tree)
-  //  nThresh    - min number of datums to subdivide a node
-  //  diagThresh - min physical size to subdivide a node
-	PDTree_Mesh(cisstMesh &mesh, int nThresh, double diagThresh);
+  algDirICP_DIMLOP_dlibWrapper(algDirICP_DIMLOP *alg);
 
-  // destructor
-  virtual ~PDTree_Mesh();
-
-
-  //--- Base Class Virtual Methods ---//
-
-  virtual vct3 DatumSortPoint(int datum) const;
-
-  virtual void EnlargeBounds(const vctFrm3& F) const;
-  virtual void EnlargeBounds(const vctFrm3& F, PDTreeNode *pNode) const;
-  virtual void EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const;
-
-
-
-  //--- Noise Model Methods ---//
-
-  vct3x3& DatumCov(int datum)       // return measurement noise model for this datum
-  {
-    return MeshP->TriangleCov[datum];
-  }
-  vct3x3* DatumCovPtr(int datum)    // return measurement noise model for this datum
-  {
-    return &(MeshP->TriangleCov[datum]);
-  }
-
-  vct3& DatumCovEig(int datum)         // return measurement noise model for this datum
-  {
-    return MeshP->TriangleCovEig[datum];
-  }
-  vct3* DatumCovEigPtr(int datum)      // return measurement noise model for this datum
-  {
-    return &(MeshP->TriangleCovEig[datum]);
-  }
-
+  //vct7  ComputeRegistration( const vct7 &x0 );
+  vctDynamicVector<double> ComputeRegistration(const vctDynamicVector<double> &x0);
 };
 
 #endif

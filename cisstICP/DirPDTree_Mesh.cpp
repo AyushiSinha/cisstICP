@@ -75,11 +75,40 @@ vct3 DirPDTree_Mesh::DatumNorm(int datum)
   return mesh.faceNormals(datum);
 }
 
-void DirPDTree_Mesh::EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB)
+void DirPDTree_Mesh::EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const
 { 
   vct3 v1, v2, v3;
   mesh.FaceCoords(datum, v1, v2, v3);
   BB.Include(F*v1);
   BB.Include(F*v2);
   BB.Include(F*v3);
+}
+
+void DirPDTree_Mesh::EnlargeBounds(const vctFrm3& F, DirPDTreeNode *pNode) const
+{
+	if (!pNode->IsTerminalNode())
+	{
+		EnlargeBounds(F, pNode->pLEq);
+		BoundingBox LparentBounds = pNode->pLEq->pParent->Bounds;
+		BoundingBox LchildBounds = pNode->pLEq->Bounds;
+		LparentBounds.Include(LchildBounds);
+
+		EnlargeBounds(F, pNode->pMore);
+		BoundingBox RparentBounds = pNode->pMore->pParent->Bounds;
+		BoundingBox RchildBounds = pNode->pMore->Bounds;
+		RparentBounds.Include(RchildBounds);
+	}
+	else if (pNode->IsTerminalNode())
+	{
+		for (int i = 0; i < pNode->NumData(); i++)
+			EnlargeBounds(F, pNode->Datum(i), pNode->Bounds);
+	}
+}
+
+void DirPDTree_Mesh::EnlargeBounds(const vctFrm3& F) const
+{
+	DirPDTreeNode *pNode;
+	pNode = Top;
+
+	EnlargeBounds(F, pNode);
 }

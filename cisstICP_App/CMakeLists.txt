@@ -98,6 +98,9 @@ if (cisst_FOUND_AS_REQUIRED)
     utility.cpp
     testICP.h
     testICPNormals.h
+    CmdLineParser.h
+    CmdLineParser.inl
+    CmdLineParser.cpp
   )
 
   include_directories( 

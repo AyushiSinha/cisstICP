@@ -1,6 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -77,4 +78,33 @@ void PDTree_Mesh::EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) co
   BB.Include(F*v1);
   BB.Include(F*v2);
   BB.Include(F*v3);
+}
+
+void PDTree_Mesh::EnlargeBounds(const vctFrm3& F, PDTreeNode *pNode) const
+{
+	if (!pNode->IsTerminalNode())
+	{
+		EnlargeBounds(F, pNode->pLEq);
+		BoundingBox LparentBounds = pNode->pLEq->pParent->Bounds;
+		BoundingBox LchildBounds = pNode->pLEq->Bounds;
+		LparentBounds.Include(LchildBounds);
+
+		EnlargeBounds(F, pNode->pMore);
+		BoundingBox RparentBounds = pNode->pMore->pParent->Bounds;
+		BoundingBox RchildBounds = pNode->pMore->Bounds;
+		RparentBounds.Include(RchildBounds);
+	}
+	else if (pNode->IsTerminalNode())
+	{
+		for (int i = 0; i < pNode->NumData(); i++)
+			EnlargeBounds(F, pNode->Datum(i), pNode->Bounds);
+	}
+}
+
+void PDTree_Mesh::EnlargeBounds(const vctFrm3& F) const
+{
+	PDTreeNode *pNode;
+	pNode = Top;
+
+	EnlargeBounds(F, pNode);
 }

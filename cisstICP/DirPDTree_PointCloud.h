@@ -71,9 +71,9 @@ public:
   //-- Base Class Method Overrides --//
 
 	virtual vct3 DatumSortPoint(int datum);  // return sort point of this datum
-  virtual vct3 DatumNorm(int datum);       // return normal orientation of this datum
+	virtual vct3 DatumNorm(int datum);       // return normal orientation of this datum
 
-	virtual void EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB);
+	virtual void EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const;
 };
 
 #endif

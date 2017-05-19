@@ -52,6 +52,7 @@ class DirPDTree_Mesh : public DirPDTreeBase
 public:
 
   cisstMesh mesh;
+  BoundingBox Bounds;
 
 
   //-- Methods --//
@@ -71,9 +72,31 @@ public:
 
 	virtual vct3 DatumSortPoint(int datum);  // return sort point of this datum
 
-  virtual vct3 DatumNorm(int datum);       // return normal orientation of this datum
+	virtual vct3 DatumNorm(int datum);       // return normal orientation of this datum
 
-	virtual void EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB);
+	virtual void EnlargeBounds(const vctFrm3& F) const;
+	virtual void EnlargeBounds(const vctFrm3& F, DirPDTreeNode *pNode) const;
+	virtual void EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const;
+
+	//--- Noise Model Methods ---//
+
+	vct3x3& DatumCov(int datum)       // return measurement noise model for this datum
+	{
+		return mesh.TriangleCov[datum];
+	}
+	vct3x3* DatumCovPtr(int datum)    // return measurement noise model for this datum
+	{
+		return &(mesh.TriangleCov[datum]);
+	}
+
+	vct3& DatumCovEig(int datum)         // return measurement noise model for this datum
+	{
+		return mesh.TriangleCovEig[datum];
+	}
+	vct3* DatumCovEigPtr(int datum)      // return measurement noise model for this datum
+	{
+		return &(mesh.TriangleCovEig[datum]);
+	}
 };
 
 #endif

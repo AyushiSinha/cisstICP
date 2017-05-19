@@ -42,6 +42,7 @@
 
 void CreateDir(const std::string &dir);
 
+void transform_read(vctFrm3 &t, std::string &filename);
 void transform_write(vctFrm3 &t, std::string &filename);
 
 vctDynamicVector<vctRot3> rotations_read(std::string &filepath);
@@ -73,6 +74,12 @@ void GenerateRandomRotation(
   double minOffsetAng, double maxOffsetAng,
   vctRot3 &R);
 
+void GenerateRandomShapeParams(
+	unsigned int randSeed, unsigned int &randSeqPos, 
+	int numModes, vctDynamicVector<double> &S,
+	double stdDevLim_lower = -3.0, 
+	double stdDevLim_upper = 3.0);
+
 void GenerateRandomL(
   unsigned int randSeed, unsigned int &randSeqPos,
   const vctDynamicVector<vct3> &uDir, vctDynamicVector<vct3x2> &L);
@@ -101,6 +108,13 @@ void GenerateNoisyMesh(
 void SetMeshTriangleCovariances(
   cisstMesh &mesh,
   double stdDevPerpPlane, double stdDevInPlane);
+
+// Generates a subsampled version of a big point cloud
+void GenerateSubSamples(cisstMesh &pts,
+	vctDynamicVector<bool> &selectedPts,
+	vctDynamicVector<vct3> &subsampledPts,
+	int nSubsamples,
+	std::string *SavePath_Samples = 0);
 
 //  cisstRandomSeq - source for uniform distributed random variables
 void GenerateSamples(

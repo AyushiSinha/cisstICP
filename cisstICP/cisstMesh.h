@@ -63,7 +63,6 @@ public:
 
   vctDynamicVector<vctDynamicVector<vct3>>	wi;
   vctDynamicVector<double>					Si;			// shape parameter
-  vctDynamicVector<vct3>					estVertices;// estimated shape using shape parameters and weighted modes
 
   // mesh noise model
   //  NOTE: if used, this must be set manually by the user AFTER loading the mesh file

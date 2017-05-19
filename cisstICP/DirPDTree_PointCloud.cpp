@@ -74,7 +74,7 @@ vct3 DirPDTree_PointCloud::DatumNorm(int datum)
   return pointCloud.pointOrientations.Element(datum);
 }
 
-void DirPDTree_PointCloud::EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB)
+void DirPDTree_PointCloud::EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const
 { 
   BB.Include(F*pointCloud.points.Element(datum));
 }

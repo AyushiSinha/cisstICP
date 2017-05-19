@@ -113,6 +113,7 @@ void algICP_IMLP::SetSamples(
   vctDynamicVector<vct3x3> &argMxi,
   vctDynamicVector<vct3x3> &argMsmtMxi)
 {
+	//std::cout << "Setting samples IMLP...\n";
   if (argMxi.size() != nSamples || argMsmtMxi.size() != nSamples)
   {
     std::cout << "ERROR: number of covariances matrices does not match number of samples" << std::endl;
@@ -183,7 +184,7 @@ void algICP_IMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
   sigma2 = 0.0;  
 
   // begin with isotropic noise model for first match, 
-  //  since we don't yet have an approximation for sigma2
+  // since we don't yet have an approximation for sigma2
   
   R_Mxi_Rt.SetAll(vct3x3::Eye());
   R_MsmtMxi_Rt.SetAll(vct3x3(0.0));

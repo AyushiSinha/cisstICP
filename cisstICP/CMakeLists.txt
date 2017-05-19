@@ -289,6 +289,10 @@ IF (cisst_FOUND_AS_REQUIRED)
       algICP_DIMLP.h
       algICP_DIMLP_dlibWrapper.cpp
       algICP_DIMLP_dlibWrapper.h
+      algDirICP_DIMLOP.cpp
+      algDirICP_DIMLOP.h
+      algDirICP_DIMLOP_dlibWrapper.cpp
+      algDirICP_DIMLOP_dlibWrapper.h
       algDirICP_VIMLOP.cpp
       algDirICP_VIMLOP.h
       algDirICP_VIMLOP_dlibWrapper.cpp

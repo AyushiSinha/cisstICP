@@ -1,6 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -129,6 +130,8 @@ public:
   virtual void  SetSamples(const vctDynamicVector<vct3> &argSamplePts);
 
   virtual void ComputeMatchStatistics(double &Avg, double &StdDev);
+
+  virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam) {};
 
 protected:
 

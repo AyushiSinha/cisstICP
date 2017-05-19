@@ -351,6 +351,30 @@ void ComputeCovInverse_NonIter(const vct3x3 &M, vct3x3 &Minv)
   Minv.Assign(V_Sinv * eigenVectors.TransposeRef());
 }
 
+void ComputeCovDecomposition_NonIter(const vct3x3 &M, vct3x3 &Minv, double &det_M)
+{
+  // Compute eigen decomposition of M
+  //   M = V*diag(S)*V'
+  vct3    eigenValues;
+  vct3x3  eigenVectors;
+  ComputeCovEigenDecomposition_NonIter(M, eigenValues, eigenVectors);
+
+  // Compute Minv
+  //   Minv = V*diag(1/S)*V'
+  static vctFixedSizeMatrix<double, 3, 3, VCT_COL_MAJOR> V_Sinv;
+  static vct3 Sinv;
+  Sinv[0] = 1.0 / eigenValues[0];
+  Sinv[1] = 1.0 / eigenValues[1];
+  Sinv[2] = 1.0 / eigenValues[2];
+  V_Sinv.Column(0) = eigenVectors.Column(0)*Sinv[0];
+  V_Sinv.Column(1) = eigenVectors.Column(1)*Sinv[1];
+  V_Sinv.Column(2) = eigenVectors.Column(2)*Sinv[2];
+  Minv.Assign(V_Sinv * eigenVectors.TransposeRef());
+
+  // compute determinant of M
+  det_M = eigenValues.ProductOfElements();
+}
+
 void ComputeCovInverse_SVD(const vct3x3 &M, vct3x3 &Minv)
 {
   // Compute SVD of M

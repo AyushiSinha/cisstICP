@@ -33,7 +33,9 @@
 // ****************************************************************************
 
 #include "algICP.h"
+#include <omp.h>
 
+#define ENABLE_PARALLELIZATION
 
 #ifdef ValidatePDTreeSearch
 std::ofstream validFS("../ICP_TestData/LastRun/debugPDTreeSearchValidation.txt");
@@ -104,6 +106,7 @@ std::vector<cisstICP::Callback> algICP::ICP_GetIterationCallbacks()
 algICP::algICP(PDTreeBase *pTree, const vctDynamicVector<vct3> &samplePts)
   : pTree(pTree)
 {
+	//std::cout << "Setting samples ICP...\n";
   SetSamples(samplePts);
 }
 
@@ -135,7 +138,11 @@ void algICP::ICP_InitializeParameters(vctFrm3 &FGuess)
   UpdateSampleXfmPositions(FGuess);
 
   // initialize matches with accelerated approximate search
-  for (unsigned int i = 0; i < nSamples; i++)
+  unsigned int i;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (i = 0; i < nSamples; i++)
   {
     matchDatums[i] = pTree->FastInitializeProximalDatum(
       samplePtsXfmd[i], matchPts[i]);
@@ -180,7 +187,11 @@ void algICP::ICP_ComputeMatches()
   maxNodesSearched = std::numeric_limits<unsigned int>::min();
   avgNodesSearched = 0;
 
-  for (unsigned int s = 0; s < nSamples; s++)
+  unsigned int s;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (s = 0; s < nSamples; s++)
   {
     // inform algorithm beginning new match
     SamplePreMatch(s);

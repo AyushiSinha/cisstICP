@@ -140,7 +140,7 @@ public:
   //
   virtual vct3  DatumSortPoint(int datum) = 0; // reference point for assigning datum to a node
   virtual vct3  DatumNorm(int datum) = 0;      // datum orientation (normal vector)
-  virtual void  EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) = 0;
+  virtual void  EnlargeBounds(const vctFrm3& F, int datum, BoundingBox& BB) const = 0;
 
 };
 

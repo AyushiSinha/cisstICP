@@ -32,8 +32,8 @@
 //    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 // ****************************************************************************
-#include "algICP_DIMLP_dlibWrapper.h"
-#include "algICP_DIMLP.h"
+#include "algDirICP_DIMLOP_dlibWrapper.h"
+#include "algDirICP_DIMLOP.h"
 
 #include <assert.h>
 #undef NDEBUG       // enable debug in release mode
@@ -47,11 +47,11 @@ namespace
 {
   // Global variables
   //  (referenced from global functions)
-	algICP_DIMLP *alg = NULL;
+  algDirICP_DIMLOP *alg = NULL;
 
   // Global functions
   //  (needed for function pointers)
-  double fValue(const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
+  double fValue(const algDirICP_DIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
     //static vct7 x;
 	  static vctDynamicVector<double> x;
@@ -69,15 +69,15 @@ namespace
     return alg->CostFunctionValue(x);
   }
 
-  algICP_DIMLP_dlibWrapper::dlib_vector fDerivative(
-	  const algICP_DIMLP_dlibWrapper::dlib_vector &x_dlib)
+  algDirICP_DIMLOP_dlibWrapper::dlib_vector fDerivative(
+	  const algDirICP_DIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
     //static vct7   x;
     //static vct7   g;
 	  static vctDynamicVector<double> x;
 	  static vctDynamicVector<double> g;
 	//static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
-	  static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib;
+	  static algDirICP_DIMLOP_dlibWrapper::dlib_vector  g_dlib;
 	  x.SetSize(x_dlib.size());
 	  g.SetSize(x_dlib.size());
 	  g_dlib.set_size(x_dlib.size());
@@ -111,7 +111,7 @@ namespace
 //--- Non-Globals ---//
 
 // Constructor
-algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
+algDirICP_DIMLOP_dlibWrapper::algDirICP_DIMLOP_dlibWrapper(algDirICP_DIMLOP *argAlg)
   : maxIter( 20 ),
   //tol_df( 1.0e-6 ),
   gradientNormThresh( 1.0e-3 )
@@ -121,7 +121,7 @@ algICP_DIMLP_dlibWrapper::algICP_DIMLP_dlibWrapper(algICP_DIMLP *argAlg)
 
 
 //vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
-vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vctDynamicVector<double> &x0)
+vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const vctDynamicVector<double> &x0)
 {
   //dlib_vector x_dlib(7);  // 7-element vector
 	int nComponents = x0.size();

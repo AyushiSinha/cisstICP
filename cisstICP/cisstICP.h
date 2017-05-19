@@ -1,6 +1,7 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
+//	  Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -57,33 +58,90 @@ class cisstICP
 
 public:
 
+	// ICP command line options
+	struct CmdLineOptions
+	{
+		// command line options
+		std::string target; // file name and location of target
+		std::string input;	// file name and location of input
+		std::string output;	// location where output will be stored
+		std::string xfm;	// file name and location of initial guess transform
+		std::string ssm;	// file name and location of statistical shape model
+
+		int modes;
+		int samples;
+
+		float scale;
+
+		bool deformable;	// is algorithm deformable?
+		bool useDefaultTarget;
+		bool useDefaultInput;
+		bool useDefaultOutput;
+		bool useDefaultXfm;
+		bool useDefaultSSM;
+
+		bool useDefaultNumModes;
+		bool useDefaultNumSamples;
+
+		bool useDefaultScale;
+
+		// default constructor
+		CmdLineOptions() :
+			target(""),
+			input(""),
+			output(""),
+			xfm(""),
+			ssm(""),
+			modes(3),
+			samples(300),
+			scale(1.0),
+			deformable(false),
+			useDefaultTarget(true),
+			useDefaultInput(true),
+			useDefaultOutput(true),
+			useDefaultXfm(true),
+			useDefaultSSM(true),
+			useDefaultNumModes(true),
+			useDefaultNumSamples(true),
+			useDefaultScale(true)
+		{};
+	};
+
   // ICP run-time options
   struct Options 
   {
     // run-time options
     std::string auxOutputDir; // directory for saving run-time logs
     bool    printOutput;      // print runtime output
+	bool	deformable;
     // termination conditions
     unsigned int  maxIter;        // max iterations
     unsigned int  termHoldIter;   // min iterations for which termination condition must be satisfied
+	unsigned int numShapeParams; // number of shape parameters
     double  minE;             // min error value (E)                                                          (RHT: 0.00000000001)
     double  tolE;             // min % change in error dE/E
     double  dPosThresh;       // min change in position to consider termination (sample/model distance units) (RHT: 0.00005)
     double  dAngThresh;       // min change in angle to consider termination (radians)                        (RHT: 0.00005)
+	double	dShapeThresh;
     double  dPosTerm;         // terminate if position and angle are less than
     double  dAngTerm;         //  these termination values
+	double	dShapeTerm;		  // terminate if shape parameter doesn't change
     //double  errorRatioThresh; // error ratio constraint (E/Eprev > ratio && Eprev/E < ratio);               (RHT: 0.999) 
                             
     // default constructor
     Options() :
       auxOutputDir(""),
       printOutput(true),
+	  deformable(false),
       maxIter(100),
       termHoldIter(2),
+	  numShapeParams(0),
       minE(-std::numeric_limits<double>::max()),
       tolE(0.0),  // 0.005 good number if using this
       dPosThresh(0.1), dAngThresh(0.1*(cmnPI/180)),
-      dPosTerm(0.1), dAngTerm(0.1*(cmnPI/180))
+	  dShapeThresh(0.1),
+      dPosTerm(0.1), dAngTerm(0.1*(cmnPI/180)),
+	  dShapeTerm(0.1)
       {};
 
     virtual std::string toString()
@@ -143,6 +201,8 @@ public:
     unsigned int  iter;               // current iteration
     vctFrm3       Freg;               // current rigid transform estimate
     vctFrm3       dF;                 // incremental change in rigid transform on this iteration
+	//double		  S;			  // current shape param norm
+	vctDynamicVector<double> S;		  // current shape params
     double        E;                  // error function value (RMS for standard ICP)
     double        tolE;               // percent change in error function value
     double        time;               // time transpired for this iteration
@@ -156,6 +216,7 @@ public:
       iter(0),
       Freg(vctFrm3::Identity()),
       dF(vctFrm3::Identity()),
+	  S(0.0),
       E(0.0),
       tolE(0.0),
       time(0.0),
@@ -191,6 +252,7 @@ protected:
 
   vctFrm3 FGuess;
   vctFrm3 Freg, Fbest;        // rigid body transforms (model = F * sample)
+  double ShapeNorm, prevShapeNorm;
   double  E, Ebest;           // registration error
   unsigned int iterBest;      // iteration with best registration error
   unsigned int nOutliers;     // number of outliers in last iteration

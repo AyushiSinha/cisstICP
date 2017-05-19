@@ -68,6 +68,7 @@ void ComputeCovEigenDecomposition_SVD(const vct3x3 &M, vct3 &eigenValues, vct3x3
 void ComputeCovEigenDecomposition_SEP(const vct3x3 &M, vct3 &eigenValues, vct3x3 &eigenVectors);
 
 void ComputeCovInverse_NonIter(const vct3x3 &M, vct3x3 &Minv);
+void ComputeCovDecomposition_NonIter(const vct3x3 &M, vct3x3 &Minv, double &det_M);
 
 void ComputeCovInverse_SVD(const vct3x3 &M, vct3x3 &Minv);
 

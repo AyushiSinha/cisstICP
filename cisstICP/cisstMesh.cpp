@@ -91,7 +91,7 @@ void cisstMesh::ResetModel()
 	modeWeight.SetSize(0);
 	wi.SetSize(0);
 	Si.SetSize(0);
-	estVertices.SetSize(0);
+	//estVertices.SetSize(0);
 }
 
 void cisstMesh::InitializeNoiseModel()
@@ -304,7 +304,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 	mode.resize(wOffset + modes - 1);
 	wi.resize(wOffset + modes - 1);
 	Si.resize(mOffset + modes - 1);
-	estVertices.resize(mOffset + numVertices);
+	//estVertices.resize(mOffset + numVertices);
 
 	while (modelFile.good() && modeCount < modes)
 	{
@@ -331,7 +331,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				std::cout << "ERROR: expected header at line: " << line << std::endl;
 				return -1;
 			}
-			std::cout << "Mode : " << modeNum << "; Mode weight : " << modeWeight[modeCount - 1] ;
+			std::cout << "Mode : " << modeNum << "; Mode weight : " << modeWeight[modeCount - 1] << std::endl;
 		}
 
 		while (vertCount < numVertices)
@@ -365,42 +365,43 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 			return -1;
 		}
 
-		// si = wi*(V-meanV)
+		// Si = 0 (initialization of Si)
 		if (modeCount > 0)
 		{
-			for (int i = 0; i < 3; i++)
-			{
-				for (int j = 0; j < numVertices; j++)
-				{
-					W[numVertices*i + j] = wi[wOffset + modeCount - 1][j][i];
-					V[numVertices*i + j] = vertices[j][i];
-					M[numVertices*i + j] = meanShape[j][i];	
-				}			
-			}
-			Si[wOffset + modeCount - 1] = W.DotProduct(V - M);			
-			std::cout << "; Shape parameter : " << Si[modeCount - 1] << std::endl;
+			//for (int i = 0; i < 3; i++)
+			//{
+			//	for (int j = 0; j < numVertices; j++)
+			//	{
+			//		W[numVertices*i + j] = wi[wOffset + modeCount - 1][j][i];
+			//		V[numVertices*i + j] = vertices[j][i];
+			//		M[numVertices*i + j] = meanShape[j][i];	
+			//	}			
+			//}
+			// Set Si to 0
+			Si[wOffset + modeCount - 1] = 0.0; 		
+			//std::cout << "; Shape parameter : " << Si[modeCount - 1] << std::endl;
 
-			if (modeCount == 1)
-				E = M;
-			E.AddProductOf(Si[wOffset + modeCount - 1] / modeWeight[wOffset + modeCount - 1], W);
+			//if (modeCount == 1)
+			//	E = M;
+			//E.AddProductOf(Si[wOffset + modeCount - 1] /*/ modeWeight[wOffset + modeCount - 1]*/, W);
 		}
 		modeCount++;
 	}
 
-	for (int i = 0; i < numVertices; i++)
-	{
-		estVertices[i][0] = E[0 * numVertices + i];	
-		estVertices[i][1] = E[1 * numVertices + i];
-		estVertices[i][2] = E[2 * numVertices + i];
-	}
-	
-	cisstMesh estMesh;
-	estMesh.vertices = estVertices;
-	estMesh.faces = this->faces;
-	estMesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/estimatedMesh.ply");
+	//for (int i = 0; i < numVertices; i++)
+	//{
+	//	estVertices[i][0] = E[0 * numVertices + i];	
+	//	estVertices[i][1] = E[1 * numVertices + i];
+	//	estVertices[i][2] = E[2 * numVertices + i];
+	//}
+	//
+	//cisstMesh estMesh;
+	//estMesh.vertices = estVertices;
+	//estMesh.faces = this->faces;
+	//estMesh.SavePLY("F:/Research/SinusProject/Seth_code/cisstICP/cissticp/test_data/LastRun_DIMLP/estimatedMesh.ply");
 
 	// replace patient mesh with model estimate of the mesh
-	this->vertices = meanShape; //estVertices; 
+	this->vertices = meanShape; 
 
 	if (modelFile.bad() || modelFile.fail() || modeCount != modes)
 	{
