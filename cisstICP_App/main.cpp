@@ -48,17 +48,27 @@
 #include "CmdLineParser.h"
 
 cmdLineString	Alg("alg"), Target("target"), In("in"),
-				Out("out"), Xfm("xfm"), SSM("ssm");
-cmdLineInt 		nModes("modes"), nSamples("samples");
-cmdLineFloat	Scale("scale");
+				Out("out"), Xfm("xfm"), SSM("ssm"),
+				ModeWeights("modewts"), 
+				WorkingDir("workdir");
+cmdLineInt 		nModes("modes"), nSamples("samples"),
+				nIters("iters");
+cmdLineFloat	Scale("scale"),
+				MinPos("minpos"), MaxPos("maxpos"),
+				MinAng("minang"), MaxAng("maxang");
 cmdLineReadable h("h"), help("help");
 
 cmdLineReadable* params[] =
 {
 	&Alg, &Target, &In,		// strings
 	&Out, &Xfm, &SSM,
+	&ModeWeights,
+	&WorkingDir,
 	&nModes, &nSamples,		// ints
+	&nIters,
 	&Scale,					// floats
+	&MinPos, &MaxPos,
+	&MinAng, &MaxAng,
 	&h, &help,
 	NULL
 };
@@ -66,6 +76,7 @@ cmdLineReadable* params[] =
 void SetParams() 
 {
 	int i = 0;
+	// Algorithm
 	params[i]->description = strdup("Select algorithm from the following:\n"
 									"\t\t\tStdICP: Implements the standard ICP algorithm\n"
 									"\t\t\tIMLP: Implements the iterative most likely point algorithm (default)\n"
@@ -77,32 +88,62 @@ void SetParams()
 									"\t\t\tPIMLOP: Implements the projected IMLOP algorithm\n"
 									"\t\t\tVIMLOP: Implements the video IMLOP algorithm\n\n");
 	i++;
+	// Target location
 	params[i]->description = strdup("Enter the location of the target mesh or point cloud\n\n");
 	i++;
+	// Input location
 	params[i]->description = strdup("Enter the location of the moving mesh or point cloud to be registered to the target\n"
 									"\t\t(default = sample points from the target mesh\n"
 									"\t\tor deformed target for deformable algorithms)\n\n");
 	i++;
-	params[i]->description = strdup("Enter the location where the output will be saved\n\n");
+	// Directory extention for output
+	params[i]->description = strdup("Enter the directory extention that will be appended to the working directory. The output will be saved here\n\n");
 	i++;
+	// Guess transform
 	params[i]->description = strdup("Enter the location of the initial transformation to be applied to the moving data\n\n");
 	i++;
+	// SSM location
 	params[i]->description = strdup("Enter the location of the statistical shape model (SSM) that is homologous to the target\n"
 									"\t\tNOTE:\tAn SSM is required for the deformable algorithms. If an SSM is not provided,\n"
 									"\t\t\tthe corresponding rigid registration will be computed\n\n");
 	i++;
+	// File containing mode weights
+	params[i]->description = strdup("Enter the location of the mode weights\n\n");
+	i++;
+	// Working directory
+	params[i]->description = strdup("Enter the new working directory (default = \"..\..\..\test_data\<algorithm type>\"\\n\n");
+	i++;
+	// Number of modes
 	params[i]->description = strdup("Enter the number of modes you want to use (default = 3)\n\n");
 	i++;
+	// Number of samples
 	params[i]->description = strdup("Enter the sample size to use (default = 300), or\n"
 									"\t\tthe # vertices to subsample from input\n"
 									"\t\t(default = input mesh or point cloud size)\n\n");
 	i++;
-	params[i]->description = strdup("Enter the initial scaling factor for the input (default = 1)\n\n");
+	// Maximum number of iterations
+	params[i]->description = strdup("Enter the maximum number of iterations to be performed (default = 100)\n\n");
 	i++;
+	// Scaling factor for input
+	params[i]->description = strdup("Enter the initial scaling factor for the input (default = 1.0)\n\n");
+	i++;
+	// Minimum positional offset
+	params[i]->description = strdup("Enter the lower bound for positional offset (default = 10)\n\n");
+	i++;
+	// Maximum positional offset
+	params[i]->description = strdup("Enter the upper bound for positional offset (default = 20)\n\n");
+	i++;
+	// Minimum orientation offset
+	params[i]->description = strdup("Enter the lower bound for orientation offset (default = 6)\n\n");
+	i++;
+	// Maximum orientation offset
+	params[i]->description = strdup("Enter the upper bound for orientation offset (default = 12)\n\n");
+	i++;
+	// Brief usage directions
 	params[i]->description = strdup("Prints short usage directions\n\n");
 	i++;
+	// Detailed usage directions
 	params[i]->description = strdup("Prints detailed usage directions\n\n");
-	i++;
 }
 
 void Usage(const char* exec)
@@ -111,12 +152,19 @@ void Usage(const char* exec)
 	printf("\t--%s <algorithm type>\n", Alg.name);
 	printf("\t--%s <target>\n", Target.name);
 	printf("\t--%s <input>\n", In.name);
-	printf("\t--%s <output directory>\n", Out.name);
+	printf("\t--%s <output extention>\n", Out.name);
 	printf("\t--%s <initial guess transform>\n", Xfm.name);
 	printf("\t--%s <ssm>\n", SSM.name);
+	printf("\t--%s <mode weights>\n", ModeWeights.name);
+	printf("\t--%s <working directory>\n", WorkingDir.name);
 	printf("\t--%s <number of modes>\n", nModes.name);
 	printf("\t--%s <number of subsamples>\n", nSamples.name);
+	printf("\t--%s <max iterations>\n", nIters.name);
 	printf("\t--%s <scale>\n", Scale.name);
+	printf("\t--%s <min pos offset>\n", MinPos.name);
+	printf("\t--%s <max pos offset>\n", MaxPos.name);
+	printf("\t--%s <min ang offset>\n", MinAng.name);
+	printf("\t--%s <min ang offset>\n", MaxAng.name);
 	printf("\t--%s (Prints usage directions)\n", h.name);
 	printf("\t--%s (Prints detailed usage directions)\n", help.name);
 }
@@ -130,9 +178,16 @@ void Help(const char* exec)
 	printf("\t--%s <output directory>\n\t\t%s", Out.name, Out.description);
 	printf("\t--%s <initial guess transform>\n\t\t%s", Xfm.name, Xfm.description);
 	printf("\t--%s <ssm>\n\t\t%s", SSM.name, SSM.description);
+	printf("\t--%s <mode weights>\n\t\t%s", ModeWeights.name, ModeWeights.description);
+	printf("\t--%s <working directory>\n\t\t%s", WorkingDir.name, WorkingDir.description);
 	printf("\t--%s <number of modes>\n\t\t%s", nModes.name, nModes.description);
 	printf("\t--%s <number of subsamples>\n\t\t%s", nSamples.name, nSamples.description);
+	printf("\t--%s <max iterations>\n\t\t%s", nIters.name, nIters.description);
 	printf("\t--%s <scale>\n\t\t%s", Scale.name, Scale.description);
+	printf("\t--%s <min pos offset>\n\t\t%s", MinPos.name, MinPos.description);
+	printf("\t--%s <max pos offset>\n\t\t%s", MaxPos.name, MaxPos.description);
+	printf("\t--%s <min ang offset>\n\t\t%s", MinAng.name, MinAng.description);
+	printf("\t--%s <min ang offset>\n\t\t%s", MaxAng.name, MaxAng.description);
 	printf("\t--%s \t%s", h.name, h.description);
 	printf("\t--%s \t%s", help.name, help.description);
 }
@@ -227,6 +282,12 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.useDefaultInput = false;
 	}
 
+	if (ModeWeights.set) {
+		cmdLineOpts.modeweights = ModeWeights.value;
+		cmdLineOpts.readModeWeights = true;
+		cmdLineOpts.useDefaultNumModes = false;
+	}
+
 	if (Out.set) {
 		cmdLineOpts.output = Out.value;
 		cmdLineOpts.useDefaultOutput = false;
@@ -241,11 +302,15 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.ssm = SSM.value;
 		cmdLineOpts.useDefaultSSM = false;
 	}
-
 	
 	if (nModes.set) {
 		cmdLineOpts.modes = nModes.value; 
 		cmdLineOpts.useDefaultNumModes = false;
+	}
+
+	if (WorkingDir.set) {
+		cmdLineOpts.workingdir = WorkingDir.value;
+		cmdLineOpts.useDefaultWorkingDir = false;
 	}
 
 	if (nSamples.set) {
@@ -253,10 +318,34 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.useDefaultNumSamples = false;
 	}
 
-	if (Scale.set)
-	{
+	if (nIters.set) {
+		cmdLineOpts.niters = nIters.value;
+		cmdLineOpts.useDefaultNumIters = false;
+	}
+
+	if (Scale.set) {
 		cmdLineOpts.scale = Scale.value;
 		cmdLineOpts.useDefaultScale = false;
+	}
+
+	if (MinPos.set) {
+		cmdLineOpts.minpos = MinPos.value;
+		cmdLineOpts.useDefaultMinPos = false;
+	}
+
+	if (MaxPos.set) {
+		cmdLineOpts.maxpos = MaxPos.value;
+		cmdLineOpts.useDefaultMaxPos = false;
+	}
+
+	if (MinAng.set) {
+		cmdLineOpts.minang = MinAng.value;
+		cmdLineOpts.useDefaultMinAng = false;
+	}
+
+	if (MaxAng.set) {
+		cmdLineOpts.maxang = MaxAng.value;
+		cmdLineOpts.useDefaultMaxAng = false;
 	}
 
 	if (!strcmp(Alg.value, "StdICP") || !strcmp(Alg.value, "IMLP") 

@@ -68,6 +68,71 @@
 //  }
 //}
 
+void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath)
+{
+	unsigned int itemsRead = 0;
+	std::string line;
+	int nsp;
+
+	std::cout << "Reading shape parameters from file: " << filepath << std::endl;
+	std::ifstream fs(filepath.c_str());
+	if (!fs.is_open())
+	{
+		std::cerr << "ERROR: failed to open file: " << filepath << std::endl;
+		assert(0);
+	}
+
+	// read shape parameters
+	//while (fs.good())
+	//{
+		std::getline(fs, line, ' ');
+		nsp = std::stoi(line);
+		S.SetSize(nsp);
+		std::cout << "Number of mode weights = " << nsp << std::endl;
+
+		for (int i = 0; i < nsp; i++)
+		{
+			std::getline(fs, line, ' ');
+			S[i] = std::stof(line);
+
+			std::cout << "shape parameter = " << S[i] << std::endl;
+			itemsRead++;
+		}
+
+		if (itemsRead != nsp)
+		{
+			//break;
+			std::cerr << "ERROR: invalid transformation file!\nShape parameter file format should be as follows:\n"
+				"numShapeParams ShapeParam_1 ShapeParam_2 ... ShapeParam_numShapeParams\n" << std::endl;
+			assert(0);
+		}
+	//}
+
+	//if (fs.bad() || fs.fail())
+	//{
+	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
+	//  assert(0);
+	//}
+	fs.close();
+}
+
+void shapeparam_write(vctDynamicVector<double> &S, std::string &filename)
+{
+	// output format:
+	//  sp1 sp2 sp3 ... spm, where m= number of modes being used  
+	std::ofstream out(filename.c_str());
+	if (out) {
+		out << S.size() << " " ;
+		for (int i = 0; i < S.size(); i++)
+			out << S[i] << " " ;
+	}
+	else {
+		out << "ERROR: cannot open shape parameter file for writing" << std::endl;
+		assert(0);
+	}
+	out.close();
+}
+
 void transform_read(vctFrm3 &F, std::string &filepath)
 {
 	unsigned int itemsRead;
@@ -121,6 +186,13 @@ void transform_write(vctFrm3 &F, std::string &filename)
   if (out) {
     out << F.Rotation().Row(0) << " " << F.Rotation().Row(1) << " "
       << F.Rotation().Row(2) << " " << F.Translation();
+
+	//out << std::fixed << std::setprecision(20) <<
+	//	F.Rotation().Row(0).Element(0) << " " << F.Rotation().Row(0).Element(1) << " " << F.Rotation().Row(0).Element(2) << " " <<
+	//	F.Rotation().Row(1).Element(0) << " " << F.Rotation().Row(1).Element(1) << " " << F.Rotation().Row(1).Element(2) << " " <<
+	//	F.Rotation().Row(2).Element(0) << " " << F.Rotation().Row(2).Element(1) << " " << F.Rotation().Row(2).Element(2) << " " <<
+	//	F.Translation().Element(0) << " " << F.Translation().Element(1) << " " << F.Translation().Element(2);
+
     //out << t.Rotation().Row(0) << "  " << t.Translation()[0] << std::endl 
     //  << t.Rotation().Row(1) << "  " << t.Translation()[1] << std::endl
     //  << t.Rotation().Row(2) << "  " << t.Translation()[2] << std::endl;
@@ -827,6 +899,9 @@ void GenerateSubSamples(cisstMesh &pts,
 	std::mt19937 eng(rd());	// seed the generator
 	std::uniform_int_distribution<> distr(0, pts.NumVertices()); // define the range
 
+	vctDynamicVector<vct3> subsampledNormals;
+	subsampledNormals.SetSize(nSubsamples);
+
 	for (int i = 0; i < nSubsamples; i++)
 	{
 		int currnum = distr(eng);
@@ -839,9 +914,20 @@ void GenerateSubSamples(cisstMesh &pts,
 			continue;
 		}
 		subsampledPts[i] = pts.vertices[currnum];
+		subsampledNormals[i] = pts.vertexNormals[currnum];
+#if 0
+		if (subsampledPts[i][0] < 6.00 && subsampledPts[i][0] > -6.50 &&
+			subsampledPts[i][1] < 33.00 && subsampledPts[i][1] > 5.00 &&
+			subsampledPts[i][2] < -5.00 && subsampledPts[i][2] > -21.00) 
+			continue;
+		else 
+			i--;
+		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
+#endif
 	}
 
 	pts.vertices = subsampledPts;
+	pts.vertexNormals = subsampledNormals;
 
 	// save samples
 	if (SavePath_Samples)

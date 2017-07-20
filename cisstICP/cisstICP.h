@@ -64,46 +64,68 @@ public:
 		// command line options
 		std::string target; // file name and location of target
 		std::string input;	// file name and location of input
-		std::string output;	// location where output will be stored
+		std::string output;	// directory extention added to working dir where output will be stored
+		std::string modeweights; // file name and location of mode weights
+		std::string workingdir; // replaces the default working direction, where input and output data is stored
 		std::string xfm;	// file name and location of initial guess transform
 		std::string ssm;	// file name and location of statistical shape model
 
 		int modes;
 		int samples;
+		int niters;
 
 		float scale;
+		float minpos, maxpos;
+		float minang, maxang;
 
 		bool deformable;	// is algorithm deformable?
 		bool useDefaultTarget;
 		bool useDefaultInput;
+		bool readModeWeights;
 		bool useDefaultOutput;
+		bool useDefaultWorkingDir;
 		bool useDefaultXfm;
 		bool useDefaultSSM;
 
 		bool useDefaultNumModes;
 		bool useDefaultNumSamples;
+		bool useDefaultNumIters;
 
 		bool useDefaultScale;
+		bool useDefaultMinPos;
+		bool useDefaultMaxPos;
+		bool useDefaultMinAng;
+		bool useDefaultMaxAng;
 
 		// default constructor
 		CmdLineOptions() :
 			target(""),
-			input(""),
+			input(""), 
+			modeweights(""),
 			output(""),
+			workingdir(""),
 			xfm(""),
 			ssm(""),
 			modes(3),
 			samples(300),
+			niters(100),
 			scale(1.0),
 			deformable(false),
 			useDefaultTarget(true),
 			useDefaultInput(true),
+			readModeWeights(false),
 			useDefaultOutput(true),
+			useDefaultWorkingDir(true),
 			useDefaultXfm(true),
 			useDefaultSSM(true),
 			useDefaultNumModes(true),
 			useDefaultNumSamples(true),
-			useDefaultScale(true)
+			useDefaultNumIters(true),
+			useDefaultScale(true),
+			useDefaultMinPos(true),
+			useDefaultMaxPos(true),
+			useDefaultMinAng(true),
+			useDefaultMaxAng(true)
 		{};
 	};
 

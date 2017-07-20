@@ -164,9 +164,9 @@ public:
 	vctDynamicVector<vct3x3> &sampleMsmtCov,
 	vctDynamicVector<vct3> &meanShape);
 
-  //virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
-	 // double &PosAvg, double &PosStdDev,
-	 // double &AngAvg, double &AngStdDev);
+  virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
+	  double &PosAvg, double &PosStdDev,
+	  double &AngAvg, double &AngStdDev);
   void	UpdateShape(vctDynamicVector<double> &si);
   void	UpdateTree();
 

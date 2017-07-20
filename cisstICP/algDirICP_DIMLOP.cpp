@@ -70,6 +70,37 @@ algDirICP_DIMLOP::algDirICP_DIMLOP(
    SetSamples(samplePts, sampleNorms, sampleCov, sampleMsmtCov, meanShape);
  }
 
+void algDirICP_DIMLOP::ComputeMatchStatistics(
+	double &PosAvg, double &PosStdDev,
+	double &AngAvg, double &AngStdDev)
+{
+	double sumSqrMatchDist = 0.0;
+	double sumMatchDist = 0.0;
+	double sqrMatchDist;
+	double sumSqrMatchAngle = 0.0;
+	double sumMatchAngle = 0.0;
+	double matchAngle, sqrMatchAngle;
+
+	// return the average match distance of the inliers
+	for (unsigned int i = 0; i < nSamples; i++)
+	{
+		sqrMatchDist = (matchPts[i] - Freg * samplePts[i]).NormSquare();
+
+		sumSqrMatchDist += sqrMatchDist;
+		sumMatchDist += sqrt(sqrMatchDist);
+
+		matchAngle = acos(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]));
+
+		sumMatchAngle += matchAngle;
+		sumSqrMatchAngle += matchAngle * matchAngle;
+	}
+
+	PosAvg = sumMatchDist / nSamples;
+	PosStdDev = (sumSqrMatchDist / nSamples) + PosAvg*PosAvg;
+	AngAvg = sumMatchAngle / nSamples;
+	AngStdDev = (sumSqrMatchAngle / nSamples) + AngAvg*AngAvg;
+}
+
 void algDirICP_DIMLOP::SetSamples(
   const vctDynamicVector<vct3> &argSamplePts,
   const vctDynamicVector<vct3> &argSampleNorms,

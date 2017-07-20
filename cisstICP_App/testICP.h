@@ -97,12 +97,13 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	// Set output directories
 	std::string workingDir;
+	std::string outputDir;
 	std::string algDir;
 
-	if (cmdOpts.useDefaultOutput)
+	//if (cmdOpts.useDefaultOutput)
 		workingDir = "../../../test_data/";
-	else
-		workingDir = cmdOpts.output;
+	//else
+	//	workingDir = cmdOpts.output;
 
 	switch (algType)
 	{
@@ -137,7 +138,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	}
 	}
 
-	std::string outputDir = workingDir + algDir;
+	if (cmdOpts.useDefaultOutput)
+		outputDir = workingDir + algDir;
+	else
+		outputDir = workingDir + algDir + cmdOpts.output + "/";
 	CreateDirectory(outputDir.c_str(), NULL);
 
 	// input files
@@ -179,16 +183,16 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	// Set default values/initialize variables
 	int		nSamples	= 300;	// default number of samples (for default input)
-	//const int nSamples = 300;
+	int		maxIters	= 100;
 	double	scale		= 1.0;
 
-	int		nThresh		= 5;	// Cov Tree Params
-	double	diagThresh	= 5.0;	//  ''
+	int		nThresh		= 5;	// 5;	// Cov Tree Params
+	double	diagThresh	= 5.0;	// 5.0;	//  ''
 
-	double minOffsetPos = 10;	// 50.0; 
-	double maxOffsetPos = 20;	// 100.0; 
-	double minOffsetAng = 6;	// 30.0; 
-	double maxOffsetAng = 12;	// 60.0;  
+	double minOffsetPos = 10.0;	// 50.0; 
+	double maxOffsetPos = 20.0;	// 100.0; 
+	double minOffsetAng = 6.0;	// 30.0; 
+	double maxOffsetAng = 12.0;	// 60.0;  
 
 	double percentOutliers		= 0.0;	// 0.05;
 	double minPosOffsetOutlier	= 5.0;
@@ -196,12 +200,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	double minAngOffsetOutlier	= 0.0;
 	double maxAngOffsetOutlier	= 0.0;
 
-	std::srand(time(NULL)); unsigned int randSeed1	 = 0;	//std::rand();	// generates samples
-	std::srand(time(NULL)); unsigned int randSeqPos1 = 0;	//std::rand();
-	std::srand(time(NULL)); unsigned int randSeed2	 = 17;	//std::rand();	// generates offsets
-	std::srand(time(NULL)); unsigned int randSeqPos2 = 28;	//std::rand();
-	std::srand(time(NULL)); unsigned int randSeed3	 = 28;	//std::rand();	// generates shape parameters
-	std::srand(time(NULL)); unsigned int randSeqPos3 = 8;	//std::rand();
+	std::srand(time(NULL)); unsigned int randSeed1	 = /*0;		*/std::rand();	// generates samples
+	std::srand(time(NULL)); unsigned int randSeqPos1 = /*0;		*/std::rand();
+	std::srand(time(NULL)); unsigned int randSeed2	 = /*17;	*/std::rand();	// generates offsets
+	std::srand(time(NULL)); unsigned int randSeqPos2 = /*28;	*/std::rand();
+	std::srand(time(NULL)); unsigned int randSeed3	 = /*28;	*/std::rand();	// generates shape parameters
+	std::srand(time(NULL)); unsigned int randSeqPos3 = /*8;		*/std::rand();
 
 	// Samples Noise Model
 	//  NOTE: this is a generative noise model 
@@ -209,7 +213,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//        to the noise properties defined here)
 	//double noiseSampsSD[3] = {1.0, 1.0, 1.0};		// noise model for samples (std dev along each axis)
 	double sampleNoiseInPlane = 1.0;				// standard deviation of noise in and out of plane
-	double sampleNoisePerpPlane = 2.0;				//   ''
+	double sampleNoisePerpPlane = 1.0;				//   ''
 
 	// Target Noise Model (for point cloud target only)
 	//  NOTE: this is a descriptive model, not a generative one
@@ -247,9 +251,17 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 		if (cmdOpts.useDefaultNumModes)
 			modes += 3;
-		else
-			modes += cmdOpts.modes;
-		weight.SetSize(modes - 1);
+		else	  
+		{
+			if (cmdOpts.readModeWeights) {
+				shapeparam_read(weight, cmdOpts.modeweights);
+				modes += weight.size();
+			}
+			else
+				modes += cmdOpts.modes;
+		}
+		std::cout << "Number of modes = " << modes << std::endl;
+		
 		int check = ReadShapeModel(mesh, loadModelPath, modes);		// makes sure mesh is mean mesh
 		if (check != 1) {
 			std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
@@ -260,6 +272,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 		if (cmdOpts.useDefaultInput)
 		{
+			weight.SetSize(modes - 1);
 			GenerateRandomShapeParams(randSeed3, randSeqPos3, modes - 1, weight);
 			// add deformation to mean shape
 			for (int j = 0; j < modes - 1; j++)
@@ -268,7 +281,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 			mesh_ssm.SavePLY(meshDir);
 		}
 		else
-			weight.SetAll(0.0);
+		{
+			weight.SetSize(modes - 1);
+			if (!cmdOpts.readModeWeights) {
+				weight.SetAll(0.0);
+			}
+		}
 	}
 
 	// Create target shape from mesh (as a PD tree)
@@ -301,6 +319,9 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		//  PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
 	}
 
+	if (!cmdOpts.useDefaultNumSamples)
+		nSamples = cmdOpts.samples;
+
 	// sub-sample and scale input if need be
 	if (!cmdOpts.useDefaultInput)
 	{
@@ -325,7 +346,8 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 			//	samples, sampleNorms, sampleDatums,
 			//	&saveSamplesPath);
 		}
-		nSamples = pts.NumVertices(); //samples.size();
+		else
+			nSamples = pts.NumVertices(); //samples.size();
 
 		if (!cmdOpts.useDefaultScale)
 		{
@@ -342,6 +364,14 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		samples, sampleNorms, sampleDatums,
 		&saveSamplesPath);
 
+	if (!cmdOpts.useDefaultInput) {
+		for (int i = 0; i < nSamples; i++)
+		{
+			samples[i] = pts.vertices[i];
+			//sampleNorms[i] = pts.vertexNormals[i];
+		}
+	}
+
 	// Add noise to samples
 	GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
 		sampleNoiseInPlane, sampleNoisePerpPlane, 0.0, 0.0,
@@ -354,19 +384,34 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		&saveNoisySamplesPath,
 		&saveCovPath);
 
-	if (!cmdOpts.useDefaultInput) {
-		noisySamples = pts.vertices;
+	if (!cmdOpts.useDefaultInput && cmdOpts.useDefaultNumSamples) {
+		for (int i = 0; i < nSamples; i++)
+		{
+			noisySamples[i] = pts.vertices[i];
+			//noisySampleNorms[i] = pts.vertexNormals[i];
+		}
 	}
 	std::cout << "Using " << nSamples << " noisy sample points...\n"; 
 
+	if (!cmdOpts.useDefaultMinPos)
+		minOffsetPos = (double)cmdOpts.minpos;
+	if (!cmdOpts.useDefaultMaxPos)
+		maxOffsetPos = (double)cmdOpts.maxpos;
+	if (!cmdOpts.useDefaultMinAng)
+		minOffsetAng = (double)cmdOpts.minang;
+	if (!cmdOpts.useDefaultMaxAng)
+		maxOffsetAng = (double)cmdOpts.maxang;
+
 	// Generate random initial offset
-	vctFrm3 Fi;		
-	GenerateRandomTransform(randSeed2, randSeqPos2,
-		minOffsetPos, maxOffsetPos,
-		minOffsetAng, maxOffsetAng,
-		Fi);
-	// save initial offset
-	transform_write(Fi, saveOffsetXfmPath);
+	vctFrm3 Fi;
+	if (cmdOpts.useDefaultXfm) {
+		GenerateRandomTransform(randSeed2, randSeqPos2,
+			minOffsetPos, maxOffsetPos,
+			minOffsetAng, maxOffsetAng,
+			Fi);
+		// save initial offset
+		transform_write(Fi, saveOffsetXfmPath);
+	}
 
 	//noisySamples2d.SetSize(1);
 	noisyEdgesV1.SetSize(1);
@@ -462,9 +507,13 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	}
 	else
 	{
-		FGuess = Fi;
 		std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
+		FGuess = Fi;
 	}
+
+	if (!cmdOpts.useDefaultNumIters)
+		maxIters = cmdOpts.niters;
+
 
 	// ICP Algorithm
 	algICP *pICPAlg = NULL;
@@ -563,7 +612,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	// ICP Options
 	cisstICP::Options opt;
 	opt.auxOutputDir = outputDir;
-	opt.maxIter = 100;
+	opt.maxIter = maxIters;
 	opt.termHoldIter = 2;
 	opt.numShapeParams = modes - 1;
 	opt.minE = -std::numeric_limits<double>::max();
@@ -643,8 +692,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	cisstMesh samplePts;
 	samplePts.vertices.SetSize(noisySamples.size()); 
-	for (int i = 0; i < noisySamples.size(); i++)
-		samplePts.vertices[i] = noisySamples[i];
+	samplePts.vertices = noisySamples;
 	samplePts.SavePLY(outputDir + "/Pts.ply");
 
 	for (int i = 0; i < noisySamples.size(); i++)

@@ -42,6 +42,9 @@
 
 void CreateDir(const std::string &dir);
 
+void shapeparam_read(vctDynamicVector<double> &s, std::string &filename);
+void shapeparam_write(vctDynamicVector<double> &s, std::string &filename);
+
 void transform_read(vctFrm3 &t, std::string &filename);
 void transform_write(vctFrm3 &t, std::string &filename);
 
