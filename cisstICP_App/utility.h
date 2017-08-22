@@ -225,6 +225,28 @@ void GenerateSampleRandomNoise(
   std::string *SavePath_Cov = 0,
   std::string *savePath_L = 0);
 
+// Read oriented sample noise having the specified standard deviation of
+//  noise in directions parallel and perpendicular to the triangle
+//  plane from which the sample was drawn.
+void ReadSampleSurfaceNoise(bool bUseDefaultCov, bool bUseDefaultL,
+	unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	double StdDevInPlane, double StdDevPerpPlane,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseL,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_NoisySamples = 0,
+	std::string Path_Cov = "", std::string *SavePath_Cov = 0,
+	std::string Path_L = "", std::string *savePath_L = 0);
+
 // Generate oriented sample noise having the specified standard deviation of
 //  noise in directions parallel and perpendicular to the triangle
 //  plane from which the sample was drawn.
@@ -263,10 +285,15 @@ void DrawGIMLOPSample(
 void Callback_SaveIterationsToFile_Utility(cisstICP::CallbackArg &arg, void *userData);
 void Callback_TrackRegPath_Utility(cisstICP::CallbackArg &arg, void *userData);
 
+void ReadFromFile_Cov(vctDynamicVector<vct3x3> &cov,
+	std::string &filePath);
 void WriteToFile_Cov(
   const vctDynamicVector<vct3x3> &cov,
   std::string &filePath);
 
+
+void ReadFromFile_L(vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &axes,
+	std::string &filePath);
 void WriteToFile_L(
   const vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &L,
   std::string &filePath);

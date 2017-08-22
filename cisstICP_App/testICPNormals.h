@@ -244,8 +244,33 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double sampleNoiseInPlane = 1.0;      // standard deviation of noise in and out of plane
   double sampleNoisePerpPlane = 1.0;    //   ''
   double sampleNoiseCircSDDeg = 2.0;    // noise to apply to sample orientations 
-  double sampleNoiseCircSD = sampleNoiseCircSDDeg*cmnPI / 180.0;
   double sampleNoiseEccentricity = 0.5; // eccentricity of orientation noise
+
+  // Modify default values
+  if (!cmdOpts.useDefaultNumSamples)
+	  nSamples = cmdOpts.samples;
+  if (!cmdOpts.useDefaultNumIters)
+	  maxIters = cmdOpts.niters;
+
+  if (!cmdOpts.useDefaultMinPos)
+	  minOffsetPos = (double)cmdOpts.minpos;
+  if (!cmdOpts.useDefaultMaxPos)
+	  maxOffsetPos = (double)cmdOpts.maxpos;
+  if (!cmdOpts.useDefaultMinAng)
+	  minOffsetAng = (double)cmdOpts.minang;
+  if (!cmdOpts.useDefaultMaxAng)
+	  maxOffsetAng = (double)cmdOpts.maxang;
+
+  if (!cmdOpts.useDefaultNoiseInPlane)
+	  sampleNoiseInPlane = (double)cmdOpts.noiseinplane;
+  if (!cmdOpts.useDefaultNoisePerpPlane)
+	  sampleNoisePerpPlane = (double)cmdOpts.noiseperpplane;
+  if (!cmdOpts.useDefaultNoiseDeg)
+	  sampleNoiseCircSDDeg = (double)cmdOpts.noisedeg;
+  if (!cmdOpts.useDefaultNoiseEcc)
+	  sampleNoiseEccentricity = (double)cmdOpts.noiseecc;
+
+  double sampleNoiseCircSD = sampleNoiseCircSDDeg*cmnPI / 180.0;
   
   // load target mesh
   std::string loadTargetMeshPath;
@@ -342,9 +367,6 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
   }
 
-  if (!cmdOpts.useDefaultNumSamples)
-	  nSamples = cmdOpts.samples;
-
   // sub-sample and scale input if need be
   if (!cmdOpts.useDefaultInput)
   {
@@ -397,19 +419,38 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   }
 
   // Add noise to samples
-  GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
-    sampleNoiseInPlane, sampleNoisePerpPlane,
-    sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
-    samples, sampleNorms,
-    noisySamples, noisySampleNorms,
-    sampleNoiseCov, sampleNoiseInvCov,
-    sampleNoiseL,
-    percentOutliers,
-    minPosOffsetOutlier, maxPosOffsetOutlier,
-    minAngOffsetOutlier, maxAngOffsetOutlier,
-    &saveNoisySamplesPath,
-	&savePath_Cov, &savePath_L);
-
+  if (!cmdOpts.useDefaultCov || !cmdOpts.useDefaultAxes)
+  {
+	  ReadSampleSurfaceNoise(cmdOpts.useDefaultCov, cmdOpts.useDefaultAxes,
+		  randSeed1, randSeqPos1, randnStream,
+		  sampleNoiseInPlane, sampleNoisePerpPlane,
+		  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
+		  samples, sampleNorms,
+		  noisySamples, noisySampleNorms,
+		  sampleNoiseCov, sampleNoiseInvCov, sampleNoiseL,
+		  percentOutliers,
+		  minPosOffsetOutlier, maxPosOffsetOutlier,
+		  minAngOffsetOutlier, maxAngOffsetOutlier,
+		  &saveNoisySamplesPath,
+		  cmdOpts.cov, &savePath_Cov,
+		  cmdOpts.axes, &savePath_L); 
+  }
+  else
+  {
+	  GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
+		  sampleNoiseInPlane, sampleNoisePerpPlane,
+		  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
+		  samples, sampleNorms,
+		  noisySamples, noisySampleNorms,
+		  sampleNoiseCov, sampleNoiseInvCov,
+		  sampleNoiseL,
+		  percentOutliers,
+		  minPosOffsetOutlier, maxPosOffsetOutlier,
+		  minAngOffsetOutlier, maxAngOffsetOutlier,
+		  &saveNoisySamplesPath,
+		  &savePath_Cov, &savePath_L);
+  }
+  
   if (!cmdOpts.useDefaultInput && cmdOpts.useDefaultNumSamples) {
 	  for (int i = 0; i < nSamples; i++)
 	  {
@@ -419,15 +460,6 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   }
 
   std::cout << "Using " << nSamples << " noisy sample points...\n";
-
-  if (!cmdOpts.useDefaultMinPos)
-	  minOffsetPos = (double)cmdOpts.minpos;
-  if (!cmdOpts.useDefaultMaxPos)
-	  maxOffsetPos = (double)cmdOpts.maxpos;
-  if (!cmdOpts.useDefaultMinAng)
-	  minOffsetAng = (double)cmdOpts.minang;
-  if (!cmdOpts.useDefaultMaxAng)
-	  maxOffsetAng = (double)cmdOpts.maxang;
 
   // Generate random initial offset
   vctFrm3 Fi;
@@ -538,10 +570,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
 	  FGuess = Fi;
   }
-
-  if (!cmdOpts.useDefaultNumIters)
-	  maxIters = cmdOpts.niters;
-
+  
 
   // ICP Algorithm
   algDirICP *pICPAlg = NULL;

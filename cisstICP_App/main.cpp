@@ -49,19 +49,24 @@
 
 cmdLineString	Alg("alg"), Target("target"), In("in"),
 				Out("out"), Xfm("xfm"), SSM("ssm"),
+				Cov("cov"), Axes("axes"),
 				ModeWeights("modewts"), 
 				WorkingDir("workdir");
 cmdLineInt 		nModes("modes"), nSamples("samples"),
 				nIters("iters");
 cmdLineFloat	Scale("scale"),
 				MinPos("minpos"), MaxPos("maxpos"),
-				MinAng("minang"), MaxAng("maxang");
+				MinAng("minang"), MaxAng("maxang"),
+				NoiseInPlane("noiseinplane"),
+				NoisePerpPlane("noiseperpplane"),
+				NoiseDeg("noisedeg"), NoiseEcc("noiseecc");
 cmdLineReadable h("h"), help("help");
 
 cmdLineReadable* params[] =
 {
 	&Alg, &Target, &In,		// strings
 	&Out, &Xfm, &SSM,
+	&Cov, &Axes,				/* Positional and angular noise */
 	&ModeWeights,
 	&WorkingDir,
 	&nModes, &nSamples,		// ints
@@ -69,7 +74,10 @@ cmdLineReadable* params[] =
 	&Scale,					// floats
 	&MinPos, &MaxPos,
 	&MinAng, &MaxAng,
-	&h, &help,
+	&NoiseInPlane, 
+	&NoisePerpPlane,
+	&NoiseDeg, &NoiseEcc,
+	&h, &help,				// help
 	NULL
 };
 
@@ -108,6 +116,12 @@ void SetParams()
 									"\t\t\tthe corresponding rigid registration will be computed\n\n");
 	i++;
 	// File containing mode weights
+	params[i]->description = strdup("Enter the location of the covariance matrices for positional noise\n\n");
+	i++;
+	// File containing mode weights
+	params[i]->description = strdup("Enter the location of the major/minor axes for angular noise\n\n");
+	i++;
+	// File containing mode weights
 	params[i]->description = strdup("Enter the location of the mode weights\n\n");
 	i++;
 	// Working directory
@@ -139,6 +153,18 @@ void SetParams()
 	// Maximum orientation offset
 	params[i]->description = strdup("Enter the upper bound for orientation offset (default = 12)\n\n");
 	i++;
+	// Maximum orientation offset
+	params[i]->description = strdup("Standard deviation of positional noise in plane (default = 1)\n\n");
+	i++;
+	// Maximum orientation offset
+	params[i]->description = strdup("Standard deviation of positional noise out of plane (default = 1)\n\n");
+	i++;
+	// Maximum orientation offset
+	params[i]->description = strdup("Standard deviation of angular noise in degrees (default = 2)\n\n");
+	i++;
+	// Maximum orientation offset
+	params[i]->description = strdup("Eccentricity of angular noise (default = 0.5)\n\n");
+	i++;
 	// Brief usage directions
 	params[i]->description = strdup("Prints short usage directions\n\n");
 	i++;
@@ -155,6 +181,8 @@ void Usage(const char* exec)
 	printf("\t--%s <output extention>\n", Out.name);
 	printf("\t--%s <initial guess transform>\n", Xfm.name);
 	printf("\t--%s <ssm>\n", SSM.name);
+	printf("\t--%s <cov (positional noise)>\n", Cov.name);
+	printf("\t--%s <axes (angular noise)>\n", Axes.name);
 	printf("\t--%s <mode weights>\n", ModeWeights.name);
 	printf("\t--%s <working directory>\n", WorkingDir.name);
 	printf("\t--%s <number of modes>\n", nModes.name);
@@ -165,6 +193,10 @@ void Usage(const char* exec)
 	printf("\t--%s <max pos offset>\n", MaxPos.name);
 	printf("\t--%s <min ang offset>\n", MinAng.name);
 	printf("\t--%s <min ang offset>\n", MaxAng.name);
+	printf("\t--%s <in plane noise>\n", NoiseInPlane.name);
+	printf("\t--%s <out of plane noise>\n", NoisePerpPlane.name);
+	printf("\t--%s <angular noise (deg)>\n", NoiseDeg.name);
+	printf("\t--%s <angular noise eccentricity>\n", NoiseEcc.name);
 	printf("\t--%s (Prints usage directions)\n", h.name);
 	printf("\t--%s (Prints detailed usage directions)\n", help.name);
 }
@@ -178,6 +210,8 @@ void Help(const char* exec)
 	printf("\t--%s <output directory>\n\t\t%s", Out.name, Out.description);
 	printf("\t--%s <initial guess transform>\n\t\t%s", Xfm.name, Xfm.description);
 	printf("\t--%s <ssm>\n\t\t%s", SSM.name, SSM.description);
+	printf("\t--%s <cov (positional noise)>\n\t\t%s", Cov.name, Cov.description);
+	printf("\t--%s <axes (angular noise)>\n\t\t%s", Axes.name, Axes.description);
 	printf("\t--%s <mode weights>\n\t\t%s", ModeWeights.name, ModeWeights.description);
 	printf("\t--%s <working directory>\n\t\t%s", WorkingDir.name, WorkingDir.description);
 	printf("\t--%s <number of modes>\n\t\t%s", nModes.name, nModes.description);
@@ -188,6 +222,10 @@ void Help(const char* exec)
 	printf("\t--%s <max pos offset>\n\t\t%s", MaxPos.name, MaxPos.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MinAng.name, MinAng.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MaxAng.name, MaxAng.description);
+	printf("\t--%s <in plane noise>\n\t\t%s", NoiseInPlane.name, NoiseInPlane.description);
+	printf("\t--%s <out of plane noise>\n\t\t%s", NoisePerpPlane.name, NoisePerpPlane.description);
+	printf("\t--%s <angular noise (deg)>\n\t\t%s", NoiseDeg.name, NoiseDeg.description);
+	printf("\t--%s <angular noise eccentricity>\n\t\t%s", NoiseEcc.name, NoiseEcc.description);
 	printf("\t--%s \t%s", h.name, h.description);
 	printf("\t--%s \t%s", help.name, help.description);
 }
@@ -302,6 +340,16 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.ssm = SSM.value;
 		cmdLineOpts.useDefaultSSM = false;
 	}
+
+	if (Cov.set) {
+		cmdLineOpts.cov = Cov.value;
+		cmdLineOpts.useDefaultCov = false;
+	}
+
+	if (Axes.set) {
+		cmdLineOpts.axes = Axes.value;
+		cmdLineOpts.useDefaultAxes = false;
+	}
 	
 	if (nModes.set) {
 		cmdLineOpts.modes = nModes.value; 
@@ -346,6 +394,26 @@ int main( int argc, char* argv[] )
 	if (MaxAng.set) {
 		cmdLineOpts.maxang = MaxAng.value;
 		cmdLineOpts.useDefaultMaxAng = false;
+	}
+
+	if (NoiseInPlane.set) {
+		cmdLineOpts.noiseinplane = NoiseInPlane.value;
+		cmdLineOpts.useDefaultNoiseInPlane = false;
+	}
+
+	if (NoisePerpPlane.set) {
+		cmdLineOpts.noiseperpplane = NoisePerpPlane.value;
+		cmdLineOpts.useDefaultNoisePerpPlane = false;
+	}
+
+	if (NoiseDeg.set) {
+		cmdLineOpts.noisedeg = NoiseDeg.value;
+		cmdLineOpts.useDefaultNoiseDeg = false;
+	}
+
+	if (NoiseEcc.set) {
+		cmdLineOpts.noiseecc = NoiseEcc.value;
+		cmdLineOpts.useDefaultNoiseEcc = false;
 	}
 
 	if (!strcmp(Alg.value, "StdICP") || !strcmp(Alg.value, "IMLP") 

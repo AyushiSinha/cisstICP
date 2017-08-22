@@ -70,36 +70,79 @@ algDirICP_DIMLOP::algDirICP_DIMLOP(
    SetSamples(samplePts, sampleNorms, sampleCov, sampleMsmtCov, meanShape);
  }
 
-void algDirICP_DIMLOP::ComputeMatchStatistics(
-	double &PosAvg, double &PosStdDev,
-	double &AngAvg, double &AngStdDev)
+void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 {
 	double sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
 	double sqrMatchDist;
-	double sumSqrMatchAngle = 0.0;
-	double sumMatchAngle = 0.0;
-	double matchAngle, sqrMatchAngle;
 
-	// return the average match distance of the inliers
+	double sumSqrMahalDist = 0.0;
+	double sumMahalDist = 0.0;
+	double sqrMahalDist;
+	int nGoodSamples = 0;
+
+	vct3x3 M, Minv;
+	vct3 residual;
+
+	// NOTE: if using a method with outlier rejection, it may be desirable to
+	//       compute statistics on only the inliers
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		sqrMatchDist = (matchPts[i] - Freg * samplePts[i]).NormSquare();
+		if (outlierFlags[i]) continue;  // skip outliers
 
+		residual = Tssm_Y[i] - Freg * samplePts[i];
+		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose();// +*Myi[i];
+		ComputeCovInverse_NonIter(M, Minv);
+		sqrMahalDist = residual*Minv*residual;
+
+		sumSqrMahalDist += sqrMahalDist;
+		sumMahalDist += sqrt(sqrMahalDist);
+		nGoodSamples++;
+
+		sqrMatchDist = residual.NormSquare();
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
-
-		matchAngle = acos(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]));
-
-		sumMatchAngle += matchAngle;
-		sumSqrMatchAngle += matchAngle * matchAngle;
 	}
 
-	PosAvg = sumMatchDist / nSamples;
-	PosStdDev = (sumSqrMatchDist / nSamples) + PosAvg*PosAvg;
-	AngAvg = sumMatchAngle / nSamples;
-	AngStdDev = (sumSqrMatchAngle / nSamples) + AngAvg*AngAvg;
+	Avg = sumMahalDist / nGoodSamples;
+	StdDev = (sumSqrMahalDist / nGoodSamples) + Avg*Avg;
+
+	std::cout << "\nDIMLOP: Average Mahalanobis Distance = " << Avg << "(+/-" << StdDev << ")" << std::endl;
+
+	//Avg = sumMatchDist / nSamples;
+	//StdDev = (sumSqrMatchDist / nSamples) + Avg*Avg;
 }
+
+//void algDirICP_DIMLOP::ComputeMatchStatistics(
+//	double &PosAvg, double &PosStdDev,
+//	double &AngAvg, double &AngStdDev)
+//{
+//	double sumSqrMatchDist = 0.0;
+//	double sumMatchDist = 0.0;
+//	double sqrMatchDist;
+//	double sumSqrMatchAngle = 0.0;
+//	double sumMatchAngle = 0.0;
+//	double matchAngle, sqrMatchAngle;
+//
+//	// return the average match distance of the inliers // AS comment: maybe return the mahalanobis distance instead?
+//	for (unsigned int i = 0; i < nSamples; i++)
+//	{
+//		sqrMatchDist = (matchPts[i] - Freg * samplePts[i]).NormSquare();
+//
+//		sumSqrMatchDist += sqrMatchDist;
+//		sumMatchDist += sqrt(sqrMatchDist);
+//
+//		matchAngle = acos(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]));
+//
+//		sumMatchAngle += matchAngle;
+//		sumSqrMatchAngle += matchAngle * matchAngle;
+//	}
+//
+//	PosAvg = sumMatchDist / nSamples;
+//	PosStdDev = (sumSqrMatchDist / nSamples) + PosAvg*PosAvg;
+//	AngAvg = sumMatchAngle / nSamples;
+//	AngStdDev = (sumSqrMatchAngle / nSamples) + AngAvg*AngAvg;
+//}
 
 void algDirICP_DIMLOP::SetSamples(
   const vctDynamicVector<vct3> &argSamplePts,

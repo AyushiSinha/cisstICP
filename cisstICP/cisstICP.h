@@ -62,13 +62,15 @@ public:
 	struct CmdLineOptions
 	{
 		// command line options
-		std::string target; // file name and location of target
-		std::string input;	// file name and location of input
-		std::string output;	// directory extention added to working dir where output will be stored
-		std::string modeweights; // file name and location of mode weights
-		std::string workingdir; // replaces the default working direction, where input and output data is stored
-		std::string xfm;	// file name and location of initial guess transform
-		std::string ssm;	// file name and location of statistical shape model
+		std::string target;			// file name and location of target
+		std::string input;			// file name and location of input
+		std::string output;			// directory extention added to working dir where output will be stored
+		std::string modeweights;	// file name and location of mode weights
+		std::string workingdir;		// replaces the default working direction, where input and output data is stored
+		std::string xfm;			// file name and location of initial guess transform
+		std::string ssm;			// file name and location of statistical shape model
+		std::string cov;			// file name and location of covariance matrices of positional noise model
+		std::string axes;			// file name and location of major/minor axes of angular noise model
 
 		int modes;
 		int samples;
@@ -77,6 +79,8 @@ public:
 		float scale;
 		float minpos, maxpos;
 		float minang, maxang;
+		float noiseinplane, noiseperpplane;
+		float noisedeg, noiseecc;
 
 		bool deformable;	// is algorithm deformable?
 		bool useDefaultTarget;
@@ -86,6 +90,8 @@ public:
 		bool useDefaultWorkingDir;
 		bool useDefaultXfm;
 		bool useDefaultSSM;
+		bool useDefaultCov;
+		bool useDefaultAxes;
 
 		bool useDefaultNumModes;
 		bool useDefaultNumSamples;
@@ -96,6 +102,10 @@ public:
 		bool useDefaultMaxPos;
 		bool useDefaultMinAng;
 		bool useDefaultMaxAng;
+		bool useDefaultNoiseInPlane;
+		bool useDefaultNoisePerpPlane;
+		bool useDefaultNoiseDeg;
+		bool useDefaultNoiseEcc;
 
 		// default constructor
 		CmdLineOptions() :
@@ -106,10 +116,20 @@ public:
 			workingdir(""),
 			xfm(""),
 			ssm(""),
+			cov(""),
+			axes(""),
 			modes(3),
 			samples(300),
 			niters(100),
 			scale(1.0),
+			minpos(10.0),
+			maxpos(20.0),
+			minang(6.0),
+			maxang(12.0),
+			noiseinplane(1.0),
+			noiseperpplane(1.0),
+			noisedeg(2.0),
+			noiseecc(0.5),
 			deformable(false),
 			useDefaultTarget(true),
 			useDefaultInput(true),
@@ -118,6 +138,8 @@ public:
 			useDefaultWorkingDir(true),
 			useDefaultXfm(true),
 			useDefaultSSM(true),
+			useDefaultCov(true),
+			useDefaultAxes(true),
 			useDefaultNumModes(true),
 			useDefaultNumSamples(true),
 			useDefaultNumIters(true),
@@ -125,7 +147,11 @@ public:
 			useDefaultMinPos(true),
 			useDefaultMaxPos(true),
 			useDefaultMinAng(true),
-			useDefaultMaxAng(true)
+			useDefaultMaxAng(true),
+			useDefaultNoiseInPlane(true),
+			useDefaultNoisePerpPlane(true),
+			useDefaultNoiseDeg(true),
+			useDefaultNoiseEcc(true)
 		{};
 	};
 
@@ -139,7 +165,7 @@ public:
     // termination conditions
     unsigned int  maxIter;        // max iterations
     unsigned int  termHoldIter;   // min iterations for which termination condition must be satisfied
-	unsigned int numShapeParams; // number of shape parameters
+	unsigned int  numShapeParams; // number of shape parameters
     double  minE;             // min error value (E)                                                          (RHT: 0.00000000001)
     double  tolE;             // min % change in error dE/E
     double  dPosThresh;       // min change in position to consider termination (sample/model distance units) (RHT: 0.00005)

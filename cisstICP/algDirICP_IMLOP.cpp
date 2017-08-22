@@ -48,6 +48,28 @@ void  algDirICP_IMLOP::SetNoiseModel(
   dynamicParamEst = dynamicallyEstParams;
 }
 
+void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gotta do this right with mahalanobis distance
+{
+	double sumSqrMatchDist = 0.0;
+	double sumMatchDist = 0.0;
+	double sqrMatchDist;
+
+	// NOTE: if using a method with outlier rejection, it may be desirable to
+	//       compute statistics on only the inliers
+	for (unsigned int i = 0; i < nGoodSamples; i++)
+	{
+		sqrMatchDist = (goodMatchPts[i] - Freg * goodSamplePts[i]).NormSquare();
+
+		sumSqrMatchDist += sqrMatchDist;
+		sumMatchDist += sqrt(sqrMatchDist);
+	}
+	std::cout << "sigma = " << sigma2 << std::endl;
+	Avg = sumMatchDist / (/*sqrt(sigma2) **/ nGoodSamples);
+	StdDev = (sumSqrMatchDist / (/*sigma2 * */nGoodSamples)) + Avg*Avg;
+
+	std::cout << "\nIMLOP: Average Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
+
 void algDirICP_IMLOP::SetSamples(
   const vctDynamicVector<vct3> &argSamplePts,
   const vctDynamicVector<vct3> &argSampleNorms)

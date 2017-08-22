@@ -398,4 +398,6 @@ void algICP::ComputeMatchStatistics(double &Avg, double &StdDev)
 
   Avg = sumMatchDist / nSamples;
   StdDev = (sumSqrMatchDist / nSamples) + Avg*Avg;
+
+  std::cout << "\nICP: Average Mahalanobis Distance = " << Avg << "(+/-" << StdDev << ")" << std::endl;
 }

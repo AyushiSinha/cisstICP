@@ -154,6 +154,7 @@ public:
   // destructor
   virtual ~algDirICP_IMLOP() {}
 
+  virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
 
   void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   double  ComputeRpos();

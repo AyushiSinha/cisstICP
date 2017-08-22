@@ -66,6 +66,7 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
   // return the average mahalanobis distance of the matches
   //  based on point noise models only (measurement and surface model covariances)
   //  i.e. do not include sigma2
+
   double sumSqrMahalDist = 0.0;
   double sumMahalDist = 0.0;
   double sqrMahalDist;
@@ -88,6 +89,8 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 
   Avg = sumMahalDist / nGoodSamples;
   StdDev = (sumSqrMahalDist / nGoodSamples) + Avg*Avg;
+
+  std::cout << "\nIMLP: Average Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 
   //// return the average match distance of the inliers
   //double matchDist = 0.0;

@@ -470,4 +470,6 @@ void algDirICP::ComputeMatchStatistics(
   PosStdDev = (sumSqrMatchDist / nSamples) + PosAvg*PosAvg;
   AngAvg = sumMatchAngle / nSamples;
   AngStdDev = (sumSqrMatchAngle / nSamples) + AngAvg*AngAvg;
+
+  std::cout << "\nDirICP: Average Mahalanobis Distance = " << PosAvg << "(+/-" << PosStdDev << ")" << std::endl;
 }

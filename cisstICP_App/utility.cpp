@@ -319,6 +319,57 @@ void cov_write(vctDynamicVector<vct3x3> &cov, std::string &filename)
   out.close();
 }
 
+void ReadFromFile_Cov(vctDynamicVector<vct3x3> &cov,
+	std::string &filePath)
+{
+	// Text file format:
+	//
+	//  c00 c01 c02 c10 c11 c12 c20 c21 c22
+	//   ...
+	//  c00 c01 c02 c10 c11 c12 c20 c21 c22
+	//
+	//  where vx's are indices into the pts array
+
+	unsigned int itemsRead;
+	std::string line;
+	float f1, f2, f3, f4, f5, f6, f7, f8, f9;
+
+	std::cout << "Reading covariance from file: " << filePath << std::endl;
+	std::ifstream fs(filePath.c_str());
+	if (!fs.is_open())
+	{
+		std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
+		assert(0);
+	}
+
+	// read matrices
+	int i = 0;
+	while (fs.good())
+	{
+		std::getline(fs, line);
+		if (line.empty())
+			continue;
+		itemsRead = std::sscanf(line.c_str(), "%f %f %f %f %f %f %f %f %f",
+			&f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8, &f9);
+		//std::cout << f1 << ", " << f2 << ", " << f3 << ", " << f4 << ", " << f5 << ", " << f6 << ", " << f7 << ", " << f8 << ", " << f9 << std::endl;
+		if (itemsRead != 9)
+		{
+			//break;
+			std::cerr << "ERROR: invalid covariance file!\Covariance file format should be as follows:\n"
+				"c00 c01 c02 c10 c11 c12 c20 c21 c22\n" << std::endl;
+			assert(0);
+		}
+		cov(i).Assign(f1, f2, f3, f4, f5, f6, f7, f8, f9);
+		i++;
+	}
+	//if (fs.bad() || fs.fail())
+	//{
+	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
+	//  assert(0);
+	//}
+	fs.close();
+}
+
 // Write cov to file
 void WriteToFile_Cov(const vctDynamicVector<vct3x3> &cov,
   std::string &filePath)
@@ -347,6 +398,56 @@ void WriteToFile_Cov(const vctDynamicVector<vct3x3> &cov,
       << cov.at(i)(2, 0) << " " << cov.at(i)(2, 1) << " " << cov.at(i)(2, 2) << "\n";
   }
   fs.close();
+}
+
+void ReadFromFile_L(vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &axes,
+	std::string &filePath)
+{
+	// Text file format:
+	//
+	//  L1x L1y L1z L2x L2y L2z
+	//   ...
+	//  L1x L1y L1z L2x L2y L2z
+	//
+	//  where vx's are indices into the pts array
+
+	unsigned int itemsRead;
+	std::string line;
+	float f1, f2, f3, f4, f5, f6;
+
+	std::cout << "Reading axes from file: " << filePath << std::endl;
+	std::ifstream fs(filePath.c_str());
+	if (!fs.is_open())
+	{
+		std::cerr << "ERROR: failed to open file: " << filePath << std::endl;
+		assert(0);
+	}
+
+	// read matrices
+	int i = 0;
+	while (fs.good())
+	{
+		std::getline(fs, line);
+		if (line.empty())
+			continue;
+		itemsRead = std::sscanf(line.c_str(), "%f %f %f %f %f %f",
+			&f1, &f2, &f3, &f4, &f5, &f6);
+		if (itemsRead != 6)
+		{
+			//break;
+			std::cerr << "ERROR: invalid axis file!\Axis file format should be as follows:\n"
+				"L1x L1y L1z L2x L2y L2z\n" << std::endl;
+			assert(0);
+		}
+		axes(i).Assign(f1, f2, f3, f4, f5, f6);
+		i++;
+	}
+	//if (fs.bad() || fs.fail())
+	//{
+	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
+	//  assert(0);
+	//}
+	fs.close();
 }
 
 // Write L to file
@@ -1383,6 +1484,181 @@ void GenerateSampleRandomNoise(unsigned int randSeed, unsigned int &randSeqPos,
   {
     WriteToFile_L(noiseL, *savePath_L);
   }
+}
+
+// Read sample noise having the specified standard deviation of
+//  noise in directions parallel and perpendicular to the triangle
+//  plane from which the sample was drawn.
+void ReadSampleSurfaceNoise(bool bUseDefaultCov, bool bUseDefaultL,
+	unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	double StdDevInPlane, double StdDevPerpPlane,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseL,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_NoisySamples,
+	std::string Path_Cov, std::string *SavePath_Cov,
+	std::string Path_L, std::string *savePath_L)
+{
+	//std::cout << "Initialize random sequence... ";
+	// initialize random numbers
+	cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	cisstRandomSeq.SetSeed(randSeed);
+	cisstRandomSeq.SetSequencePosition(randSeqPos);
+	//std::cout << "Done.\n";
+
+	//std::cout << "Setting size... ";
+	unsigned int nSamps = samples.size();
+	unsigned int nOutliers = (unsigned int)(percentOutliers*(double)nSamps);
+	unsigned int nNoisy = nSamps - nOutliers;
+
+	noisySamples.SetSize(nSamps);
+	noisySampleNorms.SetSize(nSamps);
+	sampleCov.SetSize(nSamps);
+	sampleInvCov.SetSize(nSamps);
+	noiseL.SetSize(nSamps);
+	//std::cout << "Done.\n";
+
+	vct3x3 M, M0, invM0, Ninv;
+	vct3 n;
+	vctRot3 R;
+	vct3 x(1.0, 0.0, 0.0);
+	vct3 y(0.0, 1.0, 0.0);
+	vct3 z(0.0, 0.0, 1.0);
+
+	//std::cout << "Setting eigenvalues... ";
+	// set eigenvalues of noise covariance
+	//  assume a z-axis normal orientation
+	M0.SetAll(0.0);
+	M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
+	M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
+	M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+	invM0.SetAll(0.0);
+	invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
+	invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
+	invM0.Element(2, 2) = 1.0 / M0.Element(2, 2);
+	//std::cout << "Done.\n";
+
+	// read sample covariance matrix
+
+	//std::cout << "Reading files... ";
+	if (!bUseDefaultCov)
+		ReadFromFile_Cov(sampleCov, Path_Cov);
+	if (!bUseDefaultL)
+		ReadFromFile_L(noiseL, Path_L);
+	//std::cout << "Done.\n";
+
+	// add random noise to samples such that noise perpendicular to the
+	//  sample triangle is different than noise in-plane with triangle
+	for (unsigned int i = 0; i < nNoisy; i++)
+	{
+		//=== Generate position noise ===//
+
+		// Define the noise covariance for this sample
+		//  find rotation to rotate the sample normal to the z-axis
+		R = XProdRotation(sampleNorms(i), z);
+		// compute noise covariance M of this sample
+		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
+		M = R.Transpose()*M0*R;
+
+		// generate Guassian noise
+		//vct3 p;
+		//Draw3DGaussianSample(randnStream, M, p);
+
+		// apply Gaussian noise to the sample
+		//noisySamples(i) = samples(i) + p;
+		//sampleCov(i) = M;
+		sampleInvCov(i) = R.Transpose()*invM0*R;
+
+	}
+
+	// add outliers to samples such that outliers are offset outward from
+	//  the shape (offset along the point normal direction)
+	for (unsigned int k = nNoisy; k < nSamps; k++)
+	{
+		//=== Generate position outlier ===//
+
+		// generate a random outlier
+		double offset = cisstRandomSeq.ExtractRandomDouble(minPosOffsetOutlier, maxPosOffsetOutlier);
+		noisySamples.at(k) = samples.at(k) + offset*sampleNorms.at(k);
+
+		// Define the noise covariance for this sample
+		//  find rotation to rotate the sample normal to the z-axis
+		R = XProdRotation(sampleNorms.at(k), z);
+		// compute noise covariance M of this sample
+		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
+		M = R.Transpose()*M0*R;
+		//sampleCov.at(k) = M;
+		sampleInvCov.at(k) = R.Transpose()*invM0*R;
+
+		if (maxAngOffsetOutlier > 0.0)
+		{
+			//=== Generate orientation outlier ===//
+
+			// Generate random rotation on the unit sphere with uniform rotation angle
+			//  use z-axis as starting point for random rotation axis
+			//  set rotation axis along random direction on the x-y plane
+			//  generate uniform rotation angle 0-180 deg
+			//  apply rotation about the rotation axis to the z-axis to get the random rotation axis
+			//  generate a uniformly distributed rotation angle for the random rotation axis
+			vct3 z(0.0, 0.0, 1.0);
+			double xyDir = cisstRandomSeq.ExtractRandomDouble(0.0, 359.999)*cmnPI / 180.0;
+			vct3 xyAx(cos(xyDir), sin(xyDir), 0.0);
+			double xyAn = cisstRandomSeq.ExtractRandomDouble(0.0, 180.0)*cmnPI / 180.0;
+			vctAxAnRot3 Rxy(xyAx, xyAn);
+			vct3 rndAx = vctRot3(Rxy)*z;
+			double rndAn = cisstRandomSeq.ExtractRandomDouble(minAngOffsetOutlier, maxAngOffsetOutlier)*(cmnPI / 180.0);
+			vctAxAnRot3 Rrod(rndAx, rndAn);
+			noisySampleNorms.at(k) = vctRot3(Rrod)*sampleNorms.at(k);
+			// set L to any set of axis perpendicular to the sample
+			vct3 a = vctCrossProduct(z, sampleNorms.at(k));
+			if (a.Norm() > 0.001)
+			{
+				noiseL.at(k).Column(0) = a.NormalizedSelf();
+				noiseL.at(k).Column(1) = vctCrossProduct(a, sampleNorms.at(k)).Normalized();
+			}
+			else
+			{
+				noiseL.at(k).Column(0) = vct3(1.0, 0.0, 0.0);
+				noiseL.at(k).Column(1) = vct3(0.0, 1.0, 0.0);
+			}
+		}
+		else
+		{
+			noisySampleNorms.at(k) = sampleNorms.at(k);
+			noiseL.at(k) = vct3x2(0.0);
+		}
+	}
+	randSeqPos = cisstRandomSeq.GetSequencePosition();
+
+	// save noisy samples
+	if (SavePath_NoisySamples)
+	{
+		std::string noisySampsSavePath = *SavePath_NoisySamples;
+		if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples, noisySampleNorms) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
+	// save cov
+	if (SavePath_Cov)
+	{
+		WriteToFile_Cov(sampleCov, *SavePath_Cov);
+	}
+	// save L
+	if (savePath_L)
+	{
+		WriteToFile_L(noiseL, *savePath_L);
+	}
 }
 
 
