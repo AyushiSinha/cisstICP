@@ -795,6 +795,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  mesh_target.vertices(i) = Freg * mesh_target.vertices(i);
   mesh_target.SavePLY(outputDir + "/finalRegMesh.ply");
 
+  //for (int i = 0; i < mesh_source.NumVertices(); i++) {
+	 // mesh_source.vertices(i) = pICPAlg->matchPts[i];
+	 // mesh_source.vertexNormals(i) = pICPAlg->matchNorms[i];
+  //}
+  //mesh_source.SavePLY(outputDir + "/matchedMesh.ply");
+
   cisstMesh samplePts;
   samplePts.vertices.SetSize(noisySamples.size());
   samplePts.vertexNormals.SetSize(noisySamples.size());
