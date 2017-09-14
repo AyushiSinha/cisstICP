@@ -62,12 +62,17 @@ public:
 	vctDynamicVector<vctInt3>	f;
 	vctDynamicVector<vctDynamicVector<vct3>>	Tssm_wi;
 
+	double spb;
+	bool bScale;
+
 	// -- Optimizer calculations common to both cost and gradient function
 	vctRot3 Ra;
 	vct3 a, t;
+	double sc;
 	vctDynamicVector<double> s;
 	vctDynamicVector<double> x_prev;
 
+	vctDynamicVector<vct3> X;
 	vctDynamicVector<vct3> Tssm_Y;
 	vctDynamicVector<vct3> Tssm_Y_t;
 	vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
@@ -118,6 +123,7 @@ protected:
 
 	// Deformable Variables
 	vctDynamicVector<vct3>	meanShape;
+	unsigned int  nTrans; // # transformation parameters
 	unsigned int  nModes;
 	//vctDynamicVector<vct3>	sampleModes;
 	//vctDynamicVector<double> sampleModeWts;	
@@ -138,8 +144,9 @@ public:
 		vctDynamicVector<vct3x3> &sampleMsmtCov,
 		vctDynamicVector<vct3> &meanShape,
 		double kinit = 0.0, double sigma2init = 1.0, double wRpos = 0.5,
-		double kfactor = 1.0,
-		bool dynamicallyEstParams = true);
+		double kfactor = 1.0, double scale = 1.0,
+		bool dynamicallyEstParams = true, 
+		bool bScale = false);
  //   : algDirICP_IMLOP(pDirTree, samplePts, sampleNorms),
  //   //algDirPDTree(pDirTree),
 	//pDirTree(pDirTree)
@@ -162,7 +169,11 @@ public:
 	const vctDynamicVector<vct3> &argSampleNorms,
 	vctDynamicVector<vct3x3> &sampleCov,
 	vctDynamicVector<vct3x3> &sampleMsmtCov,
-	vctDynamicVector<vct3> &meanShape);
+	vctDynamicVector<vct3> &meanShape,
+	double argScale = 1.0,
+	bool argbScale = false);
+
+  void SetConstraints(double argSPbounds = 3.0);
 
   virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
 	  double &Avg, double &StdDev);
@@ -189,6 +200,7 @@ public:
   //virtual unsigned int  ICP_FilterMatches();
   //virtual bool			ICP_Terminate(vctFrm3 &Freg);
 
+  virtual void ReturnScale(double &scale);
   virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam);
 
   //--- PD Tree Interface Methods ---//

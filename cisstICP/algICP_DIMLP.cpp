@@ -51,6 +51,7 @@ algICP_DIMLP::algICP_DIMLP(
 	vctDynamicVector<vct3x3> &sampleCov,
 	vctDynamicVector<vct3x3> &sampleMsmtCov,
 	vctDynamicVector<vct3> &meanShape,
+	double scale, bool bScale,
 	double outlierChiSquareThreshold,
 	double sigma2Max)
 	: algICP_IMLP(pTree, samplePts, sampleCov, sampleMsmtCov, outlierChiSquareThreshold, sigma2Max),
@@ -59,7 +60,12 @@ algICP_DIMLP::algICP_DIMLP(
 	pMesh(pTree->MeshP),
 	TCPS(*(pTree->MeshP))
 {
-	SetSamples(samplePts, sampleCov, sampleMsmtCov, meanShape);
+	SetSamples(samplePts, sampleCov, sampleMsmtCov, meanShape, scale, bScale);
+}
+
+void algICP_DIMLP::SetConstraints(double argSPbounds)
+{
+	spb = argSPbounds;
 }
 
 void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
@@ -68,11 +74,16 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	//  based on point noise models only (measurement and surface model covariances)
 	//  i.e. do not include sigma2
 	// AS comment: maybe let this call default to the IMLP call?
+
+	double sumSqrMatchDist = 0.0;
+	double sumMatchDist = 0.0;
+	double sqrMatchDist;
+
 	double sumSqrMahalDist = 0.0;
-	double sumResidual	= 0.0;
 	double sumMahalDist = 0.0;
 	double sqrMahalDist;
 	int nGoodSamples = 0;
+
 	vct3x3 M, Minv;
 	vct3 residual;
 
@@ -80,20 +91,25 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	{
 		if (outlierFlags[i])	continue;	// skip outliers
 
-		residual = Tssm_Y[i] - Freg * samplePts[i];
+		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
 		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
-		sqrMahalDist = residual*Minv*residual;
 
-		sumResidual += residual.Norm();
+		sqrMahalDist = residual*Minv*residual;
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
+
+		sqrMatchDist = residual.NormSquare();
+		sumSqrMatchDist += sqrMatchDist;
+		sumMatchDist += sqrt(sqrMatchDist);
 		nGoodSamples++;
 	}
-	Avg = sumMahalDist / nGoodSamples;
-	StdDev = (sumSqrMahalDist / nGoodSamples) + Avg*Avg;
 
-	std::cout << "\nAverage Match Distance = " << sumResidual/nGoodSamples << std::endl;
+	Avg = sumMahalDist / nGoodSamples;
+	StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
+
+	std::cout << "\nFinal Scale = " << sc << std::endl;
+	std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
 	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 	
 }
@@ -102,11 +118,23 @@ void algICP_DIMLP::SetSamples(
 	vctDynamicVector<vct3> &argSamplePts,
 	vctDynamicVector<vct3x3> &argMxi,
 	vctDynamicVector<vct3x3> &argMsmtMxi,
-	vctDynamicVector<vct3> &argMeanShape)
+	vctDynamicVector<vct3> &argMeanShape,
+	double argScale, bool argbScale)
 {
 	//std::cout << "Setting samples DIMLP...\n";
 	// base class
 	//algICP_IMLP::SetSamples(argSamplePts, argMxi, argMsmtMxi);
+
+	// scale sample points (remove this from here when you move it to IMLP)
+	sc = argScale;
+	bScale = argbScale;
+	if (bScale) {
+		for (int i = 0; i < nSamples; i++)
+			samplePts[i] = samplePts[i] * sc;
+		nTrans = 7; // 3 for rotation, 3 for translation, 1 for scale
+	}
+	else
+		nTrans = 6; // 3 for rotation, 3 for translation
 
 	meanShape = argMeanShape;
 	nModes = pTree->MeshP->modeWeight.size();
@@ -125,7 +153,7 @@ void algICP_DIMLP::SetSamples(
 	Rat_Tssm_Y_t_x.resize(nSamples);
 	Rat_Tssm_Y_t_x_invMx.resize(nSamples);
 
-	x_prev.SetSize(6+nModes); // 3 for rotation, 3 for translation, and n modes
+	x_prev.SetSize(nTrans + nModes);  // transformation parameters, and n modes
 	mu.SetSize(nSamples);
 	f.SetSize(nSamples);
 	s.SetSize(nModes);
@@ -141,13 +169,19 @@ void algICP_DIMLP::ICP_InitializeParameters(vctFrm3 &FGuess)
 	// components, and zero for shape components
 	vct3 rot = vctRodRot3(FGuess.Rotation());
 	vct3 trans = FGuess.Translation();
+	double scale = sc;
 	x_prev.SetAll(0.0); 
 	for (int i = 0; i < 3; i++)
 		x_prev[i] = rot[i];
+
 	for (int i = 0; i < 3; i++)
 		x_prev[3 + i] = trans[i];
+
+	if (bScale)
+		x_prev[6] = scale;
+
 	for (unsigned int i = 0; i < nModes; i++)
-		x_prev[6 + i] = Si[i];
+		x_prev[nTrans + i] = Si[i];
 
 	mu.SetAll(vct3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0));
 }
@@ -215,6 +249,9 @@ void algICP_DIMLP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
 	// base class
 	algICP_IMLP::ICP_UpdateParameters_PostRegister(Freg);
+	if (bScale)
+		for (unsigned int s = 0; s < nSamples; s++)
+			samplePtsXfmd.Element(s) = sc * samplePtsXfmd.Element(s); // move this to IMLP also later
 
 	UpdateShape(Si);
 	UpdateTree();
@@ -430,6 +467,11 @@ bool algICP_DIMLP::ICP_Terminate(vctFrm3 &F)
 	}
 }
 
+void algICP_DIMLP::ReturnScale(double &scale)
+{
+	scale = sc;
+}
+
 void algICP_DIMLP::ReturnShapeParam(vctDynamicVector<double> &shapeParam)
 {
 	shapeParam = Si;
@@ -443,16 +485,15 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	vctDynamicVector<double> x0;
 	vctDynamicVector<double> x;
 
-	x0.SetSize(6 + nModes);
-	x.SetSize(6 + nModes);
+	x0.SetSize(nTrans + nModes);
+	x.SetSize(nTrans + nModes);
 
-	// initialize x_prev to fguess where you initialize Freg <-- DONE
 	x0 = x_prev; 
 
-	for (int i = 6; i < x0.size(); i++) {
-		x0[i] = std::min(x0[i], 3.0);
-		x0[i] = std::max(x0[i], -3.0);
-	}
+	//for (int i = nTrans; i < x0.size(); i++) {
+	//	x0[i] = std::min(x0[i], 3.0);
+	//	x0[i] = std::max(x0[i], -3.0);
+	//}
 
 	// x_prev must be at a different value than x0
 	x_prev.SetAll(std::numeric_limits<double>::max());
@@ -469,11 +510,16 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 
 	// update transform
 	vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
-	vctFixedSizeVectorRef<double, 3, 1> t(x, 3);
-	vctDynamicVectorRef<double> s(x, 6, nModes);
+	vctFixedSizeVectorRef<double, 3, 1> t(x, 3); 
+	double scale;
+	if (bScale)
+		scale = x[6];
+	vctDynamicVectorRef<double> s(x, nTrans, nModes);
 	F.Rotation() = vctRot3(vctRodRot3(alpha));
 	F.Translation() = t;
-	Freg = F ;
+	Freg = F;
+	if (bScale)
+		sc = scale;
 	Si = s;
 
 	pMesh->Si = Si;
@@ -490,14 +536,16 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x
 {
 	a.Assign(x[0], x[1], x[2]);
 	t.Assign(x[3], x[4], x[5]);
+	if (bScale)
+		sc = x[6];
 	
 	for (unsigned int i = 0; i < nModes; i++)
-		s[i] = x[6 + i];
+		s[i] = x[nTrans + i];
 
 	// Rodrigues formulation
 	Ra = vctRot3(vctRodRot3(a));
 
-	vctDynamicVectorRef<vct3>   X(samplePts);
+	X = samplePts;
 	vctDynamicVectorRef<vct3>   Mu(mu);
 
 	vctDynamicVector<vct3x3>  inv_Mxi(nSamples);       // inverse noise covariances of match Mxi^-1
@@ -517,7 +565,7 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x
 							+ Mu[j][2] * pMesh->vertices[f[j][2]];
 
 		Tssm_Y_t.Element(j) = Tssm_Y.Element(j) - t;
-		Rat_Tssm_Y_t_x.Element(j) = Ra.Transpose() * Tssm_Y_t.Element(j) - X.Element(j); 
+		Rat_Tssm_Y_t_x.Element(j) = Ra.Transpose() * Tssm_Y_t.Element(j) - sc * X.Element(j); 
 		ComputeCovDecomposition_NonIter(Mxi.Element(j), inv_Mxi.Element(j), det_Mxi.Element(j));
 		Rat_Tssm_Y_t_x_invMx.Element(j) = Rat_Tssm_Y_t_x.Element(j) * inv_Mxi.Element(j);
 	}
@@ -567,8 +615,11 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 	g.SetAll(0.0);
 	vctFixedSizeVectorRef<double, 3, 1> ga(g, 0);
 	vctFixedSizeVectorRef<double, 3, 1> gt(g, 3);
+	vctFixedSizeVectorRef<double, 1, 1> gsc;
+	if (bScale)
+		gsc.SetRef(g, 6);
 	//vctFixedSizeVectorRef<double, 1, 1> gs(g, 6);
-	vctDynamicVectorRef<double> gs(g, 6, nModes);
+	vctDynamicVectorRef<double> gs(g, nTrans, nModes);
 
 	vct3x3 Jz_a;
 
@@ -585,6 +636,8 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 
 		ga += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * Jz_a;
 		gt += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-Ra.Transpose());
+		if (bScale)
+			gsc += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-X.Element(j));
 
 		for (unsigned int i = 0; i < nModes; i++)
 			gs[i] += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	

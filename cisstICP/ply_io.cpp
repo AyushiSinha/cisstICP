@@ -274,7 +274,7 @@ int ply_io::write_ply(const std::string &output_ply,
 {
   e_ply_type type;
   e_ply_type length_type = PLY_UCHAR; // PLY_UINT;
-  e_ply_type list_type = PLY_SHORT; // PLY_UINT;
+  e_ply_type list_type = PLY_UINT; // PLY_SHORT;
 
   // create PLY object
   p_ply oply = ply_create(output_ply.c_str(), PLY_ASCII, NULL, 0, NULL);

@@ -88,9 +88,9 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
   }
 
   Avg = sumMahalDist / nGoodSamples;
-  StdDev = (sumSqrMahalDist / nGoodSamples) + Avg*Avg;
+  StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
 
-  std::cout << "\nIMLP: Average Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+  std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 
   //// return the average match distance of the inliers
   //double matchDist = 0.0;

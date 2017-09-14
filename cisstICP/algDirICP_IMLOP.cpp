@@ -63,11 +63,11 @@ void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gott
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
 	}
-	std::cout << "sigma = " << sigma2 << std::endl;
-	Avg = sumMatchDist / (/*sqrt(sigma2) **/ nGoodSamples);
-	StdDev = (sumSqrMatchDist / (/*sigma2 * */nGoodSamples)) + Avg*Avg;
-
-	std::cout << "\nIMLOP: Average Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+	Avg = sumMatchDist / (sigma2*nGoodSamples);
+	StdDev = sqrt( (sumSqrMatchDist / (sigma2*nGoodSamples))+Avg*Avg );
+	
+	std::cout << "\nSigma = " << sigma2;
+	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 }
 
 void algDirICP_IMLOP::SetSamples(

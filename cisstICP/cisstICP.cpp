@@ -103,6 +103,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
   ReturnType rt;
   unsigned int terminateIter = 0;  // consecutive iterations satisfying termination
   vctDynamicVector<double> sp(opt.numShapeParams);
+  double scale;
 
 #ifdef ENABLE_CODE_PROFILER
   osaStopwatch codeProfiler;
@@ -227,12 +228,17 @@ cisstICP::ReturnType cisstICP::IterateICP()
       std::cout << "Callbacks" << std::endl;
 #endif
 
+	  pAlgorithm->ReturnScale(scale);
+	  pAlgorithm->ReturnShapeParam(sp);
+
       // initial callback
       iterData.iter = 0;
       iterData.E = E;
       iterData.tolE = tolE;
       iterData.Freg.Assign(FGuess);
-      iterData.dF.Assign(FGuess);
+	  iterData.dF.Assign(FGuess);
+	  iterData.scale = scale;
+	  iterData.S = sp;
       iterData.time = iterTimer.GetElapsedTime();
       iterData.nOutliers = nOutliers;
       //iterData.isAccelStep = false;
@@ -275,6 +281,8 @@ cisstICP::ReturnType cisstICP::IterateICP()
     Freg0 = Freg1;
     Freg1 = Freg2;
     Freg2 = Freg;
+
+	pAlgorithm->ReturnScale(scale);
 
 	pAlgorithm->ReturnShapeParam(sp); 
 	prevShapeNorm = ShapeNorm;
@@ -353,6 +361,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
     iterData.tolE = tolE;
     iterData.Freg.Assign(Freg);
     iterData.dF.Assign(dF);
+	iterData.scale = scale;
 	iterData.S = sp;
     iterData.time = iterTimer.GetElapsedTime();
     iterData.nOutliers = nOutliers;
@@ -470,6 +479,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
   termMsg << " iter: " << iter << std::endl;
   termMsg << " runtime: " << totalTimer.GetElapsedTime() << std::endl;
   termMsg << std::endl << Freg << std::endl;
+  termMsg << "scale:\n   " << scale << std::endl;
   if (opt.deformable)
 	termMsg << "shape parameters:\n" << sp << std::endl;
   if (iterData.iter != iterBest)

@@ -60,7 +60,8 @@ void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *user
 	  << arg.Freg.Rotation().Row(0)(0) << ", " << arg.Freg.Rotation().Row(0)(1) << ", " << arg.Freg.Rotation().Row(0)(2) << ", , "
 	  << arg.Freg.Rotation().Row(1)(0) << ", " << arg.Freg.Rotation().Row(1)(1) << ", " << arg.Freg.Rotation().Row(1)(2) << ", , "
 	  << arg.Freg.Rotation().Row(2)(0) << ", " << arg.Freg.Rotation().Row(2)(1) << ", " << arg.Freg.Rotation().Row(2)(2) << ", , "
-	  << arg.Freg.Translation()(0) << ", " << arg.Freg.Translation()(1) << ", " << arg.Freg.Translation()(2) << ", ,";
+	  << arg.Freg.Translation()(0) << ", " << arg.Freg.Translation()(1) << ", " << arg.Freg.Translation()(2) << ", ,"
+	  << arg.scale << ", ," ;
   for (int m = 0; m < arg.S.size(); m++)
 	  (*fs) << arg.S(m) << ",";
   (*fs) << std::endl;
@@ -213,6 +214,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   int nSamples = 300;		// default number of samples (for default input)
   int maxIters = 100;
   double scale = 1.0;
+  bool	bScale = false;
 
   int    nThresh = 15;			// Cov Tree Params
   double diagThresh = 15.0;		//  ''
@@ -245,6 +247,8 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double sampleNoisePerpPlane = 1.0;    //   ''
   double sampleNoiseCircSDDeg = 2.0;    // noise to apply to sample orientations 
   double sampleNoiseEccentricity = 0.5; // eccentricity of orientation noise
+
+  double shapeparambounds = 3.0;
 
   // Modify default values
   if (!cmdOpts.useDefaultNumSamples)
@@ -336,6 +340,9 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			weight.SetAll(0.0);
 		  }
 	  }
+
+	  if (!cmdOpts.useDefaultShapeParamBounds)
+		  shapeparambounds = cmdOpts.spbounds;
   }
 
   //mesh_target.SavePLY(initmeshDir);
@@ -402,6 +409,8 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			  //samples[i] = scale * samples[i];
 			  mesh_source.vertices[i] = scale * mesh_source.vertices[i];
 	  }
+	  if (cmdOpts.bScale)
+		  bScale = true;
   }
   std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
 
@@ -570,7 +579,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
 	  FGuess = Fi;
   }
-  
+  std::cout << "scale:\n   " << scale << std::endl;  
 
   // ICP Algorithm
   algDirICP *pICPAlg = NULL;
@@ -628,10 +637,20 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  double kfactor = 1.0;
 	  bool dynamicParamEst = true;
 	  algDirICP_DIMLOP *pAlg;
-	  pAlg = new algDirICP_DIMLOP(
-		  pTreeMesh, noisySamples, noisySampleNorms,
-		  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
-		  k, sigma2, wRpos, kfactor, dynamicParamEst);
+	  if (bScale)
+		  pAlg = new algDirICP_DIMLOP(
+			  pTreeMesh, noisySamples, noisySampleNorms,
+			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
+			  k, sigma2, wRpos, kfactor, scale,
+			  dynamicParamEst, bScale);
+	  else
+		  pAlg = new algDirICP_DIMLOP(
+			  pTreeMesh, noisySamples, noisySampleNorms,
+			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
+			  k, sigma2, wRpos, kfactor, scale,
+			  dynamicParamEst);
+	  pAlg->SetConstraints(shapeparambounds);
+
 	  pICPAlg = pAlg;
 	  break;
   }
@@ -707,6 +726,13 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     assert(0);
   }
   }
+  
+  cisstMesh samplePts;
+  samplePts.vertices.SetSize(noisySamples.size());
+  samplePts.vertexNormals.SetSize(noisySamples.size());
+  samplePts.vertices = noisySamples;
+  samplePts.vertexNormals = noisySampleNorms;
+  samplePts.SavePLY(outputDir + "/Pts.ply");
 
   // ICP Options
   //cisstICP::OptionsNormals opt;
@@ -800,13 +826,6 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	 // mesh_source.vertexNormals(i) = pICPAlg->matchNorms[i];
   //}
   //mesh_source.SavePLY(outputDir + "/matchedMesh.ply");
-
-  cisstMesh samplePts;
-  samplePts.vertices.SetSize(noisySamples.size());
-  samplePts.vertexNormals.SetSize(noisySamples.size());
-  samplePts.vertices = noisySamples;
-  samplePts.vertexNormals = noisySampleNorms;
-  samplePts.SavePLY(outputDir + "/Pts.ply");
 
   for (int i = 0; i < noisySamples.size(); i++) {
 	  samplePts.vertices[i] = Fi * noisySamples[i];

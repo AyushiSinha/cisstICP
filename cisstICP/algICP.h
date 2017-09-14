@@ -131,6 +131,7 @@ public:
 
   virtual void ComputeMatchStatistics(double &Avg, double &StdDev);
 
+  virtual void ReturnScale(double &scale){};
   virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam) {};
 
 protected:

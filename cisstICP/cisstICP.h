@@ -81,8 +81,10 @@ public:
 		float minang, maxang;
 		float noiseinplane, noiseperpplane;
 		float noisedeg, noiseecc;
+		float spbounds;
 
 		bool deformable;	// is algorithm deformable?
+		bool bScale;
 		bool useDefaultTarget;
 		bool useDefaultInput;
 		bool readModeWeights;
@@ -106,6 +108,7 @@ public:
 		bool useDefaultNoisePerpPlane;
 		bool useDefaultNoiseDeg;
 		bool useDefaultNoiseEcc;
+		bool useDefaultShapeParamBounds;
 
 		// default constructor
 		CmdLineOptions() :
@@ -130,6 +133,8 @@ public:
 			noiseperpplane(1.0),
 			noisedeg(2.0),
 			noiseecc(0.5),
+			spbounds(3.0),
+			bScale(false),
 			deformable(false),
 			useDefaultTarget(true),
 			useDefaultInput(true),
@@ -151,7 +156,8 @@ public:
 			useDefaultNoiseInPlane(true),
 			useDefaultNoisePerpPlane(true),
 			useDefaultNoiseDeg(true),
-			useDefaultNoiseEcc(true)
+			useDefaultNoiseEcc(true),
+			useDefaultShapeParamBounds(true)
 		{};
 	};
 
@@ -249,7 +255,7 @@ public:
     unsigned int  iter;               // current iteration
     vctFrm3       Freg;               // current rigid transform estimate
     vctFrm3       dF;                 // incremental change in rigid transform on this iteration
-	//double		  S;			  // current shape param norm
+	double		  scale;			  // current scale
 	vctDynamicVector<double> S;		  // current shape params
     double        E;                  // error function value (RMS for standard ICP)
     double        tolE;               // percent change in error function value
@@ -264,6 +270,7 @@ public:
       iter(0),
       Freg(vctFrm3::Identity()),
       dF(vctFrm3::Identity()),
+	  scale(0.0),
 	  S(0.0),
       E(0.0),
       tolE(0.0),

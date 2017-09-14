@@ -59,8 +59,10 @@ cmdLineFloat	Scale("scale"),
 				MinAng("minang"), MaxAng("maxang"),
 				NoiseInPlane("noiseinplane"),
 				NoisePerpPlane("noiseperpplane"),
-				NoiseDeg("noisedeg"), NoiseEcc("noiseecc");
-cmdLineReadable h("h"), help("help");
+				NoiseDeg("noisedeg"), NoiseEcc("noiseecc"),
+				ShapeParamBounds("spbounds");
+cmdLineReadable bScale("bscale"),
+				h("h"), help("help");
 
 cmdLineReadable* params[] =
 {
@@ -77,6 +79,8 @@ cmdLineReadable* params[] =
 	&NoiseInPlane, 
 	&NoisePerpPlane,
 	&NoiseDeg, &NoiseEcc,
+	&ShapeParamBounds,
+	&bScale,				// readable 
 	&h, &help,				// help
 	NULL
 };
@@ -125,7 +129,7 @@ void SetParams()
 	params[i]->description = strdup("Enter the location of the mode weights\n\n");
 	i++;
 	// Working directory
-	params[i]->description = strdup("Enter the new working directory (default = \"..\..\..\test_data\<algorithm type>\"\\n\n");
+	params[i]->description = strdup("Enter the new working directory (default = \"..\\..\\..\\test_data\\LastRun_<algorithm name>\"\n\n");
 	i++;
 	// Number of modes
 	params[i]->description = strdup("Enter the number of modes you want to use (default = 3)\n\n");
@@ -165,6 +169,12 @@ void SetParams()
 	// Maximum orientation offset
 	params[i]->description = strdup("Eccentricity of angular noise (default = 0.5)\n\n");
 	i++;
+	// Scale optimization
+	params[i]->description = strdup("Constrain shape parameter search between [-n, n] (default n = 3.0)\n\n");
+	i++;
+	// Scale optimization
+	params[i]->description = strdup("Optimize over scale in addition to [R,t] and shape parameters (default = false)\n\n");
+	i++;
 	// Brief usage directions
 	params[i]->description = strdup("Prints short usage directions\n\n");
 	i++;
@@ -189,6 +199,7 @@ void Usage(const char* exec)
 	printf("\t--%s <number of subsamples>\n", nSamples.name);
 	printf("\t--%s <max iterations>\n", nIters.name);
 	printf("\t--%s <scale>\n", Scale.name);
+	printf("\t--%s <bscale>\n", bScale.name);
 	printf("\t--%s <min pos offset>\n", MinPos.name);
 	printf("\t--%s <max pos offset>\n", MaxPos.name);
 	printf("\t--%s <min ang offset>\n", MinAng.name);
@@ -197,6 +208,7 @@ void Usage(const char* exec)
 	printf("\t--%s <out of plane noise>\n", NoisePerpPlane.name);
 	printf("\t--%s <angular noise (deg)>\n", NoiseDeg.name);
 	printf("\t--%s <angular noise eccentricity>\n", NoiseEcc.name);
+	printf("\t--%s <shape parameter constraints>\n", ShapeParamBounds.name);
 	printf("\t--%s (Prints usage directions)\n", h.name);
 	printf("\t--%s (Prints detailed usage directions)\n", help.name);
 }
@@ -218,6 +230,7 @@ void Help(const char* exec)
 	printf("\t--%s <number of subsamples>\n\t\t%s", nSamples.name, nSamples.description);
 	printf("\t--%s <max iterations>\n\t\t%s", nIters.name, nIters.description);
 	printf("\t--%s <scale>\n\t\t%s", Scale.name, Scale.description);
+	printf("\t--%s <bscale>\n\t\t%s", bScale.name, bScale.description);
 	printf("\t--%s <min pos offset>\n\t\t%s", MinPos.name, MinPos.description);
 	printf("\t--%s <max pos offset>\n\t\t%s", MaxPos.name, MaxPos.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MinAng.name, MinAng.description);
@@ -226,6 +239,7 @@ void Help(const char* exec)
 	printf("\t--%s <out of plane noise>\n\t\t%s", NoisePerpPlane.name, NoisePerpPlane.description);
 	printf("\t--%s <angular noise (deg)>\n\t\t%s", NoiseDeg.name, NoiseDeg.description);
 	printf("\t--%s <angular noise eccentricity>\n\t\t%s", NoiseEcc.name, NoiseEcc.description);
+	printf("\t--%s <shape parameter constraints>\n\t\t%s", ShapeParamBounds.name, ShapeParamBounds.description);
 	printf("\t--%s \t%s", h.name, h.description);
 	printf("\t--%s \t%s", help.name, help.description);
 }
@@ -376,6 +390,11 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.useDefaultScale = false;
 	}
 
+	if (bScale.set)
+	{
+		cmdLineOpts.bScale = true;
+	}
+
 	if (MinPos.set) {
 		cmdLineOpts.minpos = MinPos.value;
 		cmdLineOpts.useDefaultMinPos = false;
@@ -414,6 +433,11 @@ int main( int argc, char* argv[] )
 	if (NoiseEcc.set) {
 		cmdLineOpts.noiseecc = NoiseEcc.value;
 		cmdLineOpts.useDefaultNoiseEcc = false;
+	}
+
+	if (ShapeParamBounds.set) {
+		cmdLineOpts.spbounds = ShapeParamBounds.value;
+		cmdLineOpts.useDefaultShapeParamBounds = false;
 	}
 
 	if (!strcmp(Alg.value, "StdICP") || !strcmp(Alg.value, "IMLP") 

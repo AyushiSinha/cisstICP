@@ -63,8 +63,8 @@ namespace
 	  for (int i = 0; i < x_dlib.size(); i++)
 		  /*if (i < 3)
 			  x[i] = 0;
-		  else
-			  */x[i] = x_dlib(i);
+		  else*/
+			  x[i] = x_dlib(i);
 
     return alg->CostFunctionValue(x);
   }
@@ -100,8 +100,8 @@ namespace
 	for (int i = 0; i < x_dlib.size(); i++)
 		/*if (i < 3)
 			g_dlib(i) = 0;
-		else
-			*/g_dlib(i) = g[i];
+		else*/
+			g_dlib(i) = g[i];
 
     return g_dlib;
   }
@@ -126,22 +126,25 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
   //dlib_vector x_dlib(7);  // 7-element vector
 	int nComponents = x0.size();
 
-	dlib_vector x_dlib(nComponents); // 6+n_modes-element vector
+	dlib_vector x_dlib(nComponents); // n_trans+n_modes-element vector
+	dlib_vector x_lower(nComponents);
+	dlib_vector x_upper(nComponents);
+
 	vctDynamicVector<double> x;
 	x.SetSize(nComponents);
 
   try
   {
-    // Now we use the find_min() function to find the minimum point.  The first argument
+    // Now we use the find_min_box_constrained() function to find the minimum point.  The first argument
     // to this routine is the search strategy we want to use.  The second argument is the 
-    // stopping strategy.
+    // stopping strategy:
     //   objective_delta_stop_strategy:  stop if df < threshold
 
-    // The other arguments to find_min() are the function to be minimized, its derivative, 
-    // then the starting point, and the last is an acceptable minimum value.  
-    // That is, if the algorithm finds any inputs that give an output value less than
-    // this then it will stop immediately.  Usually you supply a number smaller than 
-    // the actual global minimum.
+    // The other arguments to find_min_box_constrained() are the function to be minimized, its derivative, 
+    // then the starting point, and the last two are the lower and upper bounds of the constraints on the
+	// parameters being optimized:
+	//	 transformation paramters:	unconstrained
+	//	 shape paramters:			constrained between -3.0 and 3.0 (default) or user specified limits
 
  //   x_dlib(0) = x0[0];
  //   x_dlib(1) = x0[1];
@@ -154,6 +157,30 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 	  for (int i = 0; i < nComponents; i++)
 	  {
 		  x_dlib(i) = x0[i];
+
+		  int nTrans;
+		  if (alg->bScale)
+			  nTrans = 7;
+		  else
+			  nTrans = 6;
+
+		  if (i < nTrans)
+		  {
+			  x_lower(i) = -DBL_MAX;
+			  x_upper(i) = DBL_MAX;
+
+			  // should we constrain the scale as well?
+
+			  //if (i == 6) {
+			  // x_lower(i) = 0.9;
+			  // x_upper(i) = 1.1;
+			  //}
+		  }
+		  else
+		  {
+			  x_lower(i) = -alg->spb;
+			  x_upper(i) = alg->spb;
+		  }
 	  }
 
 #ifdef DLIB_VERIFY_DERIVATIVE
@@ -164,19 +191,33 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 
 
 #ifdef DLIB_VERBOSE
-    dlib::find_min(
-      dlib::bfgs_search_strategy(),
-      //dlib::objective_delta_stop_strategy( tol_df,maxIter ).be_verbose(),
-      dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
-      fValue, dlib::derivative(fValue), //fDerivative,
-      x_dlib, -1.0);
+    //dlib::find_min(
+    //  dlib::bfgs_search_strategy(),
+    //  //dlib::objective_delta_stop_strategy( tol_df,maxIter ).be_verbose(),
+    //  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
+    //  fValue, dlib::derivative(fValue), //fDerivative,
+    //  x_dlib, -1.0);
+
+	dlib::find_min_box_constrained(
+		dlib::bfgs_search_strategy(),
+		//dlib::objective_delta_stop_strategy( tol_df,maxIter ).be_verbose(),
+		dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
+		fValue, dlib::derivative(fValue), //fDerivative,
+		x_dlib, x_lower, x_upper);
 #else 
-	dlib::find_min(
-	  dlib::bfgs_search_strategy(),
-	  //dlib::objective_delta_stop_strategy( tol_df,maxIter ),
-	  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
-	  fValue, fDerivative, //dlib::derivative(fValue),
-	  x_dlib, -1.0);
+	//dlib::find_min(
+	//  dlib::bfgs_search_strategy(),
+	//  //dlib::objective_delta_stop_strategy( tol_df,maxIter ),
+	//  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
+	//  fValue, fDerivative, //dlib::derivative(fValue),
+	//  x_dlib, -1.0);
+
+	dlib::find_min_box_constrained(
+		dlib::bfgs_search_strategy(),
+		//dlib::objective_delta_stop_strategy( tol_df,maxIter ),
+		dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
+		fValue, fDerivative, //dlib::derivative(fValue),
+		x_dlib, x_lower, x_upper);
 #endif
 
     //dlib::find_min_using_approximate_derivatives(
@@ -202,10 +243,10 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 	  else
 		  */
 	  x[i] = x_dlib(i);
-	  if (i > 5) {
-		  x[i] = std::min(x[i], 3.0);
-		  x[i] = std::max(x[i], -3.0);
-	  }
+	  //if (i > 5) {
+		 // x[i] = std::min(x[i], 3.0);
+		 // x[i] = std::max(x[i], -3.0);
+	  //}
   }
 
   return x;
