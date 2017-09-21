@@ -170,6 +170,8 @@ public:
   // destructor
   virtual ~algDirICP_GIMLOP() {}
 
+  virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
+
   // dlib routines
   void    UpdateOptimizerCalculations(const vct6 &x);
   void    CostFunctionGradient(const vct6 &x, vct6 &g);

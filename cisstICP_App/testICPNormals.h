@@ -16,7 +16,7 @@
 #include "algDirICP_StdICP_PointCloud.h"
 #include "algDirICP_StdICP_Mesh.h"
 #include "algDirICP_IMLOP_Mesh.h"
-//#include "algDirICP_GIMLOP_Mesh.h"
+#include "algDirICP_GIMLOP_Mesh.h"
 #include "algDirICP_PIMLOP_Mesh.h"
 #include "algDirICP_DIMLOP.h"
 
@@ -24,7 +24,7 @@
 #define ENABLE_CALLBACKS
 
 
-enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_PIMLOP };  // DirAlgType_GIMLOP, 
+enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_GIMLOP, DirAlgType_PIMLOP }; 
 
 void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
 {
@@ -155,6 +155,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   {
 	  std::cout << "\nRunning D-IMLOP\n" << std::endl;
 	  algDir = "LastRun_DIMLOP/";
+	  break;
+  }  
+  case DirAlgType_GIMLOP:
+  {
+	  std::cout << "\nRunning GIMLOP\n" << std::endl;
+	  algDir = "LastRun_GIMLOP/";
 	  break;
   }
   case DirAlgType_PIMLOP:
@@ -320,7 +326,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  algType = DirAlgType_IMLOP;
 	  }
 	  mesh_ssm_target.vertices = mesh_target.meanShape;
-	  mesh_ssm_target.SavePLY("currentMesh0.ply");
+	  //mesh_ssm_target.SavePLY("currentMesh0.ply");
 
 	  if (cmdOpts.useDefaultInput)
 	  {
@@ -654,48 +660,49 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  pICPAlg = pAlg;
 	  break;
   }
-  //case DirAlgType_GIMLOP:
-  //{
-  //  if (!TargetShapeAsMesh)
-  //  {
-  //    std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
-  //    assert(0);
-  //  }
-  //  DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
-  //  // define GIMLOP parameters
-  //  double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
-  //  double B = sampleNoiseEccentricity*k / 2.0;
-  //  std::cout << "k: " << k << " B: " << B << std::endl;
-  //  vctDynamicVector<double> argK(nSamples, k);
-  //  vctDynamicVector<double> argB(nSamples, B);
-  //  //vctDynamicVector<double> argB( nSamples,0.0 );
+  case DirAlgType_GIMLOP:
+  {
+    if (!TargetShapeAsMesh)
+    {
+      std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
+      assert(0);
+    }
+    DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+    // define GIMLOP parameters
+    double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
+    double B = sampleNoiseEccentricity*k / 2.0;
+    std::cout << "k: " << k << " B: " << B << std::endl;
+    vctDynamicVector<double> argK(nSamples, k);
+	vctDynamicVector<double> argB(nSamples, sampleNoiseEccentricity); // B);
+    //vctDynamicVector<double> argB( nSamples,0.0 );
 
-  //  //double sigma2 = sampleNoiseInPlane*sampleNoiseInPlane;
-  //  //vctDynamicVector<double> argSigma2( nSamples,sigma2 );
-  //  //vctDynamicVector<vctFixedSizeMatrix<double,3,2>> argL( nSamples );
-  //  //vct3 xProd, L1,L2;
-  //  //vct3 xAxis( 1.0,0.0,0.0 );
-  //  //vct3 yAxis( 0.0,1.0,0.0 );
-  //  //for (unsigned int i=0; i<nSamples; i++)
-  //  //{ // set argL as isotropic
-  //  //  xProd = vctCrossProduct( noisySampleNorms(i),xAxis );
-  //  //  if (xProd.Norm() < 0.01)
-  //  //  {
-  //  //    xProd = vctCrossProduct( noisySampleNorms(i),yAxis );
-  //  //  }
-  //  //  L1 = xProd.Normalized();
-  //  //  L2 = vctCrossProduct(noisySampleNorms(i),L1).Normalized();
-  //  //  argL(i).Column(0) = L1;
-  //  //  argL(i).Column(1) = L2;
-  //  //}
-  //  // create algorithm
-  //  algDirICP_GIMLOP_Mesh *pAlg = new algDirICP_GIMLOP_Mesh(
-  //    pTreeMesh, noisySamples, noisySampleNorms,
-  //    argK, argB, sampleNoiseL, sampleNoiseInvCov);
-  //  //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
-  //  pICPAlg = pAlg;
-  //  break;
-  //}
+    //double sigma2 = sampleNoiseInPlane*sampleNoiseInPlane;
+    //vctDynamicVector<double> argSigma2( nSamples,sigma2 );
+    //vctDynamicVector<vctFixedSizeMatrix<double,3,2>> argL( nSamples );
+    //vct3 xProd, L1,L2;
+    //vct3 xAxis( 1.0,0.0,0.0 );
+    //vct3 yAxis( 0.0,1.0,0.0 );
+    //for (unsigned int i=0; i<nSamples; i++)
+    //{ // set argL as isotropic
+    //  xProd = vctCrossProduct( noisySampleNorms(i),xAxis );
+    //  if (xProd.Norm() < 0.01)
+    //  {
+    //    xProd = vctCrossProduct( noisySampleNorms(i),yAxis );
+    //  }
+    //  L1 = xProd.Normalized();
+    //  L2 = vctCrossProduct(noisySampleNorms(i),L1).Normalized();
+    //  argL(i).Column(0) = L1;
+    //  argL(i).Column(1) = L2;
+    //}
+
+    // create algorithm
+    algDirICP_GIMLOP_Mesh *pAlg = new algDirICP_GIMLOP_Mesh(
+      pTreeMesh, noisySamples, noisySampleNorms,
+	  argK, argB, sampleNoiseL, sampleNoiseCov /*sampleNoiseInvCov*/ );
+    //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
+    pICPAlg = pAlg;
+    break;
+  }
   case DirAlgType_PIMLOP:
   {
     if (!TargetShapeAsMesh)
@@ -831,7 +838,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  samplePts.vertices[i] = Fi * noisySamples[i];
 	  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms[i];
   }
-  samplePts.SavePLY("currentSamples0.ply");
+  //samplePts.SavePLY("currentSamples0.ply");
   samplePts.SavePLY(outputDir + "/initPts.ply");
 
   for (int i = 0; i < noisySamples.size(); i++) {

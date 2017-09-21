@@ -73,6 +73,49 @@ algDirICP_GIMLOP::algDirICP_GIMLOP(
 #endif
 }
 
+void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gotta do this right with mahalanobis distance
+{
+	double sumSqrMatchDist = 0.0;
+	double sumMatchDist = 0.0;
+	double sqrMatchDist;
+
+	double sumSqrMahalDist = 0.0;
+	double sumMahalDist = 0.0;
+	double sqrMahalDist;
+
+	int nGoodSamples = 0;
+
+	vct3x3 Mnew, Minv;
+	vct3 residual;
+
+	// NOTE: if using a method with outlier rejection, it may be desirable to
+	//       compute statistics on only the inliers
+	for (unsigned int i = 0; i < nSamples/*nGoodSamples*/; i++)
+	{
+		//if (outlierFlags[i])	continue;	// skip outliers
+
+		residual = matchPts[i] - Freg * samplePts[i];
+		Mnew = Freg.Rotation() * M[i] * Freg.Rotation().Transpose() ;
+		ComputeCovInverse_NonIter(Mnew, Minv);
+
+		sqrMahalDist = residual*Minv*residual;
+		sumSqrMahalDist += sqrMahalDist;
+		sumMahalDist += sqrt(sqrMahalDist);
+
+		sqrMatchDist = residual.NormSquare();
+		sumSqrMatchDist += sqrMatchDist;
+		sumMatchDist += sqrt(sqrMatchDist);
+		nGoodSamples++;
+	}
+	//Avg = sumMatchDist / (sigma2*nGoodSamples);
+	//StdDev = sqrt((sumSqrMatchDist / (sigma2*nGoodSamples)) + Avg*Avg);	
+	Avg = sumMahalDist / nGoodSamples;
+	StdDev = sqrt((sumSqrMahalDist / nGoodSamples) + Avg*Avg);
+
+	//std::cout << "\nSigma = " << sigma2;
+	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
+
 double algDirICP_GIMLOP::ICP_EvaluateErrorFunction()
 {
   // Return the negative log likelihood of the Kent

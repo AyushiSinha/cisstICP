@@ -39,7 +39,6 @@
 
 class algDirICP_DIMLOP;  // forward decleration
 
-
 class algDirICP_DIMLOP_dlibWrapper
 {
 public:

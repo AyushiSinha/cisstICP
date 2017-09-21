@@ -292,7 +292,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 			algType = AlgType_IMLP;
 		}
 		mesh_ssm.vertices = mesh.meanShape;
-		mesh_ssm.SavePLY("currentMesh0.ply");
+		//mesh_ssm.SavePLY("currentMesh0.ply");
 
 		if (cmdOpts.useDefaultInput)
 		{
@@ -733,7 +733,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	for (int i = 0; i < noisySamples.size(); i++)
 		samplePts.vertices[i] = Fi * noisySamples[i];
-	samplePts.SavePLY("currentSamples0.ply");
+	//samplePts.SavePLY("currentSamples0.ply");
 	samplePts.SavePLY(outputDir + "/initPts.ply");
 
 	for (int i = 0; i < noisySamples.size(); i++)

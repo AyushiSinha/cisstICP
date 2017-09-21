@@ -439,7 +439,8 @@ void ReadFromFile_L(vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &axes,
 				"L1x L1y L1z L2x L2y L2z\n" << std::endl;
 			assert(0);
 		}
-		axes(i).Assign(f1, f2, f3, f4, f5, f6);
+		axes(i).Column(0).Assign(f1, f2, f3);
+		axes(i).Column(1).Assign(f4, f5, f6);
 		i++;
 	}
 	//if (fs.bad() || fs.fail())
@@ -1582,62 +1583,62 @@ void ReadSampleSurfaceNoise(bool bUseDefaultCov, bool bUseDefaultL,
 
 	// add outliers to samples such that outliers are offset outward from
 	//  the shape (offset along the point normal direction)
-	for (unsigned int k = nNoisy; k < nSamps; k++)
-	{
-		//=== Generate position outlier ===//
+	//for (unsigned int k = nNoisy; k < nSamps; k++)
+	//{
+	//	//=== Generate position outlier ===//
 
-		// generate a random outlier
-		double offset = cisstRandomSeq.ExtractRandomDouble(minPosOffsetOutlier, maxPosOffsetOutlier);
-		noisySamples.at(k) = samples.at(k) + offset*sampleNorms.at(k);
+	//	// generate a random outlier
+	//	double offset = cisstRandomSeq.ExtractRandomDouble(minPosOffsetOutlier, maxPosOffsetOutlier);
+	//	noisySamples.at(k) = samples.at(k) + offset*sampleNorms.at(k);
 
-		// Define the noise covariance for this sample
-		//  find rotation to rotate the sample normal to the z-axis
-		R = XProdRotation(sampleNorms.at(k), z);
-		// compute noise covariance M of this sample
-		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
-		M = R.Transpose()*M0*R;
-		//sampleCov.at(k) = M;
-		sampleInvCov.at(k) = R.Transpose()*invM0*R;
+	//	// Define the noise covariance for this sample
+	//	//  find rotation to rotate the sample normal to the z-axis
+	//	R = XProdRotation(sampleNorms.at(k), z);
+	//	// compute noise covariance M of this sample
+	//	//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
+	//	M = R.Transpose()*M0*R;
+	//	//sampleCov.at(k) = M;
+	//	sampleInvCov.at(k) = R.Transpose()*invM0*R;
 
-		if (maxAngOffsetOutlier > 0.0)
-		{
-			//=== Generate orientation outlier ===//
+	//	if (maxAngOffsetOutlier > 0.0)
+	//	{
+	//		//=== Generate orientation outlier ===//
 
-			// Generate random rotation on the unit sphere with uniform rotation angle
-			//  use z-axis as starting point for random rotation axis
-			//  set rotation axis along random direction on the x-y plane
-			//  generate uniform rotation angle 0-180 deg
-			//  apply rotation about the rotation axis to the z-axis to get the random rotation axis
-			//  generate a uniformly distributed rotation angle for the random rotation axis
-			vct3 z(0.0, 0.0, 1.0);
-			double xyDir = cisstRandomSeq.ExtractRandomDouble(0.0, 359.999)*cmnPI / 180.0;
-			vct3 xyAx(cos(xyDir), sin(xyDir), 0.0);
-			double xyAn = cisstRandomSeq.ExtractRandomDouble(0.0, 180.0)*cmnPI / 180.0;
-			vctAxAnRot3 Rxy(xyAx, xyAn);
-			vct3 rndAx = vctRot3(Rxy)*z;
-			double rndAn = cisstRandomSeq.ExtractRandomDouble(minAngOffsetOutlier, maxAngOffsetOutlier)*(cmnPI / 180.0);
-			vctAxAnRot3 Rrod(rndAx, rndAn);
-			noisySampleNorms.at(k) = vctRot3(Rrod)*sampleNorms.at(k);
-			// set L to any set of axis perpendicular to the sample
-			vct3 a = vctCrossProduct(z, sampleNorms.at(k));
-			if (a.Norm() > 0.001)
-			{
-				noiseL.at(k).Column(0) = a.NormalizedSelf();
-				noiseL.at(k).Column(1) = vctCrossProduct(a, sampleNorms.at(k)).Normalized();
-			}
-			else
-			{
-				noiseL.at(k).Column(0) = vct3(1.0, 0.0, 0.0);
-				noiseL.at(k).Column(1) = vct3(0.0, 1.0, 0.0);
-			}
-		}
-		else
-		{
-			noisySampleNorms.at(k) = sampleNorms.at(k);
-			noiseL.at(k) = vct3x2(0.0);
-		}
-	}
-	randSeqPos = cisstRandomSeq.GetSequencePosition();
+	//		// Generate random rotation on the unit sphere with uniform rotation angle
+	//		//  use z-axis as starting point for random rotation axis
+	//		//  set rotation axis along random direction on the x-y plane
+	//		//  generate uniform rotation angle 0-180 deg
+	//		//  apply rotation about the rotation axis to the z-axis to get the random rotation axis
+	//		//  generate a uniformly distributed rotation angle for the random rotation axis
+	//		vct3 z(0.0, 0.0, 1.0);
+	//		double xyDir = cisstRandomSeq.ExtractRandomDouble(0.0, 359.999)*cmnPI / 180.0;
+	//		vct3 xyAx(cos(xyDir), sin(xyDir), 0.0);
+	//		double xyAn = cisstRandomSeq.ExtractRandomDouble(0.0, 180.0)*cmnPI / 180.0;
+	//		vctAxAnRot3 Rxy(xyAx, xyAn);
+	//		vct3 rndAx = vctRot3(Rxy)*z;
+	//		double rndAn = cisstRandomSeq.ExtractRandomDouble(minAngOffsetOutlier, maxAngOffsetOutlier)*(cmnPI / 180.0);
+	//		vctAxAnRot3 Rrod(rndAx, rndAn);
+	//		noisySampleNorms.at(k) = vctRot3(Rrod)*sampleNorms.at(k);
+	//		// set L to any set of axis perpendicular to the sample
+	//		vct3 a = vctCrossProduct(z, sampleNorms.at(k));
+	//		if (a.Norm() > 0.001)
+	//		{
+	//			noiseL.at(k).Column(0) = a.NormalizedSelf();
+	//			noiseL.at(k).Column(1) = vctCrossProduct(a, sampleNorms.at(k)).Normalized();
+	//		}
+	//		else
+	//		{
+	//			noiseL.at(k).Column(0) = vct3(1.0, 0.0, 0.0);
+	//			noiseL.at(k).Column(1) = vct3(0.0, 1.0, 0.0);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		noisySampleNorms.at(k) = sampleNorms.at(k);
+	//		noiseL.at(k) = vct3x2(0.0);
+	//	}
+	//}
+	//randSeqPos = cisstRandomSeq.GetSequencePosition();
 
 	// save noisy samples
 	if (SavePath_NoisySamples)
@@ -1649,6 +1650,7 @@ void ReadSampleSurfaceNoise(bool bUseDefaultCov, bool bUseDefaultL,
 			assert(0);
 		}
 	}
+
 	// save cov
 	if (SavePath_Cov)
 	{
@@ -1849,6 +1851,7 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
       assert(0);
     }
   }
+
   // save cov
   if (SavePath_Cov)
   {

@@ -96,7 +96,7 @@ void SetParams()
 									"\t\t\tDirICP: Implements ICP with orientation algorithm\n"
 									"\t\t\tIMLOP: Implements the iterative most likely oriented point algorithm\n"
 									"\t\t\tDIMLOP: Implements the deformable IMLOP algorithm\n"
-//									"\t\t\tGIMLOP: Implements the generalized IMLOP algorithm\n"
+									"\t\t\tGIMLOP: Implements the generalized IMLOP algorithm\n"
 									"\t\t\tPIMLOP: Implements the projected IMLOP algorithm\n"
 									"\t\t\tVIMLOP: Implements the video IMLOP algorithm\n\n");
 	i++;
@@ -298,6 +298,7 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
+		std::cout << Alg.value << "\n";
 		if (!strcmp(Alg.value, "StdICP"))
 			algType = AlgType_StdICP;
 		else if (!strcmp(Alg.value, "IMLP"))
@@ -318,8 +319,9 @@ int main( int argc, char* argv[] )
 			dirAlgType = DirAlgType_DIMLOP;
 			cmdLineOpts.deformable = true;
 		}
-		//else if (strcmp(Alg.value, "GIMLOP"))		// We did not build G-IMLOP in this instance of the code build because
-		//	dirAlgType = DirAlgType_GIMLOP;			// we did not have access to Numerical Recipes, which is a dependency
+		else if (!strcmp(Alg.value, "GIMLOP")) {		// Comment these two lines to remove G-IMLOP as an option in case 
+			dirAlgType = DirAlgType_GIMLOP;			// you do not have access to Numerical Recipes, which is a dependency
+		}
 		else if (!strcmp(Alg.value, "PIMLOP"))
 			dirAlgType = DirAlgType_PIMLOP;
 	}
@@ -444,7 +446,7 @@ int main( int argc, char* argv[] )
 		|| !strcmp(Alg.value, "DIMLP") || !strcmp(Alg.value, "VIMLOP"))
 		testICP(TargetShapeAsMesh, algType, cmdLineOpts);
 	else if (!strcmp(Alg.value, "DirICP") || !strcmp(Alg.value, "IMLOP")
-		|| !strcmp(Alg.value, "DIMLOP") /*|| !strcmp(Alg.value, "GIMLOP")*/ 
+		|| !strcmp(Alg.value, "DIMLOP") || !strcmp(Alg.value, "GIMLOP") 
 		|| !strcmp(Alg.value, "PIMLOP"))
 		testICPNormals(TargetShapeAsMesh, dirAlgType, cmdLineOpts);
 

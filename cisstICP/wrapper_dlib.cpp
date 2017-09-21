@@ -38,7 +38,7 @@
 #undef NDEBUG       // enable debug in release mode
 
 // define to print iteration details
-#define DLIB_VERBOSE
+//#define DLIB_VERBOSE
 
 
 //--- Globals ---//
@@ -143,7 +143,7 @@ vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
       dlib::gradient_norm_stop_strategy( gradientNormThresh,maxIter ),
 #endif
       fValue, fDerivative,
-      x_dlib, -1.0);
+	  x_dlib, -1.0);
 
     //find_min_using_approximate_derivatives( bfgs_search_strategy(),
     //                                        objective_delta_stop_strategy(Tol_df).be_verbose(),
