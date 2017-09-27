@@ -307,10 +307,10 @@ IF (cisst_FOUND_AS_REQUIRED)
         algDirICP_GIMLOP.h
         algDirICP_GIMLOP_Mesh.cpp
         algDirICP_GIMLOP_Mesh.h    
-        #algDirICP_GDIMLOP.cpp
-        #algDirICP_GDIMLOP.h
-        #algDirICP_GDIMLOP_dlibWrapper.cpp
-        #algDirICP_GDIMLOP_dlibWrapper.h   
+        algDirICP_GDIMLOP.cpp
+        algDirICP_GDIMLOP.h
+        algDirICP_GDIMLOP_dlibWrapper.cpp
+        algDirICP_GDIMLOP_dlibWrapper.h   
         )
     ELSE (NUMERICAL_RECIPES_INCLUDE)
       message(WARNING "The G-IMLOP algorithm is being excluded due to Numerical Recipes unfound")

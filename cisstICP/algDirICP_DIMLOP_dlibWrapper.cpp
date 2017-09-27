@@ -154,15 +154,15 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 	//x_dlib(5) = x0[5];
 	//x_dlib(6) = x0[6];
 
+	  int nTrans;
+	  if (alg->bScale)
+		  nTrans = 7;
+	  else
+		  nTrans = 6;
+
 	  for (int i = 0; i < nComponents; i++)
 	  {
 		  x_dlib(i) = x0[i];
-
-		  int nTrans;
-		  if (alg->bScale)
-			  nTrans = 7;
-		  else
-			  nTrans = 6;
 
 		  if (i < nTrans)
 		  {

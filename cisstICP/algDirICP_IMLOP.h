@@ -94,7 +94,6 @@ protected:
   double R, Rnorm, Rpos;
   double circSD;
 
-
   // Match Filtering
   //
   //  Note: using buffers and buffer references for match filtering enables

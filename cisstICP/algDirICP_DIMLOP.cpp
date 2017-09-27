@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,7 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
 
+	std::cout << "\nFinal Scale = " << sc << std::endl;
 	std::cout << "\n# good samples = " << nGoodSamples << std::endl;
 	std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
 	std::cout << "\nAverage Mahalanobis Distance = " << Avg << "(+/-" << StdDev << ")" << std::endl;
@@ -176,7 +177,7 @@ void algDirICP_DIMLOP::SetSamples(
   MsmtMxi = argMsmtMxi;
   meanShape = argMeanShape;
 
-  eigMxi.SetSize(nSamples);
+  //eigMxi.SetSize(nSamples);
 
   eigMxi.SetSize(nSamples);
   for (unsigned int i = 0; i < nSamples; i++)
@@ -194,11 +195,11 @@ void algDirICP_DIMLOP::SetSamples(
   residuals_PostMatch.SetSize(nSamples);
   sqrDist_PostMatch.SetSize(nSamples);
 
-  // scale sample points (remove this from here when you move it to IMLP)
+  // scale sample points (remove this from here when you move it to IMLOP)
   sc = argScale;
   bScale = argbScale;
   if (bScale) {
-	  for (int i = 0; i < nSamples; i++)
+	  for (unsigned int i = 0; i < nSamples; i++)
 		  samplePts[i] = samplePts[i] * sc;
 	  nTrans = 7; // 3 for rotation, 3 for translation, 1 for scale
   }
@@ -229,8 +230,6 @@ void algDirICP_DIMLOP::SetSamples(
 
 void algDirICP_DIMLOP::UpdateShape(vctDynamicVector<double>	&S)
 {
-	//static int itermesh = 0;
-
 	// deformably transform each mesh vertex
 	pDirTree->mesh.vertices = meanShape;
 	int s;
@@ -241,22 +240,10 @@ void algDirICP_DIMLOP::UpdateShape(vctDynamicVector<double>	&S)
 		for (unsigned int i = 0; i < nModes; i++)
 			pDirTree->mesh.vertices(s) += (S[i] * wi[i].Element(s));
 
-	//std::cout << "Si = " << Si[0] << " ";
-	//pMesh->Si = Si;
-	//std::string imesh = std::to_string(itermesh) + ".ply";
-	//cisstMesh currMesh;
-	//currMesh.vertices = pTree->MeshP->vertices;
-	//currMesh.faces = pTree->MeshP->faces;
-	//currMesh.SavePLY(imesh);
-	//itermesh++;
 }
 
 void algDirICP_DIMLOP::UpdateTree()
 {
-	// TODO: fix this so you're updating for all vertices, <-- DONE
-	// TODO: and recursively for all parent bounding boxes
-	//for (unsigned int s = 0; s < pMesh->NumTriangles(); s++)
-	//	pTree->EnlargeBounds(Freg, s, pTree->Bounds);
 	vctFrm3 FId;
 	FId.Assign(vctFrm3::Identity());
 
@@ -309,7 +296,7 @@ double algDirICP_DIMLOP::ICP_EvaluateErrorFunction()
 
   for (unsigned int s = 0; s < nSamples; s++)
   {
-	if (outlierFlags[s])	continue;	// skip outliers
+	//if (outlierFlags[s])	continue;	// skip outliers
 
 	// TODO: Compute errors using the current match point on the 
 	// deformed shape after computing updating Si
@@ -426,15 +413,6 @@ void algDirICP_DIMLOP::ReturnShapeParam(vctDynamicVector<double> &shapeParam)
 
 vctFrm3 algDirICP_DIMLOP::ICP_RegisterMatches()
 {
-  //RegisterP2P_Normals_vMFG(
-  //  goodSamplePts,
-  //  goodMatchPts,
-  //  goodSampleNorms,
-  //  goodMatchNorms,
-  //  B, k, Freg);
-
-  //return Freg;
-
 	vctFrm3 F;
 	ComputeMu();
 	vctDynamicVector<double> x0;
@@ -519,7 +497,7 @@ void algDirICP_DIMLOP::UpdateOptimizerCalculations(const vctDynamicVector<double
 		Rat_Tssm_Y_t_x.Element(j) = Ra.Transpose() * Tssm_Y_t.Element(j) - sc * X.Element(j);
 		ComputeCovDecomposition_NonIter(Mxi.Element(j), inv_Mxi.Element(j), det_Mxi.Element(j));
 		Rat_Tssm_Y_t_x_invMx.Element(j) = Rat_Tssm_Y_t_x.Element(j) * inv_Mxi.Element(j); 
-		Yn_Rat_Xn.Element(j) = vctDotProduct(sampleNormsXfmd.Element(j), matchNorms.Element(j));
+		Yn_Rat_Xn.Element(j) = vctDotProduct(Ra * sampleNorms/*Xfmd*/.Element(j), matchNorms.Element(j));
 	}
 	x_prev = x;
 }
@@ -661,13 +639,18 @@ void algDirICP_DIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NOR
 
   // compute sum of square distance of inliers
   sumSqrDist_Inliers = 0.0;
+  double sumNormProducts_Inliers = 0.0;
   for (unsigned int s = 0; s < nSamples; s++)
   {
-	  if (outlierFlags[s])	continue;	// skip outliers
 	  residuals_PostMatch[s] = samplePtsXfmd[s] - Tssm_Y[s]; //matchPts[s];
 	  sqrDist_PostMatch[s] = residuals_PostMatch[s].NormSquare();
 
+	  if (outlierFlags[s])	continue;	// skip outliers
+
 	  sumSqrDist_Inliers += sqrDist_PostMatch[s];
+
+	  sumNormProducts_Inliers +=
+		  vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
   }
 
   // update the match uncertainty factor
@@ -693,7 +676,10 @@ void algDirICP_DIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NOR
 
   if (bFirstIter_Matches)
   {
-	  algDirICP_DIMLOP::UpdateNoiseModel_SamplesXfmd(FGuess);
+	// update noise model
+	UpdateNoiseModel(sumSqrDist_Inliers, sumNormProducts_Inliers);
+
+	UpdateNoiseModel_SamplesXfmd(FGuess);
   }
 
   vctRot3 R(FGuess.Rotation());
@@ -709,6 +695,7 @@ void algDirICP_DIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
   // base class
 	algDirICP_IMLOP::ICP_UpdateParameters_PostRegister(Freg);
+
 	if (bScale)
 		for (unsigned int s = 0; s < nSamples; s++)
 			samplePtsXfmd.Element(s) = sc * samplePtsXfmd.Element(s); // move this to IMLOP also later
@@ -741,13 +728,115 @@ void algDirICP_DIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 
 void algDirICP_DIMLOP::UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg)
 {
-	// update noise models of teh transformed sample points
+	// update noise models of the transformed sample points
 	static vctRot3 R;
 	R = Freg.Rotation();
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
 		R_Mxi_Rt[s] = R * Mxi[s] * R.Transpose();
 	}
+}
+
+unsigned int algDirICP_DIMLOP::ICP_FilterMatches()
+{
+	//
+	// Filer Matches for Outliers
+	//  
+	// The Square Mahalanobis Distance of the matches follow a chi-square distribution
+	//  with 3 degrees of freedom (1 DOF for each spatial dimension).
+	//
+	//  Detect outliers as:  Square Mahalanobis Distance > ChiSquare(c)
+	//
+	//  Note:  ChiSquare(0.95) = 7.81     (1.96 Std Dev)
+	//         ChiSquare(0.975) = 9.35    (2.24 Std Dev)
+	//         ChiSquare(0.99) = 11.34    (2.56 Std Dev)
+	//         ChiSquare(0.9973) = 14.16  (3.0 Std Dev)     MATLAB: chi2inv(0.9973,3)
+	//
+	//  When an outlier is identified, increase the variance of its noise model
+	//  such that residual for that match is considered to be w/in 1 standard 
+	//  deviation of its mean. This will reduce the impact of this match error
+	//  on the registration result.
+	//
+
+	double StdDevExpansionFactor = 3.0;    // std dev expansion factor
+	double varExpansionFactor = StdDevExpansionFactor * StdDevExpansionFactor;
+
+	double ThetaThresh = StdDevExpansionFactor * circSD;
+	ThetaThresh = ThetaThresh > cmnPI ? cmnPI : ThetaThresh;
+	double NormProductThresh = cos(ThetaThresh);
+	//std::cout << "(" << circSD << ", " << ThetaThresh << ", " << NormProductThresh << ") ";
+
+	nOutliers = 0;
+	//nPosOutliers = 0;
+	//nNormOutliers = 0;
+	vct3x3 Mo, inv_Mo;
+	double sqrMahalDist = 0.0;
+	double normProduct = 0.0;
+
+	for (unsigned int s = 0; s < nSamples; s++)
+	{
+		// compute outlier noise model based on mearurment noise and sigma2 only
+		//  and not including the surface model covariance
+		//
+		// Note: the code below assumes that the covariance model of the target
+		//       shape is comprised of only a surface model covariance with zero
+		//       measurement noise; if this is not true, then the target measurement
+		//       noise should be added to the outlier covariance test below as well
+		//   
+		Mo = R_Mxi_Rt.Element(s);
+		Mo.Element(0, 0) += sigma2;
+		Mo.Element(1, 1) += sigma2;
+		Mo.Element(2, 2) += sigma2;
+		//Mo = R_Mxi_Rt.Element(s) + Myi_sigma2.Element(s);
+		//Mo.Element(0, 0) += outlier_alpha;
+		//Mo.Element(1, 1) += outlier_alpha;
+		//Mo.Element(2, 2) += outlier_alpha;
+
+		// compute Mahalanobis distance
+		ComputeCovInverse_NonIter(Mo, inv_Mo);
+		sqrMahalDist = residuals_PostMatch.Element(s)*inv_Mo*residuals_PostMatch.Element(s); 
+		normProduct = vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
+
+		// check if outlier
+		if (sqrMahalDist > ChiSquareThresh)
+		{ // an outlier
+			nOutliers++;
+			//nPosOutliers++;
+			outlierFlags[s] = 1;
+			// add isotropic outlier term to noise model for this match
+			//  with magnitude of half the square match distance
+			double outlierScale = 0.5 * sqrDist_PostMatch.Element(s) * varExpansionFactor;
+			Myi_sigma2[s].Element(0, 0) += outlierScale;
+			Myi_sigma2[s].Element(1, 1) += outlierScale;
+			Myi_sigma2[s].Element(2, 2) += outlierScale;
+			R_Mxi_Rt[s].Element(0, 0) += outlierScale;
+			R_Mxi_Rt[s].Element(1, 1) += outlierScale;
+			R_Mxi_Rt[s].Element(2, 2) += outlierScale;
+
+			// This shouldn't be done here, because alpha term is not used
+			//  in error function
+			//// For Error Function Evaluation:
+			//// update match covariance
+			//Mi.Element(s) = R_Mxi_Rt.Element(s) + Myi.Element(s);
+			//// match covariance decomposition
+			//ComputeCovDecomposition(Mi.Element(s), inv_Mi.Element(s), det_Mi.Element(s));
+			//// match Mahalanobis distance
+			//SqrMahalDist.Element(s) = Residuals.Element(s)*inv_Mi.Element(s)*Residuals.Element(s);
+		}
+		else if (normProduct < NormProductThresh)
+		{
+			nOutliers++;
+			//nNormOutliers++;
+			outlierFlags[s] = 1;
+			//std::cout << "\n(" << normProduct << " ? " << NormProductThresh << ") ";
+		}
+		else
+		{
+			outlierFlags[s] = 0;
+		}
+	}
+
+	return nOutliers;
 }
 
 //unsigned int algDirICP_DIMLOP::ICP_FilterMatches()
@@ -1149,81 +1238,81 @@ int algDirICP_DIMLOP::DatumMightBeCloser(
 
 // Helper Methods:
 
-//void algDirICP_DIMLOP::UpdateNoiseModel(double sumSqrDist, double sumNormProducts)
-//{
-//  // Position Parameters
-//  // compute Gaussian variables
-//  //  B = 1/(2*sigma2)
-//  // divide sum of square distances by number of samples times 3 
-//  //  to get the estimate of variance because square distance is 
-//  //  a summation of three square Gaussian RVs, one for each coordinate axis
-//  double S2 = sumSqrDist / (3.0*nSamples);
-//  if (dynamicParamEst)
-//  {
-//    B = 1.0 / (2.0*S2);
-//    B = B > threshB ? threshB : B;  // threshold in case of perfect matches
-//    sigma2 = 1.0 / (2.0*B);
-//  }
-//
-//  // Orientation Parameters
-//  // compute Fisher variables
-//  //
-//  //  MLE estimate for k is an implicit ratio of
-//  //   two Bessel functions => no analytical soln.
-//  //
-//  //  MLE for k:  set Ap(k) = R
-//  //              
-//  //    Ap(k) = Ip/2(k) / Ip/2-1(k)       <--- Bessel Functions
-//  //    p =  spatial dimension (i.e. 3)
-//  //    R =  Sum_i(dot(Ny,Nx))/N
-//  //
-//  //  Closed form approximation for k:  R(p-R^2)/(1-R^2)
-//  //
-//  //   NOTE: circular standard deviation of theta
-//  //         circSD = sqrt(-2*ln(R))
-//  //            where theta is angle between matched vectors
-//  //            i.e. theta = acos(dot(Ny,Nx))
-//  //
-//
-//  // angular error of normal orientations
-//  ComputeCircErrorStatistics(sumNormProducts, Rnorm, circSD);
-//
-//  // angular error of positions (wrt ctr of rotation)
-//  Rpos = ComputeRpos();
-//
-//  // effective angular error
-//  // only include positional error if it reduces the value of K
-//  if (Rpos < Rnorm)
-//  {
-//    R = wRpos*Rpos + (1.0 - wRpos)*Rnorm;
-//  }
-//  else
-//  {
-//    R = Rnorm;
-//  }
-//
-//  double R2 = R*R;
-//  if (dynamicParamEst)
-//  {
-//    // protect from division by zero
-//    if (R2 >= 1.0)
-//    {
-//      k = threshK;  // set k to its max value
-//    }
-//    else
-//    {
-//      k = R*(3.0 - R2) / (1.0 - R2);  // approx for k
-//      k = k > threshK ? threshK : k;  // perfect match threshold
-//    }
-//
-//    // reduce k by a factor
-//    k = k * k_factor;
-//  }
-//
-//#ifdef TEST_STD_ICP
-//  k = 0.0;
-//#endif
-//}
+void algDirICP_DIMLOP::UpdateNoiseModel(double sumSqrDist, double sumNormProducts)
+{
+  //// Position Parameters
+  //// compute Gaussian variables
+  ////  B = 1/(2*sigma2)
+  //// divide sum of square distances by number of samples times 3 
+  ////  to get the estimate of variance because square distance is 
+  ////  a summation of three square Gaussian RVs, one for each coordinate axis
+  //double S2 = sumSqrDist / (3.0*nSamples);
+  //if (dynamicParamEst)
+  //{
+  //  B = 1.0 / (2.0*S2);
+  //  B = B > threshB ? threshB : B;  // threshold in case of perfect matches
+  //  sigma2 = 1.0 / (2.0*B);
+  //}
+  //
+  //// Orientation Parameters
+  //// compute Fisher variables
+  ////
+  ////  MLE estimate for k is an implicit ratio of
+  ////   two Bessel functions => no analytical soln.
+  ////
+  ////  MLE for k:  set Ap(k) = R
+  ////              
+  ////    Ap(k) = Ip/2(k) / Ip/2-1(k)       <--- Bessel Functions
+  ////    p =  spatial dimension (i.e. 3)
+  ////    R =  Sum_i(dot(Ny,Nx))/N
+  ////
+  ////  Closed form approximation for k:  R(p-R^2)/(1-R^2)
+  ////
+  ////   NOTE: circular standard deviation of theta
+  ////         circSD = sqrt(-2*ln(R))
+  ////            where theta is angle between matched vectors
+  ////            i.e. theta = acos(dot(Ny,Nx))
+  ////
+
+  // angular error of normal orientations
+  ComputeCircErrorStatistics(sumNormProducts, Rnorm, circSD);
+
+  //// angular error of positions (wrt ctr of rotation)
+  //Rpos = ComputeRpos();
+  //
+  //// effective angular error
+  //// only include positional error if it reduces the value of K
+  //if (Rpos < Rnorm)
+  //{
+  //  R = wRpos*Rpos + (1.0 - wRpos)*Rnorm;
+  //}
+  //else
+  //{
+  //  R = Rnorm;
+  //}
+  //
+  //double R2 = R*R;
+  //if (dynamicParamEst)
+  //{
+  //  // protect from division by zero
+  //  if (R2 >= 1.0)
+  //  {
+  //    k = threshK;  // set k to its max value
+  //  }
+  //  else
+  //  {
+  //    k = R*(3.0 - R2) / (1.0 - R2);  // approx for k
+  //    k = k > threshK ? threshK : k;  // perfect match threshold
+  //  }
+  //
+  //  // reduce k by a factor
+  //  k = k * k_factor;
+  //}
+
+#ifdef TEST_STD_ICP
+  k = 0.0;
+#endif
+}
 
 
 //double algDirICP_DIMLOP::ComputeRpos()
@@ -1241,7 +1330,7 @@ int algDirICP_DIMLOP::DatumMightBeCloser(
 //  //  Procrustes problem as added indicator of rotational uncertainty
 //
 //  vctDynamicVectorRef<vct3> S(samplePtsXfmd);
-//  vctDynamicVectorRef<vct3> C(matchPts);
+//  vctDynamicVectorRef<vct3> C(/*matchPts*/Tssm_Y);
 //  unsigned int N = S.size();
 //  vct3 Smean = vctCentroid(S);
 //  vct3 Cmean = vctCentroid(C);
@@ -1290,186 +1379,186 @@ int algDirICP_DIMLOP::DatumMightBeCloser(
 //}
 
 
-// Below are various methods that were tried in an attempt to balance the k & B
-//  weights s.t. k does not blow up too large
-
-//switch (opt.errFunc)
-//{
-//case OptionsNorm::STDICP:
-//  {
-//    // orientation is not used in standard ICP => k=0
-//    double sigma2 = this->S2;
-//    k = 0.0;
-
-//    // perfect match threshold
-//    //  need to threshold both sigma2 & B, since sigma2 used for calculating
-//    //  normalization constant.
-//    //  Note:  if B > n, then sigma2 < 1/(2*n)
-//    //B = B > 1e5 ? 1e5 : B;
-//    sigma2 = sigma2 < 1.0/(2.0e5) ? 1.0/(2.0e5) : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;    
-//  }
-//case OptionsNorm::vMFG:
-//  {
-//    // update error function parameters
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // perfect match thresholds
-//    //  need to threshold both sigma2 & B, since sigma2 used for calculating
-//    //  normalization constant.
-//    //  Note:  if B > n, then sigma2 < 1/(2*n)
-//    //B = B > threshB ? threshB : B;
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    // compute normalization constant for probability distribution
-//    Compute_vMFGConstant( k,sigma2,logC );
-
-//    // compute error function
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kROTREG:
-//  {
-//    double sigma2 = this->S2;
-
-//    // regularize k by dR
-//    vctRodRot3 dR;
-//    dR.From(iterData->dF.Rotation());   // convert to Rodrigues notation
-//    double dAng = dR.Norm();
-//    double cSD = this->circSD + dAng;
-//    //  SD = sqrt(-2*log(R));
-//    //   =>  R = exp(-(SD^2)/2)
-//    double Rreg = exp(-(cSD*cSD)/2);
-//    double Rreg2 = Rreg*Rreg;
-//    k = Rreg*(3-Rreg2)/(1-Rreg2);
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kREG:
-//  {
-//    double prevK = k; 
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // regularization on k
-//    k = prevK + (k-prevK)*opt.kRegConst;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kbREG:
-//  {
-//    double prevK = k;
-//    double prevB = B;
-
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kTHRESH:
-//  {
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // Threshold K
-//    //  Note: k = 600 equates to about 3.25 degrees circular standard deviation
-//    k = k > opt.kThresh ? opt.kThresh : k;
-
-//    // perfect match thresholds
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kSCALE:
-//  {
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // Scale K
-//    k /= opt.kScale;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kFIXED:
-//  {
-//    k = opt.k;
-//    double sigma2 = this->S2;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );      
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kbFIXED:
-//  {
-//    k = opt.k;
-//    B = opt.B;
-//    double sigma2 = 1.0/(2.0*B);
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::WRAPNORMAL:
-//  {
-//    // assign k according to the variance of a
-//    //  wrapped normal distribution
-//    double sigma2 = this->S2;
-//    k = 1.0/(2.0*(this->circSD)*(this->circSD));  // ERROR: should be k = 1/circSD^2
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//default:
-//  {
-//    std::cout << "No valid error function chosen" << std::endl;
-//    assert(0);
-//  }
-//}
+//// Below are various methods that were tried in an attempt to balance the k & B
+////  weights s.t. k does not blow up too large
+//
+////switch (opt.errFunc)
+////{
+////case OptionsNorm::STDICP:
+////  {
+////    // orientation is not used in standard ICP => k=0
+////    double sigma2 = this->S2;
+////    k = 0.0;
+//
+////    // perfect match threshold
+////    //  need to threshold both sigma2 & B, since sigma2 used for calculating
+////    //  normalization constant.
+////    //  Note:  if B > n, then sigma2 < 1/(2*n)
+////    //B = B > 1e5 ? 1e5 : B;
+////    sigma2 = sigma2 < 1.0/(2.0e5) ? 1.0/(2.0e5) : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;    
+////  }
+////case OptionsNorm::vMFG:
+////  {
+////    // update error function parameters
+////    double sigma2;
+////    Compute_vMFGParams( k,sigma2 );
+//
+////    // perfect match thresholds
+////    //  need to threshold both sigma2 & B, since sigma2 used for calculating
+////    //  normalization constant.
+////    //  Note:  if B > n, then sigma2 < 1/(2*n)
+////    //B = B > threshB ? threshB : B;
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    // compute normalization constant for probability distribution
+////    Compute_vMFGConstant( k,sigma2,logC );
+//
+////    // compute error function
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kROTREG:
+////  {
+////    double sigma2 = this->S2;
+//
+////    // regularize k by dR
+////    vctRodRot3 dR;
+////    dR.From(iterData->dF.Rotation());   // convert to Rodrigues notation
+////    double dAng = dR.Norm();
+////    double cSD = this->circSD + dAng;
+////    //  SD = sqrt(-2*log(R));
+////    //   =>  R = exp(-(SD^2)/2)
+////    double Rreg = exp(-(cSD*cSD)/2);
+////    double Rreg2 = Rreg*Rreg;
+////    k = Rreg*(3-Rreg2)/(1-Rreg2);
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kREG:
+////  {
+////    double prevK = k; 
+////    double sigma2;
+////    Compute_vMFGParams( k,sigma2 );
+//
+////    // regularization on k
+////    k = prevK + (k-prevK)*opt.kRegConst;
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kbREG:
+////  {
+////    double prevK = k;
+////    double prevB = B;
+//
+////    double sigma2;
+////    Compute_vMFGParams( k,sigma2 );
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kTHRESH:
+////  {
+////    double sigma2;
+////    Compute_vMFGParams( k,sigma2 );
+//
+////    // Threshold K
+////    //  Note: k = 600 equates to about 3.25 degrees circular standard deviation
+////    k = k > opt.kThresh ? opt.kThresh : k;
+//
+////    // perfect match thresholds
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kSCALE:
+////  {
+////    double sigma2;
+////    Compute_vMFGParams( k,sigma2 );
+//
+////    // Scale K
+////    k /= opt.kScale;
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kFIXED:
+////  {
+////    k = opt.k;
+////    double sigma2 = this->S2;
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );      
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::kbFIXED:
+////  {
+////    k = opt.k;
+////    B = opt.B;
+////    double sigma2 = 1.0/(2.0*B);
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////case OptionsNorm::WRAPNORMAL:
+////  {
+////    // assign k according to the variance of a
+////    //  wrapped normal distribution
+////    double sigma2 = this->S2;
+////    k = 1.0/(2.0*(this->circSD)*(this->circSD));  // ERROR: should be k = 1/circSD^2
+//
+////    // perfect match thresholds
+////    k = k > threshK ? threshK : k;
+////    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
+////    B = 1.0/(2.0*sigma2);
+//
+////    Compute_vMFGConstant( k,sigma2,logC );
+////    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
+////    break;
+////  }
+////default:
+////  {
+////    std::cout << "No valid error function chosen" << std::endl;
+////    assert(0);
+////  }
+////}

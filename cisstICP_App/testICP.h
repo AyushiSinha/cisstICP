@@ -197,7 +197,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	double minOffsetAng = 6.0;	// 30.0; 
 	double maxOffsetAng = 12.0;	// 60.0;  
 
-	double percentOutliers		= 0.0;	// 0.05;
+	double percentOutliers		= 0.05;	// 0.0; // 0.05;
 	double minPosOffsetOutlier	= 5.0;
 	double maxPosOffsetOutlier	= 10.0;
 	double minAngOffsetOutlier	= 0.0;
@@ -609,9 +609,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
 		algICP_DIMLP *pAlg;
 		if (bScale)
-			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, true);
+			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, bScale);
 		else
-			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape);
+			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, bScale); 
+																		// ^ for cases when scale is specified, but must not be optimized over
 		pAlg->SetConstraints(shapeparambounds);
 
 		mesh.TriangleCov.SetSize(mesh.NumTriangles());
@@ -622,22 +623,22 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 		break;
 	}
-	case AlgType_VIMLOP:
-	{
-		PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
-		DirPDTree2D_Edges *pDirTree = dynamic_cast<DirPDTree2D_Edges*>(pDirTree);
-		camera cam(500, 500, 1, 1, 0, 0);
-		algDirICP_VIMLOP *pAlg;
-		pAlg = new algDirICP_VIMLOP(pTreeMesh, pDirTree, noisySamples, sampleNoiseCov, sampleNoiseCov, noisyEdgesV1, noisyEdgesV2, noisyNorms2d, sampleNoiseCov2d, normNoiseCov2d, cam);
-
-		mesh.TriangleCov.SetSize(mesh.NumTriangles());
-		mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
-		mesh.TriangleCov.SetAll(vct3x3(0.0));
-		pTreeMesh->ComputeNodeNoiseModels();
-		pICPAlg = pAlg;
-
-		break;
-	}
+	//case AlgType_VIMLOP:
+	//{
+	//	PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
+	//	DirPDTree2D_Edges *pDirTree = dynamic_cast<DirPDTree2D_Edges*>(pDirTree);
+	//	camera cam(500, 500, 1, 1, 0, 0);
+	//	algDirICP_VIMLOP *pAlg;
+	//	pAlg = new algDirICP_VIMLOP(pTreeMesh, pDirTree, noisySamples, sampleNoiseCov, sampleNoiseCov, noisyEdgesV1, noisyEdgesV2, noisyNorms2d, sampleNoiseCov2d, normNoiseCov2d, cam);
+	//
+	//	mesh.TriangleCov.SetSize(mesh.NumTriangles());
+	//	mesh.TriangleCovEig.SetSize(mesh.NumTriangles());
+	//	mesh.TriangleCov.SetAll(vct3x3(0.0));
+	//	pTreeMesh->ComputeNodeNoiseModels();
+	//	pICPAlg = pAlg;
+	//
+	//	break;
+	//}
 	default:
 	{
 		std::cout << "ERROR: unknown algorithm type" << std::endl;
@@ -719,7 +720,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		mesh.vertices = mesh.meanShape;
 		for (int s = 0; s < mesh.NumVertices(); s++)
 		{
-			for (unsigned int i = 0; i < modes - 1; i++)
+			for (unsigned int i = 0; i < (unsigned int)(modes - 1); i++)
 			{
 				mesh.vertices(s) += (mesh.Si[i] * mesh.wi[i].Element(s));
 			}

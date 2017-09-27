@@ -97,6 +97,7 @@ void SetParams()
 									"\t\t\tIMLOP: Implements the iterative most likely oriented point algorithm\n"
 									"\t\t\tDIMLOP: Implements the deformable IMLOP algorithm\n"
 									"\t\t\tGIMLOP: Implements the generalized IMLOP algorithm\n"
+									"\t\t\tGIMLOP: Implements the deformable generalized IMLOP algorithm\n"
 									"\t\t\tPIMLOP: Implements the projected IMLOP algorithm\n"
 									"\t\t\tVIMLOP: Implements the video IMLOP algorithm\n\n");
 	i++;
@@ -322,6 +323,11 @@ int main( int argc, char* argv[] )
 		else if (!strcmp(Alg.value, "GIMLOP")) {		// Comment these two lines to remove G-IMLOP as an option in case 
 			dirAlgType = DirAlgType_GIMLOP;			// you do not have access to Numerical Recipes, which is a dependency
 		}
+		else if (!strcmp(Alg.value, "GDIMLOP"))
+		{
+			dirAlgType = DirAlgType_GDIMLOP;
+			cmdLineOpts.deformable = true;
+		}
 		else if (!strcmp(Alg.value, "PIMLOP"))
 			dirAlgType = DirAlgType_PIMLOP;
 	}
@@ -446,8 +452,8 @@ int main( int argc, char* argv[] )
 		|| !strcmp(Alg.value, "DIMLP") || !strcmp(Alg.value, "VIMLOP"))
 		testICP(TargetShapeAsMesh, algType, cmdLineOpts);
 	else if (!strcmp(Alg.value, "DirICP") || !strcmp(Alg.value, "IMLOP")
-		|| !strcmp(Alg.value, "DIMLOP") || !strcmp(Alg.value, "GIMLOP") 
-		|| !strcmp(Alg.value, "PIMLOP"))
+		|| !strcmp(Alg.value, "DIMLOP")  || !strcmp(Alg.value, "GIMLOP") 
+		|| !strcmp(Alg.value, "GDIMLOP") || !strcmp(Alg.value, "PIMLOP"))
 		testICPNormals(TargetShapeAsMesh, dirAlgType, cmdLineOpts);
 
 	return 0;

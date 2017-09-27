@@ -200,13 +200,24 @@ void algDirICP_IMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
 //void algDirICP_IMLOP::ICP_UpdateParameters_PostMatch()
 //{
 //  // base class
-//  algDirICP::ICP_UpdateParameters_PostMatch();
+  //algDirICP::ICP_UpdateParameters_PostMatch();
 //
-//  //// update noise model
-//  //UpdateNoiseModel(SumSqrDist_PostMatch, sumNormProducts_PostMatch);
-//  //// update monitoring variables
-//  //pICP->errFuncNormWeight = k;
-//  //pICP->errFuncPosWeight = B;
+  //double SumSqrDist_PostMatch = 0.0;
+  //double sumNormProducts_PostMatch = 0.0;
+  //for (unsigned int s = 0; s < nSamples; s++)
+  //{
+	 // SumSqrDist_PostMatch +=
+		//  (samplePtsXfmd.Element(s) - matchPts.Element(s)).NormSquare();
+	 // sumNormProducts_PostMatch +=
+		//  vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
+  //}
+//
+  //// update noise model
+  //UpdateNoiseModel(SumSqrDist_PostMatch, sumNormProducts_PostMatch);
+//
+  //// update monitoring variables
+  ////pICP->errFuncNormWeight = k;
+  ////pICP->errFuncPosWeight = B;
 //}
 
 void algDirICP_IMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
@@ -310,12 +321,11 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
   //   to the number of points transferred.
   //
 
-  //double ChiSquareThresh = 11.34;
-  double ChiSquareThresh = 14.16;
-  double S2 = pICP->SumSqrDist_PostMatch / (3*nSamples); // variance estimate along a single axis
+  double ChiSquareThresh = 7.81;
+  double S2 = sumSqrDist / (3 * nSamples); // variance estimate along a single axis
   double SquareDistThresh = S2 * ChiSquareThresh;
 
-  double ThetaThresh = 3.0*pICP->circSD_PostMatch;
+  double ThetaThresh = 3.0*circSD;
   ThetaThresh = ThetaThresh > cmnPI ? cmnPI : ThetaThresh;
   double NormProductThresh = cos(ThetaThresh);
 
@@ -324,25 +334,27 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
   nPosOutliers = 0;
   nNormOutliers = 0;
 
-  gSumSqrDist_PostMatch = 0.0;
-  gSumNormProducts_PostMatch = 0.0;
-  oSumSqrDist_PostMatch = 0.0;
-  oSumNormProducts_PostMatch = 0.0;
+  double gSumSqrDist_PostMatch = 0.0;
+  double gSumNormProducts_PostMatch = 0.0;
+  double oSumSqrDist_PostMatch = 0.0;
+  double oSumNormProducts_PostMatch = 0.0;
   //gSumSqrNormDist_PostMatch = 0.0;
   //oSumSqrNormDist_PostMatch = 0.0;
 
   // for all model/sample sets
-  for (unsigned int set = 0; set < pICP->nSets; set++)
-  {
-    unsigned int nSamps_Set = pICP->nsamplePtsSets[set];
+  //for (unsigned int set = 0; set < pICP->nSets; set++)
+  //{
+    //unsigned int nSamps_Set = pICP->nsamplePtsSets[set];
     unsigned int nGood_Set = 0;
 
-    vctDynamicVectorRef<vct3>   samplePts( pICP->SampleSets[set] );
-    vctDynamicVectorRef<vct3>   sampleNorms( pICP->SampleNormSets[set] );
-    vctDynamicVectorRef<vct3>   matchPts( pICP->ClosestPointSets[set] );
-    vctDynamicVectorRef<vct3>   matchNorms( pICP->ClosestPointNormSets[set] );
-    vctDynamicVectorRef<double> SquareDistances( pICP->SquareDistanceSets_PostMatch[set] );
-    vctDynamicVectorRef<double> NormProducts( pICP->NormProductSets_PostMatch[set] );
+	vctDynamicVectorRef<vct3>   samplePts(samplePts); // (pICP->SampleSets[set]);
+	vctDynamicVectorRef<vct3>   sampleNorms(sampleNorms); // (pICP->SampleNormSets[set]);
+	vctDynamicVectorRef<vct3>   matchPts(matchPts); // (pICP->ClosestPointSets[set]);
+	vctDynamicVectorRef<vct3>   matchNorms(matchNorms); // (pICP->ClosestPointNormSets[set]);
+	//vctDynamicVectorRef<double> SquareDistances( pICP->SquareDistanceSets_PostMatch[set] );
+	//vctDynamicVectorRef<double> NormProducts(pICP->NormProductSets_PostMatch[set]);
+	vctDynamicVector<double> SquareDistances(nSamples);
+	vctDynamicVector<double> NormProducts(nSamples);
     //vctDynamicVectorRef<double> Distances( pICP->DistanceSets_PostMatch[set] );
     //vctDynamicVectorRef<vct3>   TransformedsamplePts( pICP->TransformedSampleSets[set] );    
     //vctDynamicVectorRef<vct3>   TransformedsampleNorms( pICP->TransformedSampleNormSets[set] );
@@ -351,8 +363,11 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
     //vctDynamicVectorRef<double> dThetas( pICP->dThetaSets_PostMatch[set] );
 
     // Filter Outliers
-    for (unsigned int s = 0; s < nSamps_Set; s++)
+    for (unsigned int s = 0; s < nSamples/*nSamps_Set*/; s++)
     {
+		SquareDistances.Element(s) = (matchPts(s) - Freg*samplePts(s)).NormSquare();
+		NormProducts.Element(s) = matchNorms(s) * (Freg.Rotation() * sampleNorms(s));
+
       // Positional Outlier Test
       if ( SquareDistances.Element(s) > SquareDistThresh )
       {	// a positional outlier
@@ -377,7 +392,7 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
         //      outliers, but cost of an outlier is always the same
         // Since a) is smooth and b) may be jumpy, we choose situation a).
         //
-        double normProduct;
+		double normProduct; 
         //double sqrNormDist;
         // check if orientation is outlier as well
         //  if so, threshold orientation component of error as well
@@ -440,8 +455,8 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
     //  AllGoodSampleWeightsBuf.at(k) = pICP->Weights[set]/nGood_Set;
     //}
     //nOutliersSets[set] = nSamps_Set - nGood_Set;
-    nOutliers += nSamps_Set - nGood_Set;
-  }
+	nOutliers += nSamples - nGoodSamples; // nSamps_Set - nGood_Set;
+  //}
 
   goodSamplePts.SetRef( goodSamplePtsBuf,0,nGoodSamples );  
   goodSampleNorms.SetRef( goodSampleNormsBuf,0,nGoodSamples );  
@@ -451,8 +466,8 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
   //AllGoodTransformedsamplePts.SetRef( AllGoodTransformedsamplePtsBuf,0,nGoodSamples );
   //AllGoodTransformedsampleNorms.SetRef( AllGoodTransformedsampleNormsBuf,0,nGoodSamples );
 
-  pICP->iterData->nOutliersPos = nPosOutliers;
-  pICP->iterData->nOutliersNorm = nNormOutliers;
+  //pICP->iterData->nOutliersPos = nPosOutliers;
+  //pICP->iterData->nOutliersNorm = nNormOutliers;
 
   return nOutliers;
 

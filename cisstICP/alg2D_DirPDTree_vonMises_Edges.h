@@ -142,7 +142,7 @@ public:
 	  sampleEdgesV2 = argEdgesV2;
 	  sampleEdgesNorm = argEdgesNorm;
 
-	  nSamples = sampleEdgesNorm.size();
+	  nSamples = (unsigned int)sampleEdgesNorm.size();
 
 	  // initialize variables dependent on sample size
 	  samplePtsXfmd.SetSize(nSamples);

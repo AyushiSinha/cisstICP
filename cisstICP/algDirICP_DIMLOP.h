@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -90,8 +90,9 @@ protected:
 	bool bFirstIter_Matches;  // flag that the first iteration is being run
 
 	// dynamic noise model
-	double sigma2;      // match uncertainty (added to My covariances as sigma2*I)
-	double sigma2Max;   // max threshold on match uncertainty
+	double sigma2;								// match uncertainty (added to My covariances as sigma2*I)
+	double sigma2Max 
+		= std::numeric_limits<double>::max();   // max threshold on match uncertainty
 	vctDynamicVector<vct3>  residuals_PostMatch;    // Pclosest - Psample
 	vctDoubleVec            sqrDist_PostMatch;      // ||Pclosest - Psample||^2
 
@@ -118,6 +119,8 @@ protected:
 	vctFrm3 Fdec;
 
 	// outlier handling
+	unsigned int nOutliers;
+	double ChiSquareThresh = 7.81;
 	double sumSqrDist_Inliers;
 	vctDynamicVector<int>   outlierFlags;
 
@@ -158,7 +161,7 @@ public:
   // destructor
   virtual ~algDirICP_DIMLOP() {}
 
-  //void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
+  void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   //double  ComputeRpos();
 
   //void SetNoiseModel(
@@ -186,7 +189,7 @@ public:
 
   void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
   void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
-  double	CostFunctionValue(const vctDynamicVector<double> &x);
+  double  CostFunctionValue(const vctDynamicVector<double> &x);
 
   //--- ICP Interface Methods ---//
 
@@ -197,7 +200,7 @@ public:
   virtual void			ICP_ComputeMatches();
   virtual vctFrm3       ICP_RegisterMatches();
   virtual double        ICP_EvaluateErrorFunction();
-  //virtual unsigned int  ICP_FilterMatches();
+  virtual unsigned int  ICP_FilterMatches();
   //virtual bool			ICP_Terminate(vctFrm3 &Freg);
 
   virtual void ReturnScale(double &scale);

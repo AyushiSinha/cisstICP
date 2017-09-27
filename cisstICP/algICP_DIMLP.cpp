@@ -129,7 +129,7 @@ void algICP_DIMLP::SetSamples(
 	sc = argScale;
 	bScale = argbScale;
 	if (bScale) {
-		for (int i = 0; i < nSamples; i++)
+		for (unsigned int i = 0; i < nSamples; i++)
 			samplePts[i] = samplePts[i] * sc;
 		nTrans = 7; // 3 for rotation, 3 for translation, 1 for scale
 	}

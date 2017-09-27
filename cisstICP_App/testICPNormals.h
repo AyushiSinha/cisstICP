@@ -19,12 +19,13 @@
 #include "algDirICP_GIMLOP_Mesh.h"
 #include "algDirICP_PIMLOP_Mesh.h"
 #include "algDirICP_DIMLOP.h"
+#include "algDirICP_GDIMLOP.h"
 
 // disable for run-time tests
 #define ENABLE_CALLBACKS
 
 
-enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_GIMLOP, DirAlgType_PIMLOP }; 
+enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_GIMLOP, DirAlgType_GDIMLOP, DirAlgType_PIMLOP };
 
 void Callback_TrackRegPath_testICPNormals(cisstICP::CallbackArg &arg, void *userData)
 {
@@ -163,6 +164,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  algDir = "LastRun_GIMLOP/";
 	  break;
   }
+  case DirAlgType_GDIMLOP:
+  {
+	  std::cout << "\nRunning GDIMLOP\n" << std::endl;
+	  algDir = "LastRun_GDIMLOP/";
+	  break;
+  }
   case DirAlgType_PIMLOP:
   {
 	  std::cout << "\nRunning PIMLOP\n" << std::endl;
@@ -232,7 +239,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double minOffsetAng = 6.0;  // 20.0;
   double maxOffsetAng = 12.0; // 60.0;
 
-  double percentOutliers	 = 0.0;
+  double percentOutliers	 = 0.05; // 0.0;
   double minPosOffsetOutlier = 5.0;  // 15.0;
   double maxPosOffsetOutlier = 10.0; // 20.0;
   double minAngOffsetOutlier = 0.0;  // 15.0;
@@ -299,7 +306,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   mesh_ssm_target = mesh_target;	// Initializing mesh_ssm to mesh for non-deformable algorithms 
   int modes = 1;					// +1 (for mean)
 
-  if (algType == DirAlgType_DIMLOP)
+  if (cmdOpts.deformable/*algType == DirAlgType_DIMLOP*/)
   {
 	  std::string loadModelPath;
 	  if (cmdOpts.useDefaultSSM)
@@ -654,7 +661,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			  pTreeMesh, noisySamples, noisySampleNorms,
 			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
 			  k, sigma2, wRpos, kfactor, scale,
-			  dynamicParamEst);
+			  dynamicParamEst);											// for cases when scale is specified, but must not be optimized over
 	  pAlg->SetConstraints(shapeparambounds);
 
 	  pICPAlg = pAlg;
@@ -702,6 +709,60 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
     pICPAlg = pAlg;
     break;
+  }
+  case DirAlgType_GDIMLOP:
+  {
+	  //enum  algDirICP_GDIMLOP::PARAM_EST_TYPE{ PARAMS_FIXED, PARAMS_DYN_THRESH, PARAMS_FIXED_1stITER_POS };
+	  //PARAM_EST_TYPE paramEstMethod;
+	  if (!TargetShapeAsMesh)
+	  {
+		  std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
+		  assert(0);
+	  }
+	  DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
+	  // define GIMLOP parameters
+	  double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
+	  double B = sampleNoiseEccentricity*k / 2.0;
+	  std::cout << "k: " << k << " B: " << B << std::endl;
+	  vctDynamicVector<double> argK(nSamples, k);
+	  vctDynamicVector<double> argB(nSamples, sampleNoiseEccentricity); // B);
+	  //vctDynamicVector<double> argB( nSamples,0.0 );
+
+	  //double sigma2 = sampleNoiseInPlane*sampleNoiseInPlane;
+	  //vctDynamicVector<double> argSigma2( nSamples,sigma2 );
+	  //vctDynamicVector<vctFixedSizeMatrix<double,3,2>> argL( nSamples );
+	  //vct3 xProd, L1,L2;
+	  //vct3 xAxis( 1.0,0.0,0.0 );
+	  //vct3 yAxis( 0.0,1.0,0.0 );
+	  //for (unsigned int i=0; i<nSamples; i++)
+	  //{ // set argL as isotropic
+	  //  xProd = vctCrossProduct( noisySampleNorms(i),xAxis );
+	  //  if (xProd.Norm() < 0.01)
+	  //  {
+	  //    xProd = vctCrossProduct( noisySampleNorms(i),yAxis );
+	  //  }
+	  //  L1 = xProd.Normalized();
+	  //  L2 = vctCrossProduct(noisySampleNorms(i),L1).Normalized();
+	  //  argL(i).Column(0) = L1;
+	  //  argL(i).Column(1) = L2;
+	  //}
+
+	  // create algorithm
+	  algDirICP_GDIMLOP *pAlg;
+	  if (bScale)
+		  pAlg = new algDirICP_GDIMLOP(
+			  pTreeMesh, noisySamples, noisySampleNorms,
+			  argK, argB, sampleNoiseL, sampleNoiseCov,
+			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);
+	  else
+		  pAlg = new algDirICP_GDIMLOP(
+			  pTreeMesh, noisySamples, noisySampleNorms,
+			  argK, argB, sampleNoiseL, sampleNoiseCov,
+			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);	// for cases when scale is specified, but must not be optimized over
+	  pAlg->SetConstraints(shapeparambounds);
+	  //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
+	  pICPAlg = pAlg;
+	  break;
   }
   case DirAlgType_PIMLOP:
   {
@@ -792,7 +853,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 
   std::stringstream resultStream;
   resultStream << std::endl;
-  if (algType == DirAlgType_DIMLOP)
+  if (cmdOpts.deformable/*algType == DirAlgType_DIMLOP*/)
   {
 	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight << std::endl;
 	  pICPAlg->ReturnShapeParam(mesh_target.Si);
@@ -811,12 +872,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 
   std::cout << "=============================================================\n" << std::endl;
 
-  if (algType == DirAlgType_DIMLOP)
+  if (cmdOpts.deformable/*algType == DirAlgType_DIMLOP*/)
   {
 	  mesh_target.vertices = mesh_target.meanShape;
 	  for (int s = 0; s < mesh_target.NumVertices(); s++)
 	  {
-		  for (unsigned int i = 0; i < modes - 1; i++)
+		  for (unsigned int i = 0; i < (unsigned int)(modes - 1); i++)
 		  {
 			  mesh_target.vertices(s) += (mesh_target.Si[i] * mesh_target.wi[i].Element(s));
 		  }
