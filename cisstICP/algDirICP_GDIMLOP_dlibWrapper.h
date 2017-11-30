@@ -57,7 +57,7 @@ public:
   // -- Methods -- //
 
   // constructor
-  algDirICP_GDIMLOP_dlibWrapper(); // algDirICP_GIMLOP *kent );
+  algDirICP_GDIMLOP_dlibWrapper(algDirICP_GDIMLOP *argAlg); // algDirICP_GIMLOP *kent );
 
   /*vct6*/vctDynamicVector<double>  ComputeRegistration(const /*vct6*/vctDynamicVector<double> &x0, algDirICP_GDIMLOP *kent);
 };

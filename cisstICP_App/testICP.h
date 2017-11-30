@@ -190,14 +190,14 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	bool	bScale		= false;
 
 	int		nThresh		= 5;	// 5;	// Cov Tree Params
-	double	diagThresh	= 5.0;	// 5.0;	//  ''
+	double	diagThresh = 5.0; // 5.0;	// 5.0;	//  ''
 
 	double minOffsetPos = 10.0;	// 50.0; 
 	double maxOffsetPos = 20.0;	// 100.0; 
 	double minOffsetAng = 6.0;	// 30.0; 
 	double maxOffsetAng = 12.0;	// 60.0;  
 
-	double percentOutliers		= 0.05;	// 0.0; // 0.05;
+	double percentOutliers		= 0.0;	// 0.0; // 0.05;
 	double minPosOffsetOutlier	= 5.0;
 	double maxPosOffsetOutlier	= 10.0;
 	double minAngOffsetOutlier	= 0.0;

@@ -225,6 +225,31 @@ void GenerateSampleRandomNoise(
   std::string *SavePath_Cov = 0,
   std::string *savePath_L = 0);
 
+// Generate oriented sample noise having a random position covariance with the
+//  specified eigenvalues and random orientation with the specified
+//  circular standard deviation and eccentricity.
+void GenerateSampleRandomNoise2(
+	unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	vct3 &covEigenvalues,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisySampleEccNorms,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseEccL,
+	vctDynamicVector<vct3x2> &noiseL,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_NoisySamples = 0,
+	std::string *SavePath_Cov = 0,
+	std::string *savePath_EccL = 0,
+	std::string *savePath_L = 0);
+
 // Read oriented sample noise having the specified standard deviation of
 //  noise in directions parallel and perpendicular to the triangle
 //  plane from which the sample was drawn.
@@ -269,6 +294,32 @@ void GenerateSampleSurfaceNoise(
   std::string *SavePath_Cov = 0,
   std::string *SavePath_L = 0);
 
+// Generate 2 oriented sample noise having the specified standard deviation of
+//  noise in directions parallel and perpendicular to the triangle
+//  plane from which the sample was drawn.
+void GenerateSampleSurfaceNoise2(
+	unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	double StdDevInPlane, double StdDevPerpPlane,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisyEccSampleNorms,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseEccL,
+	vctDynamicVector<vct3x2> &noiseL,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_EccNoisySamples = 0,
+	std::string *SavePath_NoisySamples = 0,
+	std::string *SavePath_Cov = 0,
+	std::string *SavePath_EccL = 0,
+	std::string *SavePath_L = 0);
+
 void Draw3DGaussianSample(
   std::ifstream &randnStream,
   const vct3x3 &M, vct3 &x);
@@ -281,6 +332,11 @@ void DrawGIMLOPSample(
   std::ifstream &randnStream,
   double k, double B, const vct3 &mean,
   const vctFixedSizeMatrix<double, 3, 2> &L, vct3 &n);
+
+void Draw2GIMLOPSample(
+	std::ifstream &randnStream,
+	double k, double B, const vct3 &mean,
+	const vctFixedSizeMatrix<double, 3, 2> &L, vct3 &n);
 
 void Callback_SaveIterationsToFile_Utility(cisstICP::CallbackArg &arg, void *userData);
 void Callback_TrackRegPath_Utility(cisstICP::CallbackArg &arg, void *userData);

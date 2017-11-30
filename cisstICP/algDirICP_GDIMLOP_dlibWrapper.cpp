@@ -67,13 +67,13 @@ namespace
     return Kent_dlib->CostFunctionValue( x );
   }
 
-  algDirICP_GDIMLOP_dlibWrapper::dlib_vector fDerivative(const wrapper_dlib::dlib_vector &x_dlib)
+  algDirICP_GDIMLOP_dlibWrapper::dlib_vector fDerivative(const algDirICP_GDIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
  //   static vct6   x;
 	//static vct6   g;
 	static vctDynamicVector<double>   x;
 	static vctDynamicVector<double>   g;
-    static wrapper_dlib::dlib_vector  g_dlib/*(6)*/;    // 6-element vector
+	static algDirICP_GDIMLOP_dlibWrapper::dlib_vector  g_dlib/*(6)*/;    // 6-element vector
 
 	x.SetSize(x_dlib.size());
 	g.SetSize(x_dlib.size());
@@ -106,12 +106,12 @@ namespace
 //--- Non-Globals ---//
 
 // Constructor
-algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper()  // algDirICP_GIMLOP *kent )
-  : maxIter(40), //maxIter( 20 ),
+algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper(algDirICP_GDIMLOP *argAlg)  // algDirICP_GIMLOP *kent )
+  : maxIter( 20 ), //maxIter(40),
   //tol_df( 1.0e-6 ),
   gradientNormThresh( 1.0e-3 )
 {
-  Kent_dlib = NULL;     // initialize global variable
+	Kent_dlib = argAlg; // NULL;     // initialize global variable
   //Kent_dlib = kent;  // initialize global variable
 }
 
@@ -198,7 +198,7 @@ algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper()  // algDirICP_GIM
       //dlib::objective_delta_stop_strategy( Tol_df,maxIter ),
       dlib::gradient_norm_stop_strategy( gradientNormThresh, maxIter ),
 #endif
-      fValue, fDerivative,
+	  fValue, fDerivative, //dlib::derivative(fValue), 
       x_dlib, x_lower, x_upper);
 
     //find_min_using_approximate_derivatives( bfgs_search_strategy(),

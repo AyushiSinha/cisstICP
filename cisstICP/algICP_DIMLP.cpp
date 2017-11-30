@@ -590,10 +590,10 @@ double algICP_DIMLP::CostFunctionValue(const vctDynamicVector<double> &x)
 	{
 		if (outlierFlags[i])	continue;
 
-		f += Rat_Tssm_Y_t_x_invMx.Element(i) * Rat_Tssm_Y_t_x.Element(i);
+		f += ( Rat_Tssm_Y_t_x_invMx.Element(i) * Rat_Tssm_Y_t_x.Element(i) ) / 2.0;
 	}
 
-	f += s.DotProduct(s) ; // Comment out to test
+	f += ( s.DotProduct(s) ) / 2.0; // Comment out to test
 
 	return f;
 }
@@ -634,16 +634,16 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 		for (unsigned int c = 0; c < 3; c++)
 			Jz_a.Column(c) = dRa[c].TransposeRef() * Tssm_Y_t[j]; // check this computation
 
-		ga += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * Jz_a;
-		gt += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-Ra.Transpose());
+		ga += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * Jz_a;
+		gt += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-Ra.Transpose());
 		if (bScale)
-			gsc += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-X.Element(j));
+			gsc += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-X.Element(j));
 
 		for (unsigned int i = 0; i < nModes; i++)
-			gs[i] += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
+			gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
 	}
 
-	gs += 2.0 * s;	// Cshape component
+	gs += /*2.0 **/ s;	// Cshape component
 }
 
 

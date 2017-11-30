@@ -84,7 +84,7 @@ protected:
 public:
 
   // noise parameter estimation methods
-  enum  PARAM_EST_TYPE{ PARAMS_FIXED, PARAMS_DYN_THRESH, PARAMS_FIXED_1stITER_POS };
+  //enum  PARAM_EST_TYPE{ PARAMS_FIXED, PARAMS_DYN_THRESH, PARAMS_FIXED_1stITER_POS };
   PARAM_EST_TYPE paramEstMethod;
 
   // for reporting purposes

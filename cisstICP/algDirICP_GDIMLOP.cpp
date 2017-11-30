@@ -66,7 +66,7 @@ algDirICP_GDIMLOP::algDirICP_GDIMLOP(
   pDirTree(pDirTree),
   pMesh(&pDirTree->mesh),
   TCPS(pDirTree->mesh),
-  dlib(),
+  dlib(this),
   paramEstMethod(paramEst)
 {
   //SetNoiseModel(argK, argE, argL, argM, paramEst);
@@ -99,7 +99,6 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 
 	int nGoodSamples = 0;
 
-	vct3x3 Mnew, Minv;
 	vct3 residual;
 
 	// NOTE: if using a method with outlier rejection, it may be desirable to
@@ -109,10 +108,8 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		if (outlierFlags[i])	continue;	// skip outliers
 
 		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
-		Mnew = Freg.Rotation() * M[i] * Freg.Rotation().Transpose();
-		ComputeCovInverse_NonIter(Mnew, Minv);
 
-		sqrMahalDist = residual*Minv*residual;
+		sqrMahalDist = residual*invM[i]*residual;
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 
@@ -124,7 +121,6 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt((sumSqrMahalDist / nGoodSamples) + Avg*Avg);
 
-	//std::cout << "\nSigma = " << sigma2;
 	std::cout << "\nFinal Scale = " << sc << std::endl;
 	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 }
@@ -146,24 +142,33 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
   double nklog2PI	= 0.0;
   double logCost	= 0.0;
   double ssmCost	= 0.0;
+  double normCost	= 0.0;	// for debugging only
+  double normCost1	= 0.0;	// for debugging only
   for (unsigned int i = 0; i < nSamples; i++)
   {
 	Mi[i] = R_M_Rt[i] + Myi_sigma2[i];
 	ComputeCovDecomposition_NonIter(Mi[i], inv_Mi[i], det_Mi[i]);
 
+	if (outlierFlags[i])	continue;	// skip outliers
+
     Error += MatchError(samplePtsXfmd[i], sampleNormsXfmd[i],
       /*matchPts[i]*/Tssm_Y[i], matchNorms[i],
-	  k[i], B[i], R_L[i], R_invM_Rt[i]);
+	  k[i], B[i], R_L[i], /*R_invM_Rt[i]*/inv_Mi[i]);
 
 	// match covariance
 	nklog2PI += 5.0*log(2.0*cmnPI); // 1/2
 	logCost += log(det_Mi[i]);		// 1/2
+	normCost += L[i].Norm();
   }
+  vctRot3 R(Freg.Rotation());
+  normCost1 += R.Norm();
   ssmCost += Si.NormSquare();		// 1/2
   Error += (nklog2PI + logCost + ssmCost) / 2.0;
 
   prevCostFuncValue = costFuncValue;
   costFuncValue = Error;
+
+  //std::cout << "logCost: " << logCost << " ssmCost: " << ssmCost << " normCost(L): " << normCost << " normCost(R): " << normCost1 << " ";
 
   //-- Test for algorithm-specific termination --//
 
@@ -198,8 +203,8 @@ void algDirICP_GDIMLOP::ComputeMu()
 {
 	vct3	v0, v1, v2;
 	vct3	v0_Tssm_Y,
-		v1_Tssm_Y,
-		v2_Tssm_Y;
+			v1_Tssm_Y,
+			v2_Tssm_Y;
 
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
@@ -530,6 +535,23 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 
   // Re-initialize to compute matches on updated mesh
   TCPS.init(pDirTree->mesh.vertices, pDirTree->mesh.faces);
+
+#if 0
+  static int count = 1;
+  cisstMesh currentSamples;
+  currentSamples.vertices.SetSize(nSamples);
+  currentSamples.vertexNormals.SetSize(nSamples);
+  currentSamples.vertices = samplePtsXfmd;
+  currentSamples.vertexNormals = sampleNormsXfmd;
+  currentSamples.SavePLY("currentSamples" + std::to_string(count) + ".ply");
+
+  cisstMesh currentMesh;
+  currentMesh.vertices = pMesh->vertices;
+  currentMesh.faces = pMesh->faces;
+  currentMesh.SavePLY("currentMesh" + std::to_string(count) + ".ply");
+
+  count++;
+#endif
 }
 
 unsigned int algDirICP_GDIMLOP::ICP_FilterMatches()
@@ -732,6 +754,8 @@ void algDirICP_GDIMLOP::ComputeMatchUncertaintyEstimates()
   double sumNormProducts = 0.0;
   for (unsigned int s = 0; s < nSamples; s++)
   {
+	  if (outlierFlags[s])	continue;	// skip outliers
+
     sumSqrDist += (samplePtsXfmd.Element(s) - /*matchPts*/Tssm_Y.Element(s)).NormSquare();
     sumNormProducts += vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
   }
@@ -1139,6 +1163,7 @@ void algDirICP_GDIMLOP::SetSamples(
   }
   else
 	  nTrans = 6; // 3 for rotation, 3 for translation
+  std::cout << "# tranformation parameters: " << nTrans << std::endl;
 
   nModes = (unsigned int)pDirTree->mesh.modeWeight.size(); 
   Si = pDirTree->mesh.Si;
@@ -1411,7 +1436,8 @@ void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const /*vct6*/vctDynamicVect
     //Rat_Tssm_Y_t_x_invMx[i] = Emin[i]*Yp_RaXp_t[i];
     //invM_Yp_RaXp_t[i] = Emin[i] * Yp_RaXp_t[i];
 #else
-	Rat_Tssm_Y_t_x_invMx[i] = Rat_Tssm_Y_t_x[i] * R_invM_Rt[i];
+	//Rat_Tssm_Y_t_x_invMx[i] = Rat_Tssm_Y_t_x[i] * R_invM_Rt[i];
+	Rat_Tssm_Y_t_x_invMx[i] = R_invM_Rt[i] * Rat_Tssm_Y_t_x[i];
     //Rat_Tssm_Y_t_x_invMx[i] = R_invM_Rt[i] * (Ra.TransposeRef() * Yp_RaXp_t[i]);
     //invM_Yp_RaXp_t[i] = R_invM_Rt[i] * Yp_RaXp_t[i];
 #endif
@@ -1435,16 +1461,17 @@ double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<doubl
   {
 	if (outlierFlags[i])	continue;
 
-	double major = /*RaR*/L[i].Column(0)*Ra.TransposeRef()*Yn[i];
-	double minor =/* RaR*/L[i].Column(1)*Ra.TransposeRef()*Yn[i];
+	double major = RaRL[i].Column(0)/**Ra.TransposeRef()*/*Yn[i];
+	double minor = RaRL[i].Column(1)/**Ra.TransposeRef()*/*Yn[i];
     // add extra k[i] * 1.0 to make cost function > 0
-	f += k[i] * (1.0 - Yn_Rat_Xn[i]/*RaXn[i]*Yn[i]*/) - B[i] * (major*major - minor*minor)
-		+ (Rat_Tssm_Y_t_x_invMx[i] * Rat_Tssm_Y_t_x[i]) / 2.0;
+	f += k[i] * (1.0 - /*Yn_Rat_Xn[i]*/RaXn[i]*Yn[i]) - B[i] * (major*major - minor*minor)
+		//+ (Rat_Tssm_Y_t_x_invMx[i] * Rat_Tssm_Y_t_x[i]) / 2.0;
+		+ (Rat_Tssm_Y_t_x[i] * Rat_Tssm_Y_t_x_invMx[i]) / 2.0;
       //+ (Yp_RaXp_t[i] * Ra * Rat_Tssm_Y_t_x_invMx[i]) / 2.0;
       //+ (Yp_RaXp_t[i] * invM_Yp_RaXp_t[i]) / 2.0;
   }
 
-  f += s.DotProduct(s);
+  f += ( s.DotProduct(s) ) / 2.0;
 
   return f;
 }
@@ -1486,34 +1513,42 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
   for (unsigned int j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
-	//if (outlierFlags[j])	continue;
+	if (outlierFlags[j])	continue;
 
     //--- Kent term ---//   (orientations)        
     for (unsigned int i = 0; i < 3; i++)
     {
       //  rotational effect
-      ga[i] += -k[j] * ( (Yn[j] * dRa[i]) * Xn[j] )
-				- 2.0 * B[j] * ((/*R_*/L[j].Column(0) * dRa[i].TransposeRef())*Yn[j] * ( /** RaR*/L[j].Column(0) * Ra.TransposeRef() * Yn[j])
-				- (L[j].Column(1) * /*R_*/dRa[i].TransposeRef())*Yn[j] * ( /** RaR*/L[j].Column(1) * Ra.TransposeRef() * Yn[j]));
+		ga[i] += //-k[j] * ((Yn[j] * dRa[i]) * Xn[j])
+			-k[j] * ((dRa[i] * Xn[j]) * Yn[j])
+				//- 2.0 * B[j] * ( (/*R_*/L[j].Column(0) * dRa[i].TransposeRef()*Yn[j]) * (/*RaR*/L[j].Column(0) * Ra.TransposeRef() * Yn[j])
+				- 2.0 * B[j] * ((dRa[i] * /*R_*/L[j].Column(0)) * Yn[j] * (Yn[j] * RaRL[j].Column(0) /** Ra.TransposeRef()*/)
+				//- (/*R_*/L[j].Column(1) * dRa[i].TransposeRef()*Yn[j]) * (/*RaR*/L[j].Column(1) * Ra.TransposeRef() * Yn[j]) );
+				- (dRa[i].TransposeRef() * /*R_*/L[j].Column(1)) * Yn[j] * (Yn[j] * RaRL[j].Column(1)) /** Ra.TransposeRef()*/);
+
+		//--- Gaussian term ---//   (positions)
+		//  rotational effect
+		Jz_a.Column(i) = dRa[i].TransposeRef() * Tssm_Y_t[j];
     }
 
-    //--- Gaussian term ---//   (positions)
-    //  rotational effect
-	Jz_a.Column(0) = dRa[0].TransposeRef() * Tssm_Y_t[j];
-	Jz_a.Column(1) = dRa[1].TransposeRef() * Tssm_Y_t[j];
-	Jz_a.Column(2) = dRa[2].TransposeRef() * Tssm_Y_t[j];
-	ga += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * Jz_a;
+ //   //--- Gaussian term ---//   (positions)
+ //   //  rotational effect
+	//Jz_a.Column(0) = dRa[0].TransposeRef() * Tssm_Y_t[j];
+	//Jz_a.Column(1) = dRa[1].TransposeRef() * Tssm_Y_t[j];
+	//Jz_a.Column(2) = dRa[2].TransposeRef() * Tssm_Y_t[j];
+	ga += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * Jz_a;
 
     // translational effect
-	gt -= Rat_Tssm_Y_t_x_invMx[j] * 2.0 * Ra.Transpose();
+	//gt += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-Ra.Transpose());
+	gt -= Ra * Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ ;
 
 	if (bScale)
-		gsc += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (-X.Element(j));
+		gsc += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-X.Element(j));
 
 	for (unsigned int i = 0; i < nModes; i++)
-		gs[i] += Rat_Tssm_Y_t_x_invMx[j] * 2.0 * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
+		gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
 
-	gs += 2.0 * s;	// Cshape component
+	gs += /*2.0 **/ s * 1.0/(double)nSamples;	// Cshape component
 
     //// wrt rodrigues elements
     //for (unsigned int i = 0; i < 3; i++)

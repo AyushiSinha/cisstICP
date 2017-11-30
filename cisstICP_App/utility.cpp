@@ -914,6 +914,77 @@ void DrawGIMLOPSample(std::ifstream &randnStream,
   n = R*mean;   // Zwrap
 }
 
+// GIMLOP Parameters
+//  k  ~ concentration       (Note the approximation 1/k ~= circSD^2)
+//  B  ~ ovalness parameter  (Note eccentricity e = 2*Beta/k) 
+//  mean ~ central direction
+//  L  ~ [l1,l2]
+//        l1 ~ major axis
+//        l2 ~ minor axis
+void Draw2GIMLOPSample(std::ifstream &randnStream,
+	double k, double B, const vct3 &mean,
+	const vctFixedSizeMatrix<double, 3, 2> &L, vct3 &n, vct3 &n2)
+{
+	// Use the approximation that the tangential to the mean direction
+	//  is approximately Gaussian distributed as: 
+	//     Z ~ N(0,[k*I3-2*A]^-1)  where  A = Beta*[l1*l1' - l2*l2'] 
+	//                                    Z is the vector component tangential to the central direction
+	//
+	//  Since Z only has 2DOF, we can also compute Z using a 2D distribution:
+	//   define Zp = [l1'Z, l2'Z]'
+	//   then Zp is approximately 2D Gaussian distributed as: Zp ~ N(0,diag(k-2B,k+2B)^-1)
+	//
+	//  Alternatively, the 3D form may be expressed as:
+	//   Z ~ N(0,M^-1)  where  M = (k-2B)*l1*l1' + (k+2B)*l2*l2' + k*u*u'
+	//   which can be generated using 2 Gaussian distributed values
+	//   for lengths along l1 & l2 since Z is known to lie in the plane of l1 & l2
+	//
+	//   Variance along l1 = 1/(k-2B)
+	//   Variance along l2 = 1/(k+2B)
+	//
+	// Noisy vector X ~= u + Z  for concentrated points
+	//   more accurately, X = Zwrap where Zwrap is the "wrapped" position of Z on the unit
+	//   sphere starting from the central direction u
+
+	if (k <= 2 * B)
+	{
+		std::cout << "ERROR: can only simulate for k > 2*B" << std::endl;
+	}
+	double N1, N2, SD1, SD2, SD3, SD4;
+	N1 = ExtractGaussianRVFromStream(randnStream);
+	N2 = ExtractGaussianRVFromStream(randnStream);
+	SD1 = 1.0 / sqrt(k - 2.0*B);
+	SD2 = 1.0 / sqrt(k + 2.0*B);
+	SD3 = 1.0 / sqrt(k - 2.0*0);
+	SD4 = 1.0 / sqrt(k + 2.0*0);
+	// compute tangential vector Z
+	vct3 Z = N1*SD1*L.Column(0) + N2*SD2*L.Column(1);
+	vct3 Z2 = N1*SD3*L.Column(0) + N2*SD4*L.Column(1);
+	// wrap Z onto unit sphere
+	//  do this by rotating u until it aligns with Zwrap
+	vct3 Raxis = vctCrossProduct(mean, Z);
+	vct3 Raxis2 = vctCrossProduct(mean, Z2);
+	Raxis.NormalizedSelf();
+	Raxis2.NormalizedSelf();
+	double Rangle = Z.Norm();
+	double Rangle2 = Z2.Norm();
+	if (Rangle > cmnPI)
+	{
+		std::cout << "WARNING: generated GIMLOP sample more than 180 degrees"
+			<< " offset from the central direction" << std::endl;
+	}
+	if (Rangle2 > cmnPI)
+	{
+		std::cout << "WARNING: generated GIMLOP sample more than 180 degrees"
+			<< " offset from the central direction" << std::endl;
+	}
+	vctRot3 R(vctAxAnRot3(Raxis, Rangle));
+	vctRot3 R2(vctAxAnRot3(Raxis2, Rangle2));
+	n = R*mean;   // Zwrap
+	n2 = R2*mean;
+}
+
+
 
 void CreateMesh(cisstMesh &mesh,
   const std::string &meshLoadPath,
@@ -1017,16 +1088,26 @@ void GenerateSubSamples(cisstMesh &pts,
 		}
 		subsampledPts[i] = pts.vertices[currnum];
 		subsampledNormals[i] = pts.vertexNormals[currnum];
-#if 0
-		if (subsampledPts[i][0] < 6.00 && subsampledPts[i][0] > -6.50 &&
-			subsampledPts[i][1] < 33.00 && subsampledPts[i][1] > 5.00 &&
-			subsampledPts[i][2] < -5.00 && subsampledPts[i][2] > -21.00) 
+#if 0 // sample from visible portion of left nostril
+		if (subsampledPts[i][0] < 5.50 && subsampledPts[i][0] > -1.00 &&	// left to right
+			subsampledPts[i][1] < 0.00 && subsampledPts[i][1] > -30.00 &&	// front to back
+			subsampledPts[i][2] < 20.00 && subsampledPts[i][2] > -12.00)	// top to bottom
 			continue;
 		else 
 			i--;
 		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
 #endif
+#if 0 // sample from visible portion of pelvis
+		if (//subsampledPts[i][0] < 5.50 && subsampledPts[i][0] > -1.00 &&	// left to right
+			//subsampledPts[i][1] < 0.00 && subsampledPts[i][1] > -30.00 &&	// front to back
+			subsampledPts[i][2] > 35.00 || subsampledPts[i][2] < -50.00)	// top to bottom
+			continue;
+		else
+			i--;
+		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
+#endif
 	}
+	printf("%d subsamples generated\n", nSubsamples);
 
 	pts.vertices = subsampledPts;
 	pts.vertexNormals = subsampledNormals;
@@ -1487,6 +1568,190 @@ void GenerateSampleRandomNoise(unsigned int randSeed, unsigned int &randSeqPos,
   }
 }
 
+// Generate 2 sample noise having a random position covariance with the
+//  specified eigenvalues and random orientation with the specified
+//  circular standard deviation and eccentricity and one without eccentricity.
+void GenerateSampleRandomNoise2(unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	vct3 &covEigenvalues,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3>   &noisySampleNorms2,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseL,
+	vctDynamicVector<vct3x2> &noiseL2,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_NoisySamples,
+	std::string *SavePath_Cov,
+	std::string *savePath_L,
+	std::string *savePath_L2)
+{
+	// initialize random numbers
+	cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	cisstRandomSeq.SetSeed(randSeed);
+	cisstRandomSeq.SetSequencePosition(randSeqPos);
+
+	unsigned int nSamps = samples.size();
+	unsigned int nOutliers = (unsigned int)(percentOutliers*(double)nSamps);
+	unsigned int nNoisy = nSamps - nOutliers;
+
+	noisySamples.SetSize(nSamps);
+	noisySampleNorms.SetSize(nSamps);
+	noisySampleNorms2.SetSize(nSamps);
+	sampleCov.SetSize(nSamps);
+	sampleInvCov.SetSize(nSamps);
+	noiseL.SetSize(nSamps);
+	noiseL2.SetSize(nSamps);
+
+	vct3x3 M, M0, invM0, Ninv;
+	vct3 n;
+	vctRot3 R;
+	vct3 x(1.0, 0.0, 0.0);
+	vct3 y(0.0, 1.0, 0.0);
+	vct3 z(0.0, 0.0, 1.0);
+
+	// set eigenvalues of noise covariance
+	//  assume a z-axis normal orientation
+	M0.SetAll(0.0);
+	M0.Element(0, 0) = covEigenvalues[0];
+	M0.Element(1, 1) = covEigenvalues[1];
+	M0.Element(2, 2) = covEigenvalues[2];
+	invM0.SetAll(0.0);
+	invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
+	invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
+	invM0.Element(2, 2) = 1.0 / M0.Element(2, 2);
+
+	// add random noise to samples such that noise perpendicular to the
+	//  sample triangle is different than noise in-plane with triangle
+	for (unsigned int i = 0; i < nNoisy; i++)
+	{
+		//=== Generate position noise ===//
+
+		// Generate random noise covariance for this sample
+		vctRot3 Rcov;
+		GenerateRandomRotation(randSeed, randSeqPos, 0.0, 180.0, Rcov);
+		M = Rcov.Transpose()*M0*Rcov;
+
+		// generate Guassian noise
+		vct3 p;
+		Draw3DGaussianSample(randnStream, M, p);
+
+		// apply Gaussian noise to the sample
+		noisySamples(i) = samples(i) + p;
+		sampleCov(i) = M;
+		sampleInvCov(i) = Rcov.Transpose()*invM0*Rcov;
+
+		//=== Generate orientation noise ===//
+
+		// Fisher Noise Model
+		// Uses the approximation that 1/k ~= circSD^2
+		//double k = 1.0/(circStdDev*circStdDev);
+		//DrawFisherSample( randnStream, k, sampleNorms(i), noisySampleNorms(i) );
+
+		// Generate a major/minor axis for this sample
+		vctFixedSizeMatrix<double, 3, 2> L;
+		// generate a random major/minor axis in the x-y plane
+		double xyAngle = cisstRandomSeq.ExtractRandomDouble(0.0, cmnPI);
+		vctRot3 Rz(vctAxAnRot3(z, xyAngle));
+		vct3 majorXY = Rz*x;
+		vct3 minorXY = Rz*y;
+		// rotate major/minor axis to be perpendicular to the sample orientation
+		//  apply rotation that takes z-axis to the sample norm
+		R = XProdRotation(sampleNorms(i), z);  // rotation takes sample norm to z-axis
+		L.Column(0) = R.Transpose()*majorXY;
+		L.Column(1) = R.Transpose()*minorXY;
+
+		// GIMLOP Noise Model
+		// Use the approximation that k ~= 1/circSD^2
+		double k = 1.0 / (circStdDev*circStdDev);
+		double B = circEccentricity*k / 2.0;
+		Draw2GIMLOPSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i), noisySampleNorms2(i));
+
+		// TODO: change to 3x3 L allowing for a different central direction
+		//       than the observed sample
+		// Reorient "reported" L to be perpendicular to the noisySample rather than
+		//  the non-noisy sample (do this because the noisy sample will be used as
+		//  the central direction in the GIMLOP noise model to simulate an observed
+		//  data point with unknown ground truth orientation)
+		// Compute rotation from sample norm to noisy sample norm
+		vctRot3 Rl = XProdRotation(sampleNorms(i), noisySampleNorms(i));
+		vctRot3 Rl2 = XProdRotation(sampleNorms(i), noisySampleNorms2(i));
+		noiseL(i) = Rl*L;
+		noiseL2(i) = Rl2*L;
+	}
+
+	// TODO: how to define noise model for outliers (i.e. what to assign
+	//       as covariance, k, e, and L values?)
+	// TODO: need seperate k, e, and L for each sample (not just seperate L) if
+	//       using outliers?
+	// add outliers to samples such that outliers are offset outward from
+	//  the shape (offset along the point normal direction)
+	vctRot3 Routlier;
+	for (unsigned int k = nNoisy; k < nSamps; k++)
+	{
+		//=== Generate position outlier ===//
+
+		double offset = cisstRandomSeq.ExtractRandomDouble(minPosOffsetOutlier, maxPosOffsetOutlier);
+		noisySamples.at(k) = samples.at(k) + offset*sampleNorms.at(k);
+		sampleCov(k) = vct3x3::Eye();
+		sampleInvCov(k) = vct3x3::Eye();
+
+
+		//=== Generate orientation outlier ===//
+
+		// Generate random rotation on the unit sphere with uniform rotation angle
+		//  within the specified range for the outliers
+		GenerateRandomRotation(randSeed, randSeqPos, minAngOffsetOutlier, maxAngOffsetOutlier, Routlier);
+		noisySampleNorms.at(k) = Routlier*sampleNorms.at(k);
+		// define L
+		// find any two axis perpendicular to the noisy sample and to each other
+		vct3 xProd = vctCrossProduct(z, noisySampleNorms.at(k));
+		vct3 tmp1, tmp2;
+		if (xProd.Norm() <= 1.0e-8)  // protect from divide by zero
+		{ // noisy samples points down z axis
+			tmp1 = x;
+			tmp2 = y;
+		}
+		else
+		{
+			tmp1 = xProd.Normalized();
+			tmp2 = vctCrossProduct(tmp1, noisySampleNorms.at(k));
+			tmp2.NormalizedSelf();
+		}
+		noiseL(k).Column(0) = tmp1;
+		noiseL(k).Column(1) = tmp2;
+	}
+	randSeqPos = cisstRandomSeq.GetSequencePosition();
+
+	// save noisy samples
+	if (SavePath_NoisySamples)
+	{
+		std::string noisySampsSavePath = *SavePath_NoisySamples;
+		if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples, noisySampleNorms) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
+	// save cov
+	if (SavePath_Cov)
+	{
+		WriteToFile_Cov(sampleCov, *SavePath_Cov);
+	}
+	// save L
+	if (savePath_L)
+	{
+		WriteToFile_L(noiseL, *savePath_L);
+		WriteToFile_L(noiseL2, *savePath_L2);
+	}
+}
+
 // Read sample noise having the specified standard deviation of
 //  noise in directions parallel and perpendicular to the triangle
 //  plane from which the sample was drawn.
@@ -1862,6 +2127,230 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   {
     WriteToFile_L(noiseL, *savePath_L);
   }
+}
+
+// Generate 2 sample noise having the specified standard deviation of
+//  noise in directions parallel and perpendicular to the triangle
+//  plane from which the sample was drawn (one with ecc, one without).
+void GenerateSampleSurfaceNoise2(unsigned int randSeed, unsigned int &randSeqPos,
+	std::ifstream &randnStream,
+	double StdDevInPlane, double StdDevPerpPlane,
+	double circStdDev, double circEccentricity,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	vctDynamicVector<vct3>   &noisySamples,
+	vctDynamicVector<vct3>   &noisySampleNorms,
+	vctDynamicVector<vct3>   &noisySampleNorms2,
+	vctDynamicVector<vct3x3> &sampleCov,
+	vctDynamicVector<vct3x3> &sampleInvCov,
+	vctDynamicVector<vct3x2> &noiseL,
+	vctDynamicVector<vct3x2> &noiseL2,
+	double percentOutliers,
+	double minPosOffsetOutlier, double maxPosOffsetOutlier,
+	double minAngOffsetOutlier, double maxAngOffsetOutlier,
+	std::string *SavePath_NoisySamples,
+	std::string *SavePath_NoisySamples2,
+	std::string *SavePath_Cov,
+	std::string *savePath_L,
+	std::string *savePath_L2)
+{
+	// initialize random numbers
+	cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	cisstRandomSeq.SetSeed(randSeed);
+	cisstRandomSeq.SetSequencePosition(randSeqPos);
+
+	unsigned int nSamps = samples.size();
+	unsigned int nOutliers = (unsigned int)(percentOutliers*(double)nSamps);
+	unsigned int nNoisy = nSamps - nOutliers;
+
+	noisySamples.SetSize(nSamps);
+	noisySampleNorms.SetSize(nSamps);
+	noisySampleNorms2.SetSize(nSamps);
+	sampleCov.SetSize(nSamps);
+	sampleInvCov.SetSize(nSamps);
+	noiseL.SetSize(nSamps);
+	noiseL2.SetSize(nSamps);
+
+	vct3x3 M, M0, invM0, Ninv;
+	vct3 n;
+	vctRot3 R;
+	vct3 x(1.0, 0.0, 0.0);
+	vct3 y(0.0, 1.0, 0.0);
+	vct3 z(0.0, 0.0, 1.0);
+
+	// set eigenvalues of noise covariance
+	//  assume a z-axis normal orientation
+	M0.SetAll(0.0);
+	M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
+	M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
+	M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+	invM0.SetAll(0.0);
+	invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
+	invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
+	invM0.Element(2, 2) = 1.0 / M0.Element(2, 2);
+
+	// add random noise to samples such that noise perpendicular to the
+	//  sample triangle is different than noise in-plane with triangle
+	for (unsigned int i = 0; i < nNoisy; i++)
+	{
+		//=== Generate position noise ===//
+
+		// Define the noise covariance for this sample
+		//  find rotation to rotate the sample normal to the z-axis
+		R = XProdRotation(sampleNorms(i), z);
+		// compute noise covariance M of this sample
+		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
+		M = R.Transpose()*M0*R;
+
+		// generate Guassian noise
+		vct3 p;
+		Draw3DGaussianSample(randnStream, M, p);
+
+		// apply Gaussian noise to the sample
+		noisySamples(i) = samples(i) + p;
+		sampleCov(i) = M;
+		sampleInvCov(i) = R.Transpose()*invM0*R;
+
+		if (circStdDev > 0.0)
+		{
+			//=== Generate orientation noise ===//
+
+			// Fisher Noise Model
+			// Uses the approximation that 1/k ~= circSD^2
+			//double k = 1.0/(circStdDev*circStdDev);
+			//DrawFisherSample( randnStream, k, sampleNorms(i), noisySampleNorms(i) );
+
+			// Generate a major/minor axis for this sample
+			vctFixedSizeMatrix<double, 3, 2> L;
+			// generate a random major/minor axis in the x-y plane
+			double xyAngle = cisstRandomSeq.ExtractRandomDouble(0.0, cmnPI);
+			vctRot3 Rz(vctAxAnRot3(z, xyAngle));
+			vct3 majorXY = Rz*x;
+			vct3 minorXY = Rz*y;
+			// rotate major/minor axis to be perpendicular to the sample orientation
+			//  apply rotation that takes z-axis to the sample norm
+			L.Column(0) = R.Transpose()*majorXY;
+			L.Column(1) = R.Transpose()*minorXY;
+
+			// GIMLOP Noise Model
+			// Use the approximation that k ~= 1/circSD^2
+			double k = 1.0 / (circStdDev*circStdDev);
+			double B = circEccentricity*k / 2.0;
+			Draw2GIMLOPSample(randnStream, k, B, sampleNorms(i), L, noisySampleNorms(i), noisySampleNorms2(i));
+
+			// Reorient "reported" L to be perpendicular to the noisySample rather than
+			//  the non-noisy sample (do this because the noisy sample will be used as
+			//  the central direction in the GIMLOP noise model to simulate an observed
+			//  data point with unknown ground truth orientation)
+			// Compute rotation from sample norm to noisy sample norm
+			vctRot3 Rl = XProdRotation(sampleNorms(i), noisySampleNorms(i));
+			vctRot3 Rl2 = XProdRotation(sampleNorms(i), noisySampleNorms2(i));
+			noiseL(i) = Rl*L;
+			noiseL2(i) = Rl2*L;
+		}
+		else
+		{
+			noisySampleNorms(i) = sampleNorms(i);
+			noisySampleNorms2(i) = sampleNorms(i);
+			noiseL(i) = vct3x2(0.0);
+			noiseL2(i) = vct3x2(0.0);
+		}
+	}
+
+	// add outliers to samples such that outliers are offset outward from
+	//  the shape (offset along the point normal direction)
+	for (unsigned int k = nNoisy; k < nSamps; k++)
+	{
+		//=== Generate position outlier ===//
+
+		// generate a random outlier
+		double offset = cisstRandomSeq.ExtractRandomDouble(minPosOffsetOutlier, maxPosOffsetOutlier);
+		noisySamples.at(k) = samples.at(k) + offset*sampleNorms.at(k);
+
+		// Define the noise covariance for this sample
+		//  find rotation to rotate the sample normal to the z-axis
+		R = XProdRotation(sampleNorms.at(k), z);
+		// compute noise covariance M of this sample
+		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back
+		M = R.Transpose()*M0*R;
+		sampleCov.at(k) = M;
+		sampleInvCov.at(k) = R.Transpose()*invM0*R;
+
+		if (maxAngOffsetOutlier > 0.0)
+		{
+			//=== Generate orientation outlier ===//
+
+			// Generate random rotation on the unit sphere with uniform rotation angle
+			//  use z-axis as starting point for random rotation axis
+			//  set rotation axis along random direction on the x-y plane
+			//  generate uniform rotation angle 0-180 deg
+			//  apply rotation about the rotation axis to the z-axis to get the random rotation axis
+			//  generate a uniformly distributed rotation angle for the random rotation axis
+			vct3 z(0.0, 0.0, 1.0);
+			double xyDir = cisstRandomSeq.ExtractRandomDouble(0.0, 359.999)*cmnPI / 180.0;
+			vct3 xyAx(cos(xyDir), sin(xyDir), 0.0);
+			double xyAn = cisstRandomSeq.ExtractRandomDouble(0.0, 180.0)*cmnPI / 180.0;
+			vctAxAnRot3 Rxy(xyAx, xyAn);
+			vct3 rndAx = vctRot3(Rxy)*z;
+			double rndAn = cisstRandomSeq.ExtractRandomDouble(minAngOffsetOutlier, maxAngOffsetOutlier)*(cmnPI / 180.0);
+			vctAxAnRot3 Rrod(rndAx, rndAn);
+			noisySampleNorms.at(k) = vctRot3(Rrod)*sampleNorms.at(k);
+			// set L to any set of axis perpendicular to the sample
+			vct3 a = vctCrossProduct(z, sampleNorms.at(k));
+			if (a.Norm() > 0.001)
+			{
+				noiseL.at(k).Column(0) = a.NormalizedSelf();
+				noiseL.at(k).Column(1) = vctCrossProduct(a, sampleNorms.at(k)).Normalized();
+			}
+			else
+			{
+				noiseL.at(k).Column(0) = vct3(1.0, 0.0, 0.0);
+				noiseL.at(k).Column(1) = vct3(0.0, 1.0, 0.0);
+			}
+		}
+		else
+		{
+			noisySampleNorms.at(k) = sampleNorms.at(k);
+			noiseL.at(k) = vct3x2(0.0);
+		}
+	}
+	randSeqPos = cisstRandomSeq.GetSequencePosition();
+
+	// save noisy samples
+	if (SavePath_NoisySamples)
+	{
+		std::string noisySampsSavePath = *SavePath_NoisySamples;
+		if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath, noisySamples, noisySampleNorms) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
+	// save noisy samples
+	if (SavePath_NoisySamples2)
+	{
+		std::string noisySampsSavePath2 = *SavePath_NoisySamples2;
+		if (cisstPointCloud::WritePointCloudToFile(noisySampsSavePath2, noisySamples, noisySampleNorms2) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
+
+	// save cov
+	if (SavePath_Cov)
+	{
+		WriteToFile_Cov(sampleCov, *SavePath_Cov);
+	}
+	// save L
+	if (savePath_L)
+	{
+		WriteToFile_L(noiseL, *savePath_L);
+	}
+	if (savePath_L2)
+	{
+		WriteToFile_L(noiseL2, *savePath_L2);
+	}
 }
 
 int ReadShapeModel(cisstMesh &mesh, const std::string &modelLoadPath, int numModes)

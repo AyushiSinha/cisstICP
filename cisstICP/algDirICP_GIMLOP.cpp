@@ -85,7 +85,6 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 
 	int nGoodSamples = 0;
 
-	vct3x3 Mnew, Minv;
 	vct3 residual;
 
 	// NOTE: if using a method with outlier rejection, it may be desirable to
@@ -95,10 +94,8 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 		//if (outlierFlags[i])	continue;	// skip outliers
 
 		residual = matchPts[i] - Freg * samplePts[i];
-		Mnew = Freg.Rotation() * M[i] * Freg.Rotation().Transpose() ;
-		ComputeCovInverse_NonIter(Mnew, Minv);
 
-		sqrMahalDist = residual*Minv*residual;
+		sqrMahalDist = residual*invM[i]*residual;
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 

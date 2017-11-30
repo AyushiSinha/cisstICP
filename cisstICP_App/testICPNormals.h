@@ -198,10 +198,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   std::string saveSamplesPath		= outputDir + "SaveSamples";
   std::string saveSubSamplesPath	= outputDir + "SaveSubSamples.pts";
   std::string saveNoisySamplesPath	= outputDir + "SaveNoisySamples";
+  std::string saveNoisySamplesPath2	= outputDir + "SaveEccNoisySamples";
   std::string saveOffsetXfmPath		= outputDir + "SaveOffsetXfm.txt";
   std::string saveRegXfmPath		= outputDir + "SaveRegXfm.txt";
   std::string saveModeWeightsPath	= outputDir + "saveModeWeights.txt";
   std::string savePath_L			= outputDir + "SaveL.pts";
+  std::string savePath_L2			= outputDir + "SaveEccL.pts";
   std::string savePath_Cov			= outputDir + "SaveCov.pts";
   std::string meshDir				= outputDir + "estimatedMesh.ply";
   std::string initmeshDir			= outputDir + "initMesh.ply";
@@ -215,10 +217,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   vctDynamicVector<vct3>    sampleNorms;
   vctDynamicVector<vct3>    noisySamples;
   vctDynamicVector<vct3>    noisySampleNorms;
+  vctDynamicVector<vct3>    noisySampleNorms2;
   vctDynamicVector<unsigned int>  sampleDatums;
   vctDynamicVector<vct3x3>  sampleNoiseCov;
   vctDynamicVector<vct3x3>  sampleNoiseInvCov;
   vctDynamicVector<vct3x2>  sampleNoiseL;
+  vctDynamicVector<vct3x2>  sampleNoiseL2;
 
   vctDynamicVector<double> weight;
 
@@ -239,7 +243,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double minOffsetAng = 6.0;  // 20.0;
   double maxOffsetAng = 12.0; // 60.0;
 
-  double percentOutliers	 = 0.05; // 0.0;
+  double percentOutliers	 = 0.0; // 0.05;
   double minPosOffsetOutlier = 5.0;  // 15.0;
   double maxPosOffsetOutlier = 10.0; // 20.0;
   double minAngOffsetOutlier = 0.0;  // 15.0;
@@ -440,10 +444,27 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  }
   }
 
+  //noisySampleNorms.SetSize(nSamples);
+  //noisySampleNorms2.SetSize(nSamples);
   // Add noise to samples
   if (!cmdOpts.useDefaultCov || !cmdOpts.useDefaultAxes)
   {
-	  ReadSampleSurfaceNoise(cmdOpts.useDefaultCov, cmdOpts.useDefaultAxes,
+	  if (algType == DirAlgType_GIMLOP || algType == DirAlgType_GDIMLOP)
+		  ReadSampleSurfaceNoise(cmdOpts.useDefaultCov, cmdOpts.useDefaultAxes,
+			  randSeed1, randSeqPos1, randnStream,
+			  sampleNoiseInPlane, sampleNoisePerpPlane,
+			  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
+			  samples, sampleNorms,
+			  noisySamples, noisySampleNorms2,
+			  sampleNoiseCov, sampleNoiseInvCov, sampleNoiseL,
+			  percentOutliers,
+			  minPosOffsetOutlier, maxPosOffsetOutlier,
+			  minAngOffsetOutlier, maxAngOffsetOutlier,
+			  &saveNoisySamplesPath,
+			  cmdOpts.cov, &savePath_Cov,
+			  cmdOpts.axes, &savePath_L2); 
+	  else
+		  ReadSampleSurfaceNoise(cmdOpts.useDefaultCov, cmdOpts.useDefaultAxes,
 		  randSeed1, randSeqPos1, randnStream,
 		  sampleNoiseInPlane, sampleNoisePerpPlane,
 		  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
@@ -455,11 +476,25 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  minAngOffsetOutlier, maxAngOffsetOutlier,
 		  &saveNoisySamplesPath,
 		  cmdOpts.cov, &savePath_Cov,
-		  cmdOpts.axes, &savePath_L); 
+		  cmdOpts.axes, &savePath_L);
   }
   else
   {
-	  GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
+	  if (algType == DirAlgType_GIMLOP || algType == DirAlgType_GDIMLOP)
+		  GenerateSampleSurfaceNoise2(randSeed1, randSeqPos1, randnStream, 
+			  sampleNoiseInPlane, sampleNoisePerpPlane,
+			  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
+			  samples, sampleNorms,
+			  noisySamples, noisySampleNorms2, noisySampleNorms,
+			  sampleNoiseCov, sampleNoiseInvCov,
+			  sampleNoiseL, sampleNoiseL2,
+			  percentOutliers,
+			  minPosOffsetOutlier, maxPosOffsetOutlier,
+			  minAngOffsetOutlier, maxAngOffsetOutlier,
+			  &saveNoisySamplesPath2, &saveNoisySamplesPath,
+			  &savePath_Cov, &savePath_L2, &savePath_L);
+	  else 
+		  GenerateSampleSurfaceNoise(randSeed1, randSeqPos1, randnStream,
 		  sampleNoiseInPlane, sampleNoisePerpPlane,
 		  sampleNoiseCircSDDeg*cmnPI / 180.0, sampleNoiseEccentricity,
 		  samples, sampleNorms,
@@ -477,7 +512,10 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  for (int i = 0; i < nSamples; i++)
 	  {
 		  noisySamples[i] = mesh_source.vertices[i];
-		  noisySampleNorms[i] = mesh_source.vertexNormals[i];
+		  if (algType == DirAlgType_GIMLOP || algType == DirAlgType_GDIMLOP)
+			  noisySampleNorms2[i] = mesh_source.vertexNormals[i];
+		  else
+			  noisySampleNorms[i] = mesh_source.vertexNormals[i];
 	  }
   }
 
@@ -704,7 +742,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 
     // create algorithm
     algDirICP_GIMLOP_Mesh *pAlg = new algDirICP_GIMLOP_Mesh(
-      pTreeMesh, noisySamples, noisySampleNorms,
+      pTreeMesh, noisySamples, noisySampleNorms2,
 	  argK, argB, sampleNoiseL, sampleNoiseCov /*sampleNoiseInvCov*/ );
     //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
     pICPAlg = pAlg;
@@ -751,12 +789,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  algDirICP_GDIMLOP *pAlg;
 	  if (bScale)
 		  pAlg = new algDirICP_GDIMLOP(
-			  pTreeMesh, noisySamples, noisySampleNorms,
+			  pTreeMesh, noisySamples, noisySampleNorms2,
 			  argK, argB, sampleNoiseL, sampleNoiseCov,
 			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);
 	  else
 		  pAlg = new algDirICP_GDIMLOP(
-			  pTreeMesh, noisySamples, noisySampleNorms,
+			  pTreeMesh, noisySamples, noisySampleNorms2,
 			  argK, argB, sampleNoiseL, sampleNoiseCov,
 			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);	// for cases when scale is specified, but must not be optimized over
 	  pAlg->SetConstraints(shapeparambounds);
@@ -799,8 +837,17 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   samplePts.vertices.SetSize(noisySamples.size());
   samplePts.vertexNormals.SetSize(noisySamples.size());
   samplePts.vertices = noisySamples;
-  samplePts.vertexNormals = noisySampleNorms;
-  samplePts.SavePLY(outputDir + "/Pts.ply");
+  if (algType == DirAlgType_GIMLOP || algType == DirAlgType_GDIMLOP)
+  {
+	  samplePts.vertexNormals = noisySampleNorms2;
+	  samplePts.SavePLY(outputDir + "/EccPts.ply");
+  }
+  if (!noisySampleNorms.empty())
+  {
+	  samplePts.vertexNormals = noisySampleNorms;
+	  samplePts.SavePLY(outputDir + "/Pts.ply");
+  }
+
 
   // ICP Options
   //cisstICP::OptionsNormals opt;
@@ -895,18 +942,38 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   //}
   //mesh_source.SavePLY(outputDir + "/matchedMesh.ply");
 
-  for (int i = 0; i < noisySamples.size(); i++) {
-	  samplePts.vertices[i] = Fi * noisySamples[i];
-	  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms[i];
-  }
-  //samplePts.SavePLY("currentSamples0.ply");
-  samplePts.SavePLY(outputDir + "/initPts.ply");
+  samplePts.vertices.SetSize(noisySamples.size());
+  samplePts.vertexNormals.SetSize(noisySamples.size());
+  if (algType == DirAlgType_GIMLOP || algType == DirAlgType_GDIMLOP)
+  {
+	  for (int i = 0; i < noisySamples.size(); i++) {
+		  samplePts.vertices[i] = Fi * noisySamples[i];
+		  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms2[i];
+	  }
+	  //samplePts.SavePLY("currentSamples0.ply");
+	  samplePts.SavePLY(outputDir + "/initPts.ply");
 
-  for (int i = 0; i < noisySamples.size(); i++) {
-	  samplePts.vertices[i] = Freg * noisySamples[i];
-	  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms[i];
+	  for (int i = 0; i < noisySamples.size(); i++) {
+		  samplePts.vertices[i] = Freg * noisySamples[i];
+		  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms2[i];
+	  }
+	  samplePts.SavePLY(outputDir + "/finalPts.ply");
   }
-  samplePts.SavePLY(outputDir + "/finalPts.ply");
+  else
+  {
+	  for (int i = 0; i < noisySamples.size(); i++) {
+		  samplePts.vertices[i] = Fi * noisySamples[i];
+		  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms[i];
+	  }
+	  //samplePts.SavePLY("currentSamples0.ply");
+	  samplePts.SavePLY(outputDir + "/initPts.ply");
+
+	  for (int i = 0; i < noisySamples.size(); i++) {
+		  samplePts.vertices[i] = Freg * noisySamples[i];
+		  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms[i];
+	  }
+	  samplePts.SavePLY(outputDir + "/finalPts.ply");
+  }
 
   if (pICPAlg) delete pICPAlg;
 
