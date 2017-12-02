@@ -902,9 +902,18 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   resultStream << std::endl;
   if (cmdOpts.deformable/*algType == DirAlgType_DIMLOP*/)
   {
-	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight << std::endl;
+	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight;
+	  if (cmdOpts.bScale)
+		  resultStream << "\tdScl: " << scale << std::endl;
+	  else
+		  resultStream << std::endl;
+	  pICPAlg->ReturnScale(scale);
 	  pICPAlg->ReturnShapeParam(mesh_target.Si);
-	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << "\tdShp: " << weight - mesh_target.Si << std::endl;
+	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << "\tdShp: " << weight - mesh_target.Si;
+	  if (cmdOpts.bScale)
+		  resultStream << "\tdScl: " << scale << std::endl;
+	  else
+		  resultStream << std::endl;
   }
   else
   {
@@ -954,7 +963,10 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  samplePts.SavePLY(outputDir + "/initPts.ply");
 
 	  for (int i = 0; i < noisySamples.size(); i++) {
-		  samplePts.vertices[i] = Freg * noisySamples[i];
+		  if (bScale)
+			  samplePts.vertices[i] = Freg * noisySamples[i] * scale;
+		  else
+			  samplePts.vertices[i] = Freg * noisySamples[i];
 		  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms2[i];
 	  }
 	  samplePts.SavePLY(outputDir + "/finalPts.ply");
@@ -969,7 +981,10 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  samplePts.SavePLY(outputDir + "/initPts.ply");
 
 	  for (int i = 0; i < noisySamples.size(); i++) {
-		  samplePts.vertices[i] = Freg * noisySamples[i];
+		  if (bScale)
+			  samplePts.vertices[i] = Freg * noisySamples[i] * scale;
+		  else
+			  samplePts.vertices[i] = Freg * noisySamples[i];
 		  samplePts.vertexNormals[i] = Freg.Rotation() * noisySampleNorms[i];
 	  }
 	  samplePts.SavePLY(outputDir + "/finalPts.ply");

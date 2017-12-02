@@ -701,8 +701,17 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	resultStream << std::endl;
 	if (algType == AlgType_DIMLP)
 	{
-		resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight << std::endl;
-		resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << "\tdShp: " << weight - mesh.Si << std::endl;
+		resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight;
+		if (cmdOpts.bScale)
+			resultStream << "\tdScl: " << scale << std::endl;
+		else
+			resultStream << std::endl;
+		pICPAlg->ReturnScale(scale);
+		resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << "\tdShp: " << weight - mesh.Si;
+		if (cmdOpts.bScale)
+			resultStream << "\tdScl: " << scale << std::endl;
+		else
+			resultStream << std::endl;
 	}
 	else
 	{
@@ -737,8 +746,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//samplePts.SavePLY("currentSamples0.ply");
 	samplePts.SavePLY(outputDir + "/initPts.ply");
 
-	for (int i = 0; i < noisySamples.size(); i++)
-		samplePts.vertices[i] = Freg * noisySamples[i];
+	for (int i = 0; i < noisySamples.size(); i++) {
+		if (bScale)
+			samplePts.vertices[i] = Freg * noisySamples[i] * scale;
+		else
+			samplePts.vertices[i] = Freg * noisySamples[i];
+	}
 	samplePts.SavePLY(outputDir + "/finalPts.ply");
 
 	if (pICPAlg) delete pICPAlg;
