@@ -57,6 +57,9 @@ cmdLineInt 		nModes("modes"), nSamples("samples"),
 cmdLineFloat	Scale("scale"),
 				MinPos("minpos"), MaxPos("maxpos"),
 				MinAng("minang"), MaxAng("maxang"),
+				pOutliers("poutliers"),
+				outMinPos("outminpos"), outMaxPos("outmaxpos"),
+				outMinAng("outminang"), outMaxAng("outmaxang"),
 				NoiseInPlane("noiseinplane"),
 				NoisePerpPlane("noiseperpplane"),
 				NoiseDeg("noisedeg"), NoiseEcc("noiseecc"),
@@ -76,6 +79,9 @@ cmdLineReadable* params[] =
 	&Scale,					// floats
 	&MinPos, &MaxPos,
 	&MinAng, &MaxAng,
+	&pOutliers,
+	&outMinPos, &outMaxPos,
+	&outMinAng, &outMaxAng,
 	&NoiseInPlane, 
 	&NoisePerpPlane,
 	&NoiseDeg, &NoiseEcc,
@@ -158,19 +164,34 @@ void SetParams()
 	// Maximum orientation offset
 	params[i]->description = strdup("Enter the upper bound for orientation offset (default = 12)\n\n");
 	i++;
-	// Maximum orientation offset
+	// Percent outliers
+	params[i]->description = strdup("Enter the percentage of outliers to add to sampled points (default = 0%)\n\n");
+	i++;
+	// Minimum positional offset for outliers
+	params[i]->description = strdup("Enter the lower bound for outlier positional offset (default = 2)\n\n");
+	i++;
+	// Maximum positional offset for outliers
+	params[i]->description = strdup("Enter the upper bound for outlier positional offset (default = 5)\n\n");
+	i++;
+	// Minimum orientation offset for outliers
+	params[i]->description = strdup("Enter the lower bound for outlier orientation offset (default = 2)\n\n");
+	i++;
+	// Maximum orientation offset for outliers
+	params[i]->description = strdup("Enter the upper bound for outlier orientation offset (default = 5)\n\n");
+	i++;
+	// In-plane positional noise SD
 	params[i]->description = strdup("Standard deviation of positional noise in plane (default = 1)\n\n");
 	i++;
-	// Maximum orientation offset
+	// Out-of-plane positional noise SD
 	params[i]->description = strdup("Standard deviation of positional noise out of plane (default = 1)\n\n");
 	i++;
-	// Maximum orientation offset
+	// Angular noise SD
 	params[i]->description = strdup("Standard deviation of angular noise in degrees (default = 2)\n\n");
 	i++;
-	// Maximum orientation offset
+	// Angular noise eccentricity
 	params[i]->description = strdup("Eccentricity of angular noise (default = 0.5)\n\n");
 	i++;
-	// Scale optimization
+	// Shape parameter constraint
 	params[i]->description = strdup("Constrain shape parameter search between [-n, n] (default n = 3.0)\n\n");
 	i++;
 	// Scale optimization
@@ -205,6 +226,11 @@ void Usage(const char* exec)
 	printf("\t--%s <max pos offset>\n", MaxPos.name);
 	printf("\t--%s <min ang offset>\n", MinAng.name);
 	printf("\t--%s <min ang offset>\n", MaxAng.name);
+	printf("\t--%s <percent outliers>\n", pOutliers.name);
+	printf("\t--%s <outlier min pos offset>\n", outMinPos.name);
+	printf("\t--%s <outlier max pos offset>\n", outMaxPos.name);
+	printf("\t--%s <outlier min ang offset>\n", outMinAng.name);
+	printf("\t--%s <outlier min ang offset>\n", outMaxAng.name);
 	printf("\t--%s <in plane noise>\n", NoiseInPlane.name);
 	printf("\t--%s <out of plane noise>\n", NoisePerpPlane.name);
 	printf("\t--%s <angular noise (deg)>\n", NoiseDeg.name);
@@ -236,6 +262,11 @@ void Help(const char* exec)
 	printf("\t--%s <max pos offset>\n\t\t%s", MaxPos.name, MaxPos.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MinAng.name, MinAng.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MaxAng.name, MaxAng.description);
+	printf("\t--%s <percent outliers>\n\t\t%s", pOutliers.name, pOutliers.description);
+	printf("\t--%s <outlier min pos offset>\n\t\t%s", outMinPos.name, outMinPos.description);
+	printf("\t--%s <outlier max pos offset>\n\t\t%s", outMaxPos.name, outMaxPos.description);
+	printf("\t--%s <outlier min ang offset>\n\t\t%s", outMinAng.name, outMinAng.description);
+	printf("\t--%s <outlier min ang offset>\n\t\t%s", outMaxAng.name, outMaxAng.description);
 	printf("\t--%s <in plane noise>\n\t\t%s", NoiseInPlane.name, NoiseInPlane.description);
 	printf("\t--%s <out of plane noise>\n\t\t%s", NoisePerpPlane.name, NoisePerpPlane.description);
 	printf("\t--%s <angular noise (deg)>\n\t\t%s", NoiseDeg.name, NoiseDeg.description);
@@ -421,6 +452,31 @@ int main( int argc, char* argv[] )
 	if (MaxAng.set) {
 		cmdLineOpts.maxang = MaxAng.value;
 		cmdLineOpts.useDefaultMaxAng = false;
+	}
+
+	if (pOutliers.set) {
+		cmdLineOpts.poutliers = pOutliers.value;
+		cmdLineOpts.useDefaultNumOutliers = false;
+	}
+
+	if (outMinPos.set) {
+		cmdLineOpts.outminpos = outMinPos.value;
+		cmdLineOpts.useDefaultOutMinPos = false;
+	}
+
+	if (outMaxPos.set) {
+		cmdLineOpts.outmaxpos = outMaxPos.value;
+		cmdLineOpts.useDefaultOutMaxPos = false;
+	}
+
+	if (outMinAng.set) {
+		cmdLineOpts.outminang = outMinAng.value;
+		cmdLineOpts.useDefaultOutMinAng = false;
+	}
+
+	if (outMaxAng.set) {
+		cmdLineOpts.outmaxang = outMaxAng.value;
+		cmdLineOpts.useDefaultOutMaxAng = false;
 	}
 
 	if (NoiseInPlane.set) {

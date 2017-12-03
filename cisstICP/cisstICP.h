@@ -79,6 +79,9 @@ public:
 		float scale;
 		float minpos, maxpos;
 		float minang, maxang;
+		float poutliers;
+		float outminpos, outmaxpos;
+		float outminang, outmaxang;
 		float noiseinplane, noiseperpplane;
 		float noisedeg, noiseecc;
 		float spbounds;
@@ -104,6 +107,11 @@ public:
 		bool useDefaultMaxPos;
 		bool useDefaultMinAng;
 		bool useDefaultMaxAng;
+		bool useDefaultNumOutliers;
+		bool useDefaultOutMinPos;
+		bool useDefaultOutMaxPos;
+		bool useDefaultOutMinAng;
+		bool useDefaultOutMaxAng;
 		bool useDefaultNoiseInPlane;
 		bool useDefaultNoisePerpPlane;
 		bool useDefaultNoiseDeg;
@@ -129,6 +137,11 @@ public:
 			maxpos(20.0),
 			minang(6.0),
 			maxang(12.0),
+			poutliers(0.0),
+			outminpos(2.0),
+			outmaxpos(5.0),
+			outminang(2.0),
+			outmaxang(5.0),
 			noiseinplane(1.0),
 			noiseperpplane(1.0),
 			noisedeg(2.0),
@@ -153,6 +166,11 @@ public:
 			useDefaultMaxPos(true),
 			useDefaultMinAng(true),
 			useDefaultMaxAng(true),
+			useDefaultNumOutliers(true),
+			useDefaultOutMinPos(true),
+			useDefaultOutMaxPos(true),
+			useDefaultOutMinAng(true),
+			useDefaultOutMaxAng(true),
 			useDefaultNoiseInPlane(true),
 			useDefaultNoisePerpPlane(true),
 			useDefaultNoiseDeg(true),

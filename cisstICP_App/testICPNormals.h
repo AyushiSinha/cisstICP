@@ -244,10 +244,10 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double maxOffsetAng = 12.0; // 60.0;
 
   double percentOutliers	 = 0.0; // 0.05;
-  double minPosOffsetOutlier = 5.0;  // 15.0;
-  double maxPosOffsetOutlier = 10.0; // 20.0;
-  double minAngOffsetOutlier = 0.0;  // 15.0;
-  double maxAngOffsetOutlier = 0.0;  // 20.0;
+  double minPosOffsetOutlier = 2.0;  // 15.0;
+  double maxPosOffsetOutlier = 5.0; // 20.0;
+  double minAngOffsetOutlier = 2.0;  // 15.0;
+  double maxAngOffsetOutlier = 5.0;  // 20.0;
 
   std::srand(time(NULL)); unsigned int randSeed1	= /*0;			*/std::rand();  // generates samples
   std::srand(time(NULL)); unsigned int randSeqPos1	= /*0;			*/std::rand();
@@ -281,6 +281,17 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  minOffsetAng = (double)cmdOpts.minang;
   if (!cmdOpts.useDefaultMaxAng)
 	  maxOffsetAng = (double)cmdOpts.maxang;
+
+  if (!cmdOpts.useDefaultNumOutliers)
+	  percentOutliers = cmdOpts.poutliers/100.0;
+  if (!cmdOpts.useDefaultOutMinPos)
+	  minPosOffsetOutlier = (double)cmdOpts.outminpos;
+  if (!cmdOpts.useDefaultOutMaxPos)
+	  maxPosOffsetOutlier = (double)cmdOpts.outmaxpos;
+  if (!cmdOpts.useDefaultOutMinAng)
+	  minAngOffsetOutlier = (double)cmdOpts.outminang;
+  if (!cmdOpts.useDefaultOutMaxAng)
+	  maxAngOffsetOutlier = (double)cmdOpts.outmaxang;
 
   if (!cmdOpts.useDefaultNoiseInPlane)
 	  sampleNoiseInPlane = (double)cmdOpts.noiseinplane;
@@ -519,7 +530,11 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  }
   }
 
-  std::cout << "Using " << nSamples << " noisy sample points...\n";
+  std::cout << "Using " << nSamples << " noisy sample points";
+  if (!cmdOpts.useDefaultNumOutliers)
+	  std::cout << " with " << percentOutliers << " outliers...\n";
+  else
+	  std::cout << "...\n";
 
   // Generate random initial offset
   vctFrm3 Fi;
