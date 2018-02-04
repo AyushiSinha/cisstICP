@@ -181,6 +181,9 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 			  x_lower(i) = -alg->spb;
 			  x_upper(i) = alg->spb;
 		  }
+		  // add proper options for limits on all components
+		  //x_lower(6) = 0.7; // -DBL_MAX;
+		  //x_upper(6) = 1.3; // DBL_MAX;
 	  }
 
 #ifdef DLIB_VERIFY_DERIVATIVE

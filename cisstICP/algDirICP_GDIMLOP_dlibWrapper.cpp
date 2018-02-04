@@ -168,8 +168,8 @@ algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper(algDirICP_GDIMLOP *
 
 		if (i < nTrans)
 		{
-			x_lower(i) = -DBL_MAX;
-			x_upper(i) = DBL_MAX;
+			x_lower(i) = -DBL_MAX; // x_dlib(i) - 1;
+			x_upper(i) = DBL_MAX; // x_dlib(i) + 1;
 
 			// should we constrain the scale as well?
 
@@ -183,6 +183,9 @@ algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper(algDirICP_GDIMLOP *
 			x_lower(i) = -Kent_dlib->spb;
 			x_upper(i) = Kent_dlib->spb;
 		}
+		// add proper options for limits on all components
+		//x_lower(6) = 0.7; // -DBL_MAX;
+		//x_upper(6) = 1.3; // DBL_MAX;
 	}
 
     //std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 

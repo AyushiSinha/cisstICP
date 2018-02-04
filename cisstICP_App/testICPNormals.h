@@ -432,7 +432,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 
 	  if (!cmdOpts.useDefaultScale)
 	  {
-		  scale = (double)cmdOpts.scale;
+		  scale = cmdOpts.scale; // (((double)rand() / (double)RAND_MAX) /** (1.5 - 0.5)*/) + 0.5; //random number between 0.5 and 1.5 goes here
 		  for (int i = 0; i < nSamples; i++)
 			  //samples[i] = scale * samples[i];
 			  mesh_source.vertices[i] = scale * mesh_source.vertices[i];
@@ -806,12 +806,12 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  pAlg = new algDirICP_GDIMLOP(
 			  pTreeMesh, noisySamples, noisySampleNorms2,
 			  argK, argB, sampleNoiseL, sampleNoiseCov,
-			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);
+			  sampleNoiseCov, mesh_target.meanShape, 1, bScale);
 	  else
 		  pAlg = new algDirICP_GDIMLOP(
 			  pTreeMesh, noisySamples, noisySampleNorms2,
 			  argK, argB, sampleNoiseL, sampleNoiseCov,
-			  sampleNoiseCov, mesh_target.meanShape, scale, bScale);	// for cases when scale is specified, but must not be optimized over
+			  sampleNoiseCov, mesh_target.meanShape, 1, bScale);	// for cases when scale is specified, but must not be optimized over
 	  pAlg->SetConstraints(shapeparambounds);
 	  //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
 	  pICPAlg = pAlg;
