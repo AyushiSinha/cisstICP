@@ -62,7 +62,7 @@ algDirICP_GDIMLOP::algDirICP_GDIMLOP(
   PARAM_EST_TYPE paramEst)
   //: algDirICP(pDirTree, samplePts, sampleNorms),
   //algDirPDTree(pDirTree),
-  : algDirICP_GIMLOP(pDirTree, samplePts, sampleNorms, argK, argE, argL, argM),
+  : algDirICP_GIMLOP(pDirTree, samplePts, sampleNorms, argK, argE, argL, argM, scale, bScale),
   pDirTree(pDirTree),
   pMesh(&pDirTree->mesh),
   TCPS(pDirTree->mesh),
@@ -82,8 +82,14 @@ algDirICP_GDIMLOP::algDirICP_GDIMLOP(
 #endif
 }
 
-void algDirICP_GDIMLOP::SetConstraints(double argSPbounds)
+void algDirICP_GDIMLOP::SetConstraints(double argRotbounds,
+	double argTransbounds,
+	double argScalebounds,
+	double argSPbounds)
 {
+	rb = argRotbounds;
+	tb = argTransbounds;
+	sb = argScalebounds;
 	spb = argSPbounds;
 }
 
@@ -91,11 +97,16 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 {
 	double sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
+	double sqrMahalDist;
 	double sqrMatchDist;
+	double matchAngle;
+	double axisAngle;
 
+	double totalSumSqrMahalDist = 0.0;
 	double sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	double sqrMahalDist;
+	double totalSumSqrMatchAngle = 0.0;
+	double sumSqrMatchAngle = 0.0;
 
 	int nGoodSamples = 0;
 
@@ -105,24 +116,42 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 	//       compute statistics on only the inliers
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		if (outlierFlags[i])	continue;	// skip outliers
-
-		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
+		residual = /*matchPts[i]*/Tssm_Y[i] - (Freg * samplePts[i]) * sc;
 
 		sqrMahalDist = residual*invM[i]*residual;
+		totalSumSqrMahalDist += sqrMahalDist;
+
+		//double major = RaRL[i].Column(0)*matchNorms[i];
+		//double minor = RaRL[i].Column(1)*matchNorms[i];
+		matchAngle = acos( std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]) , 2*cmnPI) ); 
+		//axisAngle = (B[i] / k[i]) * acos(std::fmod(major*major, 2 * cmnPI) - std::fmod(minor*minor, 2 * cmnPI));
+		
+		//sumMatchAngle += matchAngle;
+		totalSumSqrMatchAngle += k[i] * matchAngle * matchAngle ;
+
+		if (outlierFlags[i])	continue;	// skip outliers
+
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 
 		sqrMatchDist = residual.NormSquare();
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
+
+		sumSqrMatchAngle += k[i] * matchAngle * matchAngle ;
 		nGoodSamples++;
 	}
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt((sumSqrMahalDist / nGoodSamples) + Avg*Avg);
 
-	std::cout << "\nFinal Scale = " << sc << std::endl;
-	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+	//std::cout << "\nFinal Scale = " << sc << std::endl;
+	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+
+	// For registration rejection purpose:
+	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
 }
 
 double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
@@ -1131,8 +1160,8 @@ void algDirICP_GDIMLOP::SetSamples(
   //nSamples = samplePts.size();
   //algDirICP::SetSamples(samplePts, sampleNorms);
   
-  samplePts = argSamplePts;
-  sampleNorms = argSampleNorms;
+  //samplePts = argSamplePts;
+  //sampleNorms = argSampleNorms;
   SetNoiseModel(argK, argE, argL, argM, paramEst);
 
   if (argM.size() != nSamples || argMsmtM.size() != nSamples)
@@ -1163,7 +1192,8 @@ void algDirICP_GDIMLOP::SetSamples(
   }
   else
 	  nTrans = 6; // 3 for rotation, 3 for translation
-  std::cout << "# tranformation parameters: " << nTrans << std::endl;
+  // Already printed by G-IMLOP
+  //std::cout << "# tranformation parameters: " << nTrans << std::endl;
 
   nModes = (unsigned int)pDirTree->mesh.modeWeight.size(); 
   Si = pDirTree->mesh.Si;
@@ -1548,8 +1578,6 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
 	for (unsigned int i = 0; i < nModes; i++)
 		gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
 
-	gs += /*2.0 **/ s * 1.0/(double)nSamples;	// Cshape component
-
     //// wrt rodrigues elements
     //for (unsigned int i = 0; i < 3; i++)
     //{
@@ -1564,6 +1592,8 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
     //// wrt translation
     //gt -= invM_Yp_RaXp_t[j];
   }
+
+  gs += /*2.0 **/ s;// *1.0 / (double)nSamples;	// Cshape component
 }
 
 //double algDirICP_GDIMLOP::MatchError(

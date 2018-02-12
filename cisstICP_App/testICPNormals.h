@@ -263,8 +263,18 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   double sampleNoiseInPlane = 1.0;      // standard deviation of noise in and out of plane
   double sampleNoisePerpPlane = 1.0;    //   ''
   double sampleNoiseCircSDDeg = 2.0;    // noise to apply to sample orientations 
-  double sampleNoiseEccentricity = 0.5; // eccentricity of orientation noise
+  double sampleNoiseEccentricity = 0.5; // eccentricity of orientation noise	
+  
+  // Target Noise Model (for point cloud target only)
+	//  NOTE: this is a descriptive model, not a generative one
+	//        i.e. no noise is added to the point cloud, the noise model is merely
+	//        allow for errors at intermediate locations between the points and penalize
+	//        errors offset from the surface
+  double PointCloudNoisePerpPlane = 1.0; // 0.5;			// noise model for point cloud using mesh constructor
 
+  double rotbounds = DBL_MAX;
+  double transbounds = DBL_MAX;
+  double scalebounds = 0.3;
   double shapeparambounds = 3.0;
 
   // Modify default values
@@ -373,6 +383,15 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  shapeparambounds = cmdOpts.spbounds;
   }
 
+  if (!cmdOpts.useDefaultRotationBounds)
+	  rotbounds = cmdOpts.rbounds;
+
+  if (!cmdOpts.useDefaultTranslationBounds)
+	  transbounds = cmdOpts.tbounds;
+
+  if (!cmdOpts.useDefaultScaleBounds)
+	  scalebounds = cmdOpts.sbounds;
+
   //mesh_target.SavePLY(initmeshDir);
 
   if (TargetShapeAsMesh)
@@ -394,7 +413,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     //        to allow for greater freedom of match anywhere along the triangle surface
     //        even though each triangle surface is represented by only one point.
     printf("Building point cloud PD tree .... ");
-    cisstPointCloud pointCloud(mesh_target);
+	cisstPointCloud pointCloud(mesh_target, PointCloudNoisePerpPlane);
     DirPDTree_PointCloud *pPointCloudTree;
     pPointCloudTree = new DirPDTree_PointCloud(pointCloud, nThresh, diagThresh);
     pTree = pPointCloudTree;
@@ -670,7 +689,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     if (!TargetShapeAsMesh)
     {
       std::cout << "ERROR: Currently only mesh target supported for IMLOP" << std::endl;
-      assert(0);
+	  exit(0); // assert(0);
     }
     DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
     //algDirICP_IMLOP_Mesh *pAlg = new algDirICP_IMLOP_Mesh( pTreeMesh, &ICP );
@@ -694,7 +713,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  if (!TargetShapeAsMesh)
 	  {
 		  std::cout << "ERROR: Currently only mesh target supported for DIMLOP" << std::endl;
-		  assert(0);
+		  exit(0); // assert(0);
 	  }
 	  DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
 	  double k = 1.0 / (sampleNoiseCircSD*sampleNoiseCircSD);
@@ -715,7 +734,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
 			  k, sigma2, wRpos, kfactor, scale,
 			  dynamicParamEst);											// for cases when scale is specified, but must not be optimized over
-	  pAlg->SetConstraints(shapeparambounds);
+	  pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
 
 	  pICPAlg = pAlg;
 	  break;
@@ -725,7 +744,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     if (!TargetShapeAsMesh)
     {
       std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
-      assert(0);
+	  exit(0); // assert(0);
     }
     DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
     // define GIMLOP parameters
@@ -758,7 +777,8 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     // create algorithm
     algDirICP_GIMLOP_Mesh *pAlg = new algDirICP_GIMLOP_Mesh(
       pTreeMesh, noisySamples, noisySampleNorms2,
-	  argK, argB, sampleNoiseL, sampleNoiseCov /*sampleNoiseInvCov*/ );
+	  argK, argB, sampleNoiseL, sampleNoiseCov /*sampleNoiseInvCov*/, 1, bScale);
+	pAlg->SetConstraints(rotbounds, transbounds, scalebounds);
     //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
     pICPAlg = pAlg;
     break;
@@ -770,7 +790,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	  if (!TargetShapeAsMesh)
 	  {
 		  std::cout << "ERROR: Currently only mesh target supported for GIMLOP" << std::endl;
-		  assert(0);
+		  exit(0); // assert(0);
 	  }
 	  DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
 	  // define GIMLOP parameters
@@ -812,7 +832,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			  pTreeMesh, noisySamples, noisySampleNorms2,
 			  argK, argB, sampleNoiseL, sampleNoiseCov,
 			  sampleNoiseCov, mesh_target.meanShape, 1, bScale);	// for cases when scale is specified, but must not be optimized over
-	  pAlg->SetConstraints(shapeparambounds);
+	  pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
 	  //pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
 	  pICPAlg = pAlg;
 	  break;
@@ -822,7 +842,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
     if (!TargetShapeAsMesh)
     {
       std::cout << "ERROR: Currently only mesh target supported for PIMLOP" << std::endl;
-      assert(0);
+	  exit(0); // assert(0);
     }
     DirPDTree_Mesh *pTreeMesh = dynamic_cast<DirPDTree_Mesh*>(pTree);
     // define noise model parameters
@@ -932,8 +952,16 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   }
   else
   {
-	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << std::endl;
-	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr << std::endl << std::endl;
+	  resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit;	  if (cmdOpts.bScale)
+		  resultStream << "\tdScl: " << scale << std::endl;
+	  else
+		  resultStream << std::endl;
+	  pICPAlg->ReturnScale(scale);
+	  resultStream << "Registration Error:\tdAng: " << rerr * 180 / cmnPI << "\tdPos: " << terr ;
+	  if (cmdOpts.bScale)
+		  resultStream << "\tdScl: " << scale << std::endl;
+	  else
+		  resultStream << std::endl;
   }
   resultStream << std::endl << "Average Match Error (Mahalanobis):\t" << rv.MatchPosErrAvg << " (+/-" << rv.MatchPosErrSD << ")\n" << std::endl;
   std::cout << resultStream.str();

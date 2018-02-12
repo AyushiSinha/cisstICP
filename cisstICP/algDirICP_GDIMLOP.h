@@ -90,7 +90,7 @@ public:
   // for reporting purposes
   double meanSigma2, meanK, meanE, meanE_msmt;
 
-  double spb;
+  double rb, tb, sb, spb;		// rotation, translation, scale, and shape parameter bounds
   bool bScale;
 
 protected:  
@@ -276,7 +276,10 @@ public:
     const vctDynamicVector<vct3x3> &M,
 	PARAM_EST_TYPE paramEst);
 
-  void SetConstraints(double argSPbounds = 3.0);
+  void SetConstraints(double argRotbounds = DBL_MAX,
+						double argTransbounds = DBL_MAX,
+						double argScalebounds = 0.3,
+						double argSPbounds = 3.0);
 
   void UpdateNoiseModel_DynamicEstimates();
   void UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg);

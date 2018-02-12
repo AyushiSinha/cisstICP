@@ -61,8 +61,8 @@ public:
 	vctDynamicVector<vctInt3>	f;
 	vctDynamicVector<vctDynamicVector<vct3>>	Tssm_wi;
 
-	double spb;
-	bool bScale;
+	double rb, tb, sb, spb;		// rotation, translation, scale, and shape parameter bounds
+	bool bScale;				// boolean for optional scale optimization
 
 	// -- Optimizer calculations common to both cost and gradient function
 	vctRot3 Ra;
@@ -117,7 +117,10 @@ public:
 		double argScale = 1.0, 
 		bool argbScale = false);
 
-	void SetConstraints(double argSPbounds = 3.0);
+	void SetConstraints(double argRotbounds = DBL_MAX,
+						double argTransbounds = DBL_MAX,
+						double argScalebounds = 0.3,
+						double argSPbounds = 3.0);
 
 	virtual void ComputeMatchStatistics(double &Avg, double &stdDev);
 	void	UpdateShape(vctDynamicVector<double> &si);

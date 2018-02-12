@@ -84,7 +84,7 @@ public:
 		float outminang, outmaxang;
 		float noiseinplane, noiseperpplane;
 		float noisedeg, noiseecc;
-		float spbounds;
+		float rbounds, tbounds, sbounds, spbounds;
 
 		bool deformable;	// is algorithm deformable?
 		bool bScale;
@@ -116,6 +116,9 @@ public:
 		bool useDefaultNoisePerpPlane;
 		bool useDefaultNoiseDeg;
 		bool useDefaultNoiseEcc;
+		bool useDefaultRotationBounds;
+		bool useDefaultTranslationBounds;
+		bool useDefaultScaleBounds;
 		bool useDefaultShapeParamBounds;
 
 		// default constructor
@@ -146,6 +149,9 @@ public:
 			noiseperpplane(1.0),
 			noisedeg(2.0),
 			noiseecc(0.5),
+			rbounds(DBL_MAX),
+			tbounds(DBL_MAX),
+			sbounds(0.3),
 			spbounds(3.0),
 			bScale(false),
 			deformable(false),
@@ -175,6 +181,9 @@ public:
 			useDefaultNoisePerpPlane(true),
 			useDefaultNoiseDeg(true),
 			useDefaultNoiseEcc(true),
+			useDefaultRotationBounds(true),
+			useDefaultTranslationBounds(true),
+			useDefaultScaleBounds(true),
 			useDefaultShapeParamBounds(true)
 		{};
 	};

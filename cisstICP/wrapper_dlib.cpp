@@ -53,29 +53,40 @@ namespace
   //  (needed for function pointers)
   double fValue( const wrapper_dlib::dlib_vector &x_dlib )
   {
-    static vct6 x;
-    x.Assign( x_dlib(0), x_dlib(1), x_dlib(2), 
-              x_dlib(3), x_dlib(4), x_dlib(5) );
+    static /*vct6*/ vctDynamicVector<double> x;
+	x.SetSize(x_dlib.size());
+    //x.Assign( x_dlib(0), x_dlib(1), x_dlib(2), 
+    //          x_dlib(3), x_dlib(4), x_dlib(5) );
+	for (int i = 0; i < x_dlib.size(); i++)
+		x[i] = x_dlib(i);
  
     return Kent_dlib->CostFunctionValue( x );
   }
 
   wrapper_dlib::dlib_vector fDerivative( const wrapper_dlib::dlib_vector &x_dlib )
   {
-    static vct6   x;
-    static vct6   g;
-    static wrapper_dlib::dlib_vector  g_dlib(6);    // 6-element vector
+    static /*vct6*/  vctDynamicVector<double>  x;
+	static /*vct6*/  vctDynamicVector<double>  g;
+    static wrapper_dlib::dlib_vector  g_dlib/*(6)*/;    // 6-element vector
 
-    x.Assign( x_dlib(0), x_dlib(1), x_dlib(2), 
-              x_dlib(3), x_dlib(4), x_dlib(5) );
+	x.SetSize(x_dlib.size());
+	g.SetSize(x_dlib.size());
+	g_dlib.set_size(x_dlib.size());
+
+    //x.Assign( x_dlib(0), x_dlib(1), x_dlib(2), 
+    //          x_dlib(3), x_dlib(4), x_dlib(5) );
+	for (int i = 0; i < x_dlib.size(); i++)
+		x[i] = x_dlib(i);
 
     Kent_dlib->CostFunctionGradient( x, g );
-    g_dlib(0) = g[0];
-    g_dlib(1) = g[1];
-    g_dlib(2) = g[2];
-    g_dlib(3) = g[3];
-    g_dlib(4) = g[4];
-    g_dlib(5) = g[5];
+    //g_dlib(0) = g[0];
+    //g_dlib(1) = g[1];
+    //g_dlib(2) = g[2];
+    //g_dlib(3) = g[3];
+    //g_dlib(4) = g[4];
+    //g_dlib(5) = g[5];
+	for (int i = 0; i < x_dlib.size(); i++)
+		g_dlib(i) = g[i];
 
     return g_dlib;
   }
@@ -98,12 +109,18 @@ wrapper_dlib::wrapper_dlib()  // algDirICP_GIMLOP *kent )
 
 // passing a pointer to the algorithm is necessary if this library is being
 //  used with multiple Kent algorithms simultaneously (even if single threaded)
-vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
+/*vct6*/ vctDynamicVector<double> wrapper_dlib::ComputeRegistration(const /*vct6*/ vctDynamicVector<double> &x0, algDirICP_GIMLOP *kent)
 {
   // initialize global pointer to algorithm
   Kent_dlib = kent;
-  
-  dlib_vector x_dlib(6);  // 6-element vector
+
+  int nComponents = x0.size();
+  dlib_vector x_dlib(/*6*/nComponents);  // 6-element vector
+  dlib_vector x_lower(nComponents);
+  dlib_vector x_upper(nComponents);
+
+  vctDynamicVector<double> x;
+  x.SetSize(nComponents);
 
   //double f0 = Kent_gsl->CostFunctionValue( x0 );
   //double thresh_df = tol_df * f0;
@@ -123,18 +140,46 @@ vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
     // this then it will stop immediately.  Usually you supply a number smaller than 
     // the actual global minimum.
 
-    x_dlib(0) = x0[0];
-    x_dlib(1) = x0[1];
-    x_dlib(2) = x0[2];
-    x_dlib(3) = x0[3];
-    x_dlib(4) = x0[4];
-    x_dlib(5) = x0[5];
+    //x_dlib(0) = x0[0];
+    //x_dlib(1) = x0[1];
+    //x_dlib(2) = x0[2];
+    //x_dlib(3) = x0[3];
+    //x_dlib(4) = x0[4];
+    //x_dlib(5) = x0[5];
+
+	  int nRot = 3;
+	  int nTrans = 6;
+	  int nScale;
+	  if (Kent_dlib->bScale) nScale = 7; else nScale = 6;
+
+	  for (int i = 0; i < nComponents; i++)
+	  {
+		  x_dlib(i) = x0[i];
+
+		  if (i < nRot)
+		  {
+			  x_lower(i) = x_dlib(i) - Kent_dlib->rb;
+			  x_upper(i) = x_dlib(i) + Kent_dlib->rb;
+		  }
+		  else if (i >= nRot && i < nTrans)
+		  {
+			  x_lower(i) = x_dlib(i) - Kent_dlib->tb;
+			  x_upper(i) = x_dlib(i) + Kent_dlib->tb;
+		  }
+		  else if (i >= nTrans && i < nScale)
+		  {
+			  x_lower(i) = 1 - Kent_dlib->sb;
+			  x_upper(i) = 1 + Kent_dlib->sb;
+		  }
+	  }
 
     //std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 
     //  << dlib::length(dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib)) << std::endl;
 
 
-    dlib::find_min( dlib::bfgs_search_strategy(),
+    //dlib::find_min( 
+    dlib::find_min_box_constrained( 
+		dlib::bfgs_search_strategy(),
 #ifdef DLIB_VERBOSE
       //dlib::objective_delta_stop_strategy( Tol_df,maxIter ).be_verbose(),
       dlib::gradient_norm_stop_strategy( gradientNormThresh,maxIter ).be_verbose(),
@@ -143,7 +188,8 @@ vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
       dlib::gradient_norm_stop_strategy( gradientNormThresh,maxIter ),
 #endif
       fValue, fDerivative,
-	  x_dlib, -1.0);
+	  x_dlib, x_lower, x_upper);
+	  //-1.0);
 
     //find_min_using_approximate_derivatives( bfgs_search_strategy(),
     //                                        objective_delta_stop_strategy(Tol_df).be_verbose(),
@@ -156,8 +202,15 @@ vct6 wrapper_dlib::ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent)
     assert(0);
   }
 
-  Kent_dlib = NULL;
+  Kent_dlib = NULL;  
+  
+  for (int i = 0; i < nComponents; i++)
+  {
+	  x[i] = x_dlib(i);
+  }
 
-  return vct6( x_dlib(0), x_dlib(1), x_dlib(2), 
-               x_dlib(3), x_dlib(4), x_dlib(5) );
+  return x;
+
+  //return vct6( x_dlib(0), x_dlib(1), x_dlib(2), 
+  //             x_dlib(3), x_dlib(4), x_dlib(5) );
 }

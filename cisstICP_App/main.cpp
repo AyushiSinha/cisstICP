@@ -52,7 +52,8 @@ cmdLineString	Alg("alg"), Target("target"), In("in"),
 				Cov("cov"), Axes("axes"),
 				ModeWeights("modewts"), 
 				WorkingDir("workdir");
-cmdLineInt 		nModes("modes"), nSamples("samples"),
+cmdLineInt 		targetType("targettype"), 
+				nModes("modes"), nSamples("samples"),
 				nIters("iters");
 cmdLineFloat	Scale("scale"),
 				MinPos("minpos"), MaxPos("maxpos"),
@@ -63,6 +64,9 @@ cmdLineFloat	Scale("scale"),
 				NoiseInPlane("noiseinplane"),
 				NoisePerpPlane("noiseperpplane"),
 				NoiseDeg("noisedeg"), NoiseEcc("noiseecc"),
+				RotationBounds("rbounds"),
+				TranslationBounds("tbounds"),
+				ScaleBounds("sbounds"),
 				ShapeParamBounds("spbounds");
 cmdLineReadable bScale("bscale"),
 				h("h"), help("help");
@@ -71,10 +75,11 @@ cmdLineReadable* params[] =
 {
 	&Alg, &Target, &In,		// strings
 	&Out, &Xfm, &SSM,
-	&Cov, &Axes,				/* Positional and angular noise */
+	&Cov, &Axes,			/* Positional and angular noise */
 	&ModeWeights,
 	&WorkingDir,
-	&nModes, &nSamples,		// ints
+	&targetType,			// ints
+	&nModes, &nSamples,
 	&nIters,
 	&Scale,					// floats
 	&MinPos, &MaxPos,
@@ -85,6 +90,9 @@ cmdLineReadable* params[] =
 	&NoiseInPlane, 
 	&NoisePerpPlane,
 	&NoiseDeg, &NoiseEcc,
+	&RotationBounds,
+	&TranslationBounds,
+	&ScaleBounds,
 	&ShapeParamBounds,
 	&bScale,				// readable 
 	&h, &help,				// help
@@ -103,9 +111,9 @@ void SetParams()
 									"\t\t\tIMLOP: Implements the iterative most likely oriented point algorithm\n"
 									"\t\t\tDIMLOP: Implements the deformable IMLOP algorithm\n"
 									"\t\t\tGIMLOP: Implements the generalized IMLOP algorithm\n"
-									"\t\t\tGIMLOP: Implements the deformable generalized IMLOP algorithm\n"
-									"\t\t\tPIMLOP: Implements the projected IMLOP algorithm\n"
-									"\t\t\tVIMLOP: Implements the video IMLOP algorithm\n\n");
+									"\t\t\tGDIMLOP: Implements the deformable generalized IMLOP algorithm\n"
+									"\t\t\tPIMLOP: Implements the projected IMLOP algorithm\n\n"
+									/*"\t\t\tVIMLOP: Implements the video IMLOP algorithm\n\n"*/);
 	i++;
 	// Target location
 	params[i]->description = strdup("Enter the location of the target mesh or point cloud\n\n");
@@ -126,10 +134,10 @@ void SetParams()
 									"\t\tNOTE:\tAn SSM is required for the deformable algorithms. If an SSM is not provided,\n"
 									"\t\t\tthe corresponding rigid registration will be computed\n\n");
 	i++;
-	// File containing mode weights
+	// File containing covariance matrices
 	params[i]->description = strdup("Enter the location of the covariance matrices for positional noise\n\n");
 	i++;
-	// File containing mode weights
+	// File containing major/minor axes
 	params[i]->description = strdup("Enter the location of the major/minor axes for angular noise\n\n");
 	i++;
 	// File containing mode weights
@@ -138,13 +146,17 @@ void SetParams()
 	// Working directory
 	params[i]->description = strdup("Enter the new working directory (default = \"..\\..\\..\\test_data\\LastRun_<algorithm name>\"\n\n");
 	i++;
+	// Target type (mesh or point cloud)
+	params[i]->description = strdup("Specify the target type:\n"
+									"\t\tMesh: 1 (default)\n"
+									"\t\tPoint cloud: 0\n\n");
+	i++;
 	// Number of modes
 	params[i]->description = strdup("Enter the number of modes you want to use (default = 3)\n\n");
 	i++;
 	// Number of samples
-	params[i]->description = strdup("Enter the sample size to use (default = 300), or\n"
-									"\t\tthe # vertices to subsample from input\n"
-									"\t\t(default = input mesh or point cloud size)\n\n");
+	params[i]->description = strdup("When no input point cloud is provided, number of points to sample from model shape (default = 300), or\n"
+									"\t\tWhen an input point cloud is provided, number of points to subsample from it (default = point cloud size)\n\n");
 	i++;
 	// Maximum number of iterations
 	params[i]->description = strdup("Enter the maximum number of iterations to be performed (default = 100)\n\n");
@@ -191,11 +203,21 @@ void SetParams()
 	// Angular noise eccentricity
 	params[i]->description = strdup("Eccentricity of angular noise (default = 0.5)\n\n");
 	i++;
+	// Rotation constraint
+	params[i]->description = strdup("Constrain rotation component search between [prev-n, prev+n] (default n = DBL_MAX)\n\n");
+	i++;
+	// Translation constraint
+	params[i]->description = strdup("Constrain translation component search between [prev-n, prev+n] (default n = DBL_MAX)\n\n");
+	i++;
+	// Scale constraint
+	params[i]->description = strdup("Constrain scale component search between [1-n, 1+n] (default n = 0.3)\n\n");
+	i++;
 	// Shape parameter constraint
 	params[i]->description = strdup("Constrain shape parameter search between [-n, n] (default n = 3.0)\n\n");
 	i++;
 	// Scale optimization
-	params[i]->description = strdup("Optimize over scale in addition to [R,t] and shape parameters (default = false)\n\n");
+	params[i]->description = strdup("Optimize over scale in addition to [R,t] and shape parameters (default = false)\n"
+									"\t\tOnly available for D-IMLP, D-IMLOP, G-IMLOP, and GD-IMLOP algorithms\n\n");
 	i++;
 	// Brief usage directions
 	params[i]->description = strdup("Prints short usage directions\n\n");
@@ -209,6 +231,7 @@ void Usage(const char* exec)
 	printf("Usage %s: \n", exec);
 	printf("\t--%s <algorithm type>\n", Alg.name);
 	printf("\t--%s <target>\n", Target.name);
+	printf("\t--%s <target type>\n", targetType.name); 
 	printf("\t--%s <input>\n", In.name);
 	printf("\t--%s <output extention>\n", Out.name);
 	printf("\t--%s <initial guess transform>\n", Xfm.name);
@@ -218,10 +241,10 @@ void Usage(const char* exec)
 	printf("\t--%s <mode weights>\n", ModeWeights.name);
 	printf("\t--%s <working directory>\n", WorkingDir.name);
 	printf("\t--%s <number of modes>\n", nModes.name);
-	printf("\t--%s <number of subsamples>\n", nSamples.name);
+	printf("\t--%s <number of samples>\n", nSamples.name);
 	printf("\t--%s <max iterations>\n", nIters.name);
 	printf("\t--%s <scale>\n", Scale.name);
-	printf("\t--%s <bscale>\n", bScale.name);
+	printf("\t--%s \n", bScale.name);
 	printf("\t--%s <min pos offset>\n", MinPos.name);
 	printf("\t--%s <max pos offset>\n", MaxPos.name);
 	printf("\t--%s <min ang offset>\n", MinAng.name);
@@ -235,6 +258,9 @@ void Usage(const char* exec)
 	printf("\t--%s <out of plane noise>\n", NoisePerpPlane.name);
 	printf("\t--%s <angular noise (deg)>\n", NoiseDeg.name);
 	printf("\t--%s <angular noise eccentricity>\n", NoiseEcc.name);
+	printf("\t--%s <rotation constraints>\n", RotationBounds.name);
+	printf("\t--%s <translation constraints>\n", TranslationBounds.name);
+	printf("\t--%s <scale constraints>\n", ScaleBounds.name);
 	printf("\t--%s <shape parameter constraints>\n", ShapeParamBounds.name);
 	printf("\t--%s (Prints usage directions)\n", h.name);
 	printf("\t--%s (Prints detailed usage directions)\n", help.name);
@@ -245,6 +271,7 @@ void Help(const char* exec)
 	printf("Usage %s: \n", exec);
 	printf("\t--%s <algorithm type>\n\t\t%s", Alg.name, Alg.description);
 	printf("\t--%s <target>\n\t\t%s", Target.name, Target.description);
+	printf("\t--%s <target type>\n\t\t%s", targetType.name, targetType.description);
 	printf("\t--%s <input>\n\t\t%s", In.name, In.description);
 	printf("\t--%s <output directory>\n\t\t%s", Out.name, Out.description);
 	printf("\t--%s <initial guess transform>\n\t\t%s", Xfm.name, Xfm.description);
@@ -254,10 +281,10 @@ void Help(const char* exec)
 	printf("\t--%s <mode weights>\n\t\t%s", ModeWeights.name, ModeWeights.description);
 	printf("\t--%s <working directory>\n\t\t%s", WorkingDir.name, WorkingDir.description);
 	printf("\t--%s <number of modes>\n\t\t%s", nModes.name, nModes.description);
-	printf("\t--%s <number of subsamples>\n\t\t%s", nSamples.name, nSamples.description);
+	printf("\t--%s <number of samples>\n\t\t%s", nSamples.name, nSamples.description);
 	printf("\t--%s <max iterations>\n\t\t%s", nIters.name, nIters.description);
 	printf("\t--%s <scale>\n\t\t%s", Scale.name, Scale.description);
-	printf("\t--%s <bscale>\n\t\t%s", bScale.name, bScale.description);
+	printf("\t--%s \n\t\t%s", bScale.name, bScale.description);
 	printf("\t--%s <min pos offset>\n\t\t%s", MinPos.name, MinPos.description);
 	printf("\t--%s <max pos offset>\n\t\t%s", MaxPos.name, MaxPos.description);
 	printf("\t--%s <min ang offset>\n\t\t%s", MinAng.name, MinAng.description);
@@ -271,6 +298,9 @@ void Help(const char* exec)
 	printf("\t--%s <out of plane noise>\n\t\t%s", NoisePerpPlane.name, NoisePerpPlane.description);
 	printf("\t--%s <angular noise (deg)>\n\t\t%s", NoiseDeg.name, NoiseDeg.description);
 	printf("\t--%s <angular noise eccentricity>\n\t\t%s", NoiseEcc.name, NoiseEcc.description);
+	printf("\t--%s <rotation constraints>\n\t\t%s", RotationBounds.name, RotationBounds.description);
+	printf("\t--%s <translation constraints>\n\t\t%s", TranslationBounds.name, TranslationBounds.description);
+	printf("\t--%s <scale constraints>\n\t\t%s", ScaleBounds.name, ScaleBounds.description);
 	printf("\t--%s <shape parameter constraints>\n\t\t%s", ShapeParamBounds.name, ShapeParamBounds.description);
 	printf("\t--%s \t%s", h.name, h.description);
 	printf("\t--%s \t%s", help.name, help.description);
@@ -403,15 +433,26 @@ int main( int argc, char* argv[] )
 		cmdLineOpts.axes = Axes.value;
 		cmdLineOpts.useDefaultAxes = false;
 	}
-	
-	if (nModes.set) {
-		cmdLineOpts.modes = nModes.value; 
-		cmdLineOpts.useDefaultNumModes = false;
-	}
 
 	if (WorkingDir.set) {
 		cmdLineOpts.workingdir = WorkingDir.value;
 		cmdLineOpts.useDefaultWorkingDir = false;
+	}
+
+	if (targetType.set) {
+		if (targetType.value == 0)
+			TargetShapeAsMesh = false;
+		else if (targetType.value == 1)
+			TargetShapeAsMesh = true;
+		else {
+			std::cerr << "Invalid option for target type: " << targetType.value << "\nExiting...\n\n";
+			return 0;
+		}
+	}
+	
+	if (nModes.set) {
+		cmdLineOpts.modes = nModes.value; 
+		cmdLineOpts.useDefaultNumModes = false;
 	}
 
 	if (nSamples.set) {
@@ -497,6 +538,21 @@ int main( int argc, char* argv[] )
 	if (NoiseEcc.set) {
 		cmdLineOpts.noiseecc = NoiseEcc.value;
 		cmdLineOpts.useDefaultNoiseEcc = false;
+	}
+
+	if (RotationBounds.set) {
+		cmdLineOpts.rbounds = RotationBounds.value;
+		cmdLineOpts.useDefaultRotationBounds = false;
+	}
+
+	if (TranslationBounds.set) {
+		cmdLineOpts.tbounds = TranslationBounds.value;
+		cmdLineOpts.useDefaultTranslationBounds = false;
+	}
+
+	if (ScaleBounds.set) {
+		cmdLineOpts.sbounds = ScaleBounds.value;
+		cmdLineOpts.useDefaultScaleBounds = false;
 	}
 
 	if (ShapeParamBounds.set) {

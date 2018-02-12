@@ -143,7 +143,7 @@ vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct
     // The other arguments to find_min_box_constrained() are the function to be minimized, its derivative, 
     // then the starting point, and the last two are the lower and upper bounds of the constraints on the
 	// parameters being optimized:
-	//	 transformation paramters:	unconstrained
+	//	 transformation paramters:	unconstrained (default) or user specified limits
 	//	 shape paramters:			constrained between -3.0 and 3.0 (default) or user specified limits
 
  //   x_dlib(0) = x0[0];
@@ -154,37 +154,35 @@ vctDynamicVector<double> algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct
 	//x_dlib(5) = x0[5];
 	//x_dlib(6) = x0[6];
 
-
-	  int nTrans;
-	  if (alg->bScale)
-		  nTrans = 7;
-	  else
-		  nTrans = 6;
+	  int nRot = 3;
+	  int nTrans = 6;
+	  int nScale;
+	  if (alg->bScale) nScale = 7; else nScale = 6;
 
 	  for (int i = 0; i < nComponents; i++)
 	  {
 		  x_dlib(i) = x0[i];
 
-		  if (i < nTrans)
+		  if (i < nRot)
 		  {
-			  x_lower(i) = -DBL_MAX;
-			  x_upper(i) = DBL_MAX;
-
-			  // should we constrain the scale as well?
-
-			  //if (i == 6) {
-				 // x_lower(i) = 0.9;
-				 // x_upper(i) = 1.1;
-			  //}
+			  x_lower(i) = x_dlib(i) - alg->rb;
+			  x_upper(i) = x_dlib(i) + alg->rb;
+		  }
+		  else if (i >= nRot && i < nTrans)
+		  {
+			  x_lower(i) = x_dlib(i) - alg->tb;
+			  x_upper(i) = x_dlib(i) + alg->tb;
+		  }
+		  else if (i >= nTrans && i < nScale)
+		  {
+			  x_lower(i) = 1 - alg->sb;
+			  x_upper(i) = 1 + alg->sb;
 		  }
 		  else
 		  {
 			  x_lower(i) = -alg->spb;
 			  x_upper(i) =  alg->spb;
 		  }
-		  // add proper options for limits on all components
-		  //x_lower(6) = 0.7; // -DBL_MAX;
-		  //x_upper(6) = 1.3; // DBL_MAX;
 	  }
 
 #ifdef DLIB_VERIFY_DERIVATIVE

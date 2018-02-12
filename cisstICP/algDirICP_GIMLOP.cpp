@@ -55,13 +55,15 @@ algDirICP_GIMLOP::algDirICP_GIMLOP(
   const vctDynamicVector<double> &argE,
   const vctDynamicVector<vct3x2> &argL,
   const vctDynamicVector<vct3x3> &argM,
+  double scale, bool bScale,
   PARAM_EST_TYPE paramEst)
   : algDirICP(pDirTree, samplePts, sampleNorms),
   algDirPDTree(pDirTree),
   dlib(),
   paramEstMethod(paramEst)
 {
-  SetNoiseModel(argK, argE, argL, argM, paramEst);
+  SetSamples(samplePts, sampleNorms, argK, argE, argL, argM, scale, bScale, paramEst);
+  //SetNoiseModel(argK, argE, argL, argM, paramEst);
 
 #ifdef SAVE_MATCHES
   MatchIsotropic = false;
@@ -73,15 +75,29 @@ algDirICP_GIMLOP::algDirICP_GIMLOP(
 #endif
 }
 
+void algDirICP_GIMLOP::SetConstraints(double argRotbounds,
+	double argTransbounds,
+	double argScalebounds)
+{
+	rb = argRotbounds;
+	tb = argTransbounds;
+	sb = argScalebounds;
+}
+
 void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gotta do this right with mahalanobis distance
 {
 	double sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
+	double sqrMahalDist;
 	double sqrMatchDist;
+	double matchAngle;
+	double axisAngle;
 
+	//double totalSumSqrMahalDist = 0.0;
 	double sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	double sqrMahalDist;
+	//double totalSumSqrMatchAngle = 0.0;
+	double sumSqrMatchAngle = 0.0;
 
 	int nGoodSamples = 0;
 
@@ -89,11 +105,13 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 
 	// NOTE: if using a method with outlier rejection, it may be desirable to
 	//       compute statistics on only the inliers
-	for (unsigned int i = 0; i < nSamples/*nGoodSamples*/; i++)
+	for (unsigned int i = 0; i < nSamples; i++)
 	{
 		//if (outlierFlags[i])	continue;	// skip outliers
 
-		residual = matchPts[i] - Freg * samplePts[i];
+		residual = matchPts[i] - (Freg * samplePts[i]) /** sc*/;
+
+		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
 
 		sqrMahalDist = residual*invM[i]*residual;
 		sumSqrMahalDist += sqrMahalDist;
@@ -102,6 +120,8 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 		sqrMatchDist = residual.NormSquare();
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
+
+		sumSqrMatchAngle += k[i] * matchAngle * matchAngle;
 		nGoodSamples++;
 	}
 	//Avg = sumMatchDist / (meanSigma2*nGoodSamples);
@@ -110,7 +130,13 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 	StdDev = sqrt((sumSqrMahalDist / nGoodSamples) + Avg*Avg);
 
 	//std::cout << "\nSigma = " << sigma2;
-	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+
+	// For registration rejection purpose:
+	//std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	//std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
 }
 
 double algDirICP_GIMLOP::ICP_EvaluateErrorFunction()
@@ -148,9 +174,15 @@ vctFrm3 algDirICP_GIMLOP::ICP_RegisterMatches()
   //}
 
   vctFrm3 dF;
-  vct6 x0(0.0);
-  vct6 x;
+  //vct6 x0(0.0);
+  //vct6 x;
+  vctDynamicVector<double> x0;
+  vctDynamicVector<double> x;
 
+  x0.SetSize(nTrans);
+  x.SetSize(nTrans);
+
+  x0.SetAll(0.0);
   // x_prev must begin at a different value than x0
   x_prev.SetAll(std::numeric_limits<double>::max());
 
@@ -162,9 +194,14 @@ vctFrm3 algDirICP_GIMLOP::ICP_RegisterMatches()
   // update transform
   vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
   vctFixedSizeVectorRef<double, 3, 1> t(x, 3);
+  double scale;
+  if (bScale)
+	  scale = x[6];
   dF.Rotation() = vctRot3(vctRodRot3(alpha));
   dF.Translation() = t;
   Freg = dF * Freg;
+  if (bScale)
+	  sc = scale;
 
   return Freg;
 }
@@ -271,7 +308,11 @@ void algDirICP_GIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
 void algDirICP_GIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
   // base class
-  algDirICP::ICP_UpdateParameters_PostRegister(Freg);
+	algDirICP::ICP_UpdateParameters_PostRegister(Freg);
+
+	if (bScale)
+		for (unsigned int s = 0; s < nSamples; s++)
+			samplePtsXfmd.Element(s) = sc * samplePtsXfmd.Element(s); // move this to IMLOP also later
 
   UpdateNoiseModel_DynamicEstimates();
   UpdateNoiseModel_SamplesXfmd(Freg);  
@@ -739,19 +780,35 @@ int algDirICP_GIMLOP::NodeMightBeCloser(
 // Helper Methods
 
 void algDirICP_GIMLOP::SetSamples(
-  const vctDynamicVector<vct3> &samplePts,
-  const vctDynamicVector<vct3> &sampleNorms,
+  const vctDynamicVector<vct3> &argSamplePts,
+  const vctDynamicVector<vct3> &argSampleNorms,
   const vctDynamicVector<double> &argK,
   const vctDynamicVector<double> &argE,
   const vctDynamicVector<vct3x2> &argL,
   const vctDynamicVector<vct3x3> &argM,
+  double argScale, bool argbScale,
   PARAM_EST_TYPE paramEst)
 {
   // base class
-  nSamples = samplePts.size();
-  algDirICP::SetSamples(samplePts, sampleNorms);
+  nSamples = argSamplePts.size();
+
+  // scale sample points (remove this from here when you move it to IMLOP)
+  sc = argScale;
+  bScale = argbScale;
+  if (bScale) {
+	  for (unsigned int i = 0; i < nSamples; i++)
+		  samplePts[i] = argSamplePts[i] * sc;
+	  nTrans = 7; // 3 for rotation, 3 for translation, 1 for scale
+  }
+  else
+	  nTrans = 6; // 3 for rotation, 3 for translation
+  std::cout << "# tranformation parameters: " << nTrans << std::endl;
+
+  algDirICP::SetSamples(argSamplePts, argSampleNorms);
   
   SetNoiseModel(argK, argE, argL, argM, paramEst);
+
+  x_prev.SetSize(nTrans);
 }
 
 
@@ -934,14 +991,17 @@ void algDirICP_GIMLOP::ComputeCovDecomposition_NonIter(
 }
 
 
-void algDirICP_GIMLOP::UpdateOptimizerCalculations(const vct6 &x)
+void algDirICP_GIMLOP::UpdateOptimizerCalculations(const /*vct6*/ vctDynamicVector<double> &x)
 {
   a.Assign(x[0], x[1], x[2]);
   t.Assign(x[3], x[4], x[5]);
+  if (bScale)
+	  sc = x[6];
 
   // matrix for rotation increment
   Ra = vctRot3(vctRodRot3(a));
 
+  Xp_xfm = samplePtsXfmd;
   vctDynamicVectorRef<vct3>   Xp_xfm(samplePtsXfmd);
   vctDynamicVectorRef<vct3>   Xn_xfm(sampleNormsXfmd);
   vctDynamicVectorRef<vct3>   Yp(matchPts);
@@ -954,7 +1014,7 @@ void algDirICP_GIMLOP::UpdateOptimizerCalculations(const vct6 &x)
 
     //--- position---//
     Yp_t[i] = Yp[i] - t;
-    Rat_Yp_RaXp_t[i] = Ra.TransposeRef() * Yp_t[i] - Xp_xfm[i];
+    Rat_Yp_RaXp_t[i] = Ra.TransposeRef() * Yp_t[i] - sc * Xp_xfm[i];
     //Yp_RaXp_t[i] = Yp[i] - Ra*Xp_xfm[i] - t;    
 #ifdef KENT_POS_ISOTROPIC
     invM_Rat_Yp_RaXp_t[i] = Emin[i]*(Ra.TransposeRef() * Yp_t[i] - Xp_xfm[i]);
@@ -969,7 +1029,7 @@ void algDirICP_GIMLOP::UpdateOptimizerCalculations(const vct6 &x)
   x_prev = x;
 }
 
-double algDirICP_GIMLOP::CostFunctionValue(const vct6 &x)
+double algDirICP_GIMLOP::CostFunctionValue(const /*vct6*/ vctDynamicVector<double> &x)
 {
   // don't recompute these if already computed for gradient
   if (x.NotEqual(x_prev))
@@ -995,7 +1055,7 @@ double algDirICP_GIMLOP::CostFunctionValue(const vct6 &x)
 }
 
 
-void algDirICP_GIMLOP::CostFunctionGradient(const vct6 &x, vct6 &g)
+void algDirICP_GIMLOP::CostFunctionGradient(const /*vct6*/ vctDynamicVector<double> &x, /*vct6*/ vctDynamicVector<double> &g)
 {
   //vct3 alpha;         // alpha = a/norm(a)
   //double theta;       // theta = norm(a)
@@ -1016,6 +1076,10 @@ void algDirICP_GIMLOP::CostFunctionGradient(const vct6 &x, vct6 &g)
   g.SetAll(0.0);
   vctFixedSizeVectorRef<double, 3, 1> ga(g, 0);
   vctFixedSizeVectorRef<double, 3, 1> gt(g, 3);
+  vctFixedSizeVectorRef<double, 1, 1> gsc;
+  if (bScale)
+	  gsc.SetRef(g, 6);
+
   vctDynamicVectorRef<vct3>   Xp_xfm(samplePtsXfmd);
   vctDynamicVectorRef<vct3>   Xn_xfm(sampleNormsXfmd);
   vctDynamicVectorRef<vct3>   Yp(matchPts);
@@ -1043,6 +1107,9 @@ void algDirICP_GIMLOP::CostFunctionGradient(const vct6 &x, vct6 &g)
     // translational effect
     gt -= Ra * invM_Rat_Yp_RaXp_t[j];
 
+	if (bScale)
+		gsc += invM_Rat_Yp_RaXp_t[j] * (-Xp_xfm.Element(j));
+
     //// wrt rodrigues elements
     //for (unsigned int i = 0; i < 3; i++)
     //{
@@ -1057,6 +1124,11 @@ void algDirICP_GIMLOP::CostFunctionGradient(const vct6 &x, vct6 &g)
     //// wrt translation
     //gt -= invM_Yp_RaXp_t[j];
   }
+}
+
+void algDirICP_GIMLOP::ReturnScale(double &scale)
+{
+	scale = sc;
 }
 
 double algDirICP_GIMLOP::MatchError(

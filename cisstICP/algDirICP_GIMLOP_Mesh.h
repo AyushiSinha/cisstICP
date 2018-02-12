@@ -67,9 +67,10 @@ public:
     const vctDynamicVector<double> &argK,
     const vctDynamicVector<double> &argE,
     const vctDynamicVector<vct3x2> &argL,
-    const vctDynamicVector<vct3x3> &M,
+	const vctDynamicVector<vct3x3> &M,
+	double scale = 1.0, bool bScale = false,
     PARAM_EST_TYPE paramEst = PARAMS_FIXED)
-    : algDirICP_GIMLOP(pDirTree, samplePts, sampleNorms, argK, argE, argL, M, paramEst),
+	: algDirICP_GIMLOP(pDirTree, samplePts, sampleNorms, argK, argE, argL, M, scale, bScale, paramEst),
     pDirTree(pDirTree),
 	  TCPS(pDirTree->mesh)
   {};

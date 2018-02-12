@@ -156,41 +156,41 @@ algDirICP_GDIMLOP_dlibWrapper::algDirICP_GDIMLOP_dlibWrapper(algDirICP_GDIMLOP *
     //x_dlib(4) = x0[4];
     //x_dlib(5) = x0[5];
 
-	int nTrans;
-	if (Kent_dlib->bScale)
-		nTrans = 7;
-	else
-		nTrans = 6;
+	  int nRot = 3;
+	  int nTrans = 6;
+	  int nScale;
+	if (Kent_dlib->bScale) nScale = 7; else nScale = 6;
 
 	for (int i = 0; i < nComponents; i++)
 	{
 		x_dlib(i) = x0[i];
 
-		if (i < nTrans)
+		if (i < nRot)
 		{
-			x_lower(i) = -DBL_MAX; // x_dlib(i) - 1;
-			x_upper(i) = DBL_MAX; // x_dlib(i) + 1;
-
-			// should we constrain the scale as well?
-
-			//if (i == 6) {
-			// x_lower(i) = 0.9;
-			// x_upper(i) = 1.1;
-			//}
+			x_lower(i) = x_dlib(i) - Kent_dlib->rb;
+			x_upper(i) = x_dlib(i) + Kent_dlib->rb;
+		}
+		else if (i >= nRot && i < nTrans)
+		{
+			x_lower(i) = x_dlib(i) - Kent_dlib->tb;
+			x_upper(i) = x_dlib(i) + Kent_dlib->tb;
+		}
+		else if (i >= nTrans && i < nScale)
+		{
+			x_lower(i) = 1 - Kent_dlib->sb;
+			x_upper(i) = 1 + Kent_dlib->sb;
 		}
 		else
 		{
 			x_lower(i) = -Kent_dlib->spb;
 			x_upper(i) = Kent_dlib->spb;
 		}
-		// add proper options for limits on all components
-		//x_lower(6) = 0.7; // -DBL_MAX;
-		//x_upper(6) = 1.3; // DBL_MAX;
 	}
 
-    //std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 
-    //  << dlib::length(dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib)) << std::endl;
-
+#ifdef DLIB_VERIFY_DERIVATIVE
+    std::cout << "Difference between analytic derivative and numerical approximation of derivative: " 
+      << dlib::length(dlib::derivative(fValue)(x_dlib) - fDerivative(x_dlib)) << std::endl;
+#endif
 
     dlib::find_min_box_constrained( 
 	  dlib::bfgs_search_strategy(),

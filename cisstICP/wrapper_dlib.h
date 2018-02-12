@@ -59,7 +59,7 @@ public:
   // constructor
   wrapper_dlib(); // algDirICP_GIMLOP *kent );
 
-  vct6  ComputeRegistration(const vct6 &x0, algDirICP_GIMLOP *kent);
+  /*vct6*/ vctDynamicVector<double> ComputeRegistration(const /*vct6*/ vctDynamicVector<double> &x0, algDirICP_GIMLOP *kent);
 };
 
 #endif

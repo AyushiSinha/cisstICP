@@ -62,7 +62,7 @@ public:
 	vctDynamicVector<vctInt3>	f;
 	vctDynamicVector<vctDynamicVector<vct3>>	Tssm_wi;
 
-	double spb;
+	double rb, tb, sb, spb;		// rotation, translation, scale, and shape parameter bounds
 	bool bScale;
 
 	// -- Optimizer calculations common to both cost and gradient function
@@ -176,7 +176,10 @@ public:
 	double argScale = 1.0,
 	bool argbScale = false);
 
-  void SetConstraints(double argSPbounds = 3.0);
+  void SetConstraints(double argRotbounds = DBL_MAX,
+						double argTransbounds = DBL_MAX,
+						double argScalebounds = 0.3,
+						double argSPbounds = 3.0);
 
   virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
 	  double &Avg, double &StdDev);

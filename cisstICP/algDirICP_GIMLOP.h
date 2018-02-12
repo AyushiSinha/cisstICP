@@ -83,6 +83,9 @@ public:
   // for reporting purposes
   double meanSigma2, meanK, meanE, meanE_msmt;
 
+  double rb, tb, sb;		// rotation, translation, and scale bounds
+  bool bScale;
+
 protected:  
 
   Ellipsoid_OBB_Intersection_Solver IntersectionSolver;
@@ -140,11 +143,16 @@ protected:
   double sampleDmin;
   double sampleEmin;
 
+  unsigned int	nTrans;
+
   // Optimizer calculations common to both cost function and gradient
-  vct6 x_prev;
+  /*vct6*/ vctDynamicVector<double> x_prev;
   vct3 a, t;
+  double sc;
   vctRot3 Ra;
   //vctDynamicVector<vct3> Yp_RaXp_t;
+
+  vctDynamicVector<vct3> Xp_xfm;
   vctDynamicVector<vct3> Yp_t;
   vctDynamicVector<vct3> Rat_Yp_RaXp_t;
   vctDynamicVector<vct3> invM_Rat_Yp_RaXp_t;
@@ -164,7 +172,8 @@ public:
     const vctDynamicVector<double> &argK,
     const vctDynamicVector<double> &argE,
     const vctDynamicVector<vct3x2> &argL,
-    const vctDynamicVector<vct3x3> &M,
+	const vctDynamicVector<vct3x3> &M,
+	double scale = 1.0, bool bScale = false,
     PARAM_EST_TYPE paramEst = PARAMS_FIXED);
 
   // destructor
@@ -172,10 +181,12 @@ public:
 
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
 
+  virtual void ReturnScale(double &scale);
+
   // dlib routines
-  void    UpdateOptimizerCalculations(const vct6 &x);
-  void    CostFunctionGradient(const vct6 &x, vct6 &g);
-  double  CostFunctionValue(const vct6 &x);
+  void    UpdateOptimizerCalculations(const /*vct6*/ vctDynamicVector<double> &x);
+  void    CostFunctionGradient(const /*vct6*/ vctDynamicVector<double> &x, /*vct6*/ vctDynamicVector<double> &g);
+  double  CostFunctionValue(const /*vct6*/ vctDynamicVector<double> &x);
 
   inline double MatchError(
     const vct3 &Xp, const vct3 &Xn,
@@ -189,7 +200,8 @@ public:
     const vctDynamicVector<double> &argK,
     const vctDynamicVector<double> &argE,
     const vctDynamicVector<vct3x2> &argL,
-    const vctDynamicVector<vct3x3> &argM,
+	const vctDynamicVector<vct3x3> &argM,
+	double argScale = 1.0, bool argbScale = false,
     PARAM_EST_TYPE paramEst = PARAMS_FIXED);
 
   void SetNoiseModel(
@@ -198,6 +210,10 @@ public:
     const vctDynamicVector<vct3x2> &argL,
     const vctDynamicVector<vct3x3> &M,
     PARAM_EST_TYPE paramEst);
+
+  void SetConstraints(double argRotbounds = DBL_MAX,
+						double argTransbounds = DBL_MAX,
+						double argScalebounds = 0.3);
 
   void UpdateNoiseModel_DynamicEstimates();
   void UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg);

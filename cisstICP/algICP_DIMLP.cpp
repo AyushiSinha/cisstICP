@@ -63,8 +63,14 @@ algICP_DIMLP::algICP_DIMLP(
 	SetSamples(samplePts, sampleCov, sampleMsmtCov, meanShape, scale, bScale);
 }
 
-void algICP_DIMLP::SetConstraints(double argSPbounds)
+void algICP_DIMLP::SetConstraints(double argRotbounds,
+									double argTransbounds,
+									double argScalebounds,
+									double argSPbounds)
 {
+	rb = argRotbounds;
+	tb = argTransbounds;
+	sb = argScalebounds;
 	spb = argSPbounds;
 }
 
@@ -79,6 +85,7 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	double sumMatchDist = 0.0;
 	double sqrMatchDist;
 
+	double totalSumSqrMahalDist = 0.0;
 	double sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
 	double sqrMahalDist;
@@ -89,13 +96,15 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		if (outlierFlags[i])	continue;	// skip outliers
-
-		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
+		residual = /*matchPts[i]*/Tssm_Y[i] - (Freg * samplePts[i]) * sc;
 		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
 
 		sqrMahalDist = residual*Minv*residual;
+		totalSumSqrMahalDist += sqrMahalDist;
+
+		if (outlierFlags[i])	continue;	// skip outliers
+
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 
@@ -108,10 +117,13 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
 
-	std::cout << "\nFinal Scale = " << sc << std::endl;
-	std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
-	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
-	
+	//std::cout << "\nFinal Scale = " << sc << std::endl;
+	//std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
+	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+
+	// For registration rejection purpose:
+	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers\n";
 }
 
 void algICP_DIMLP::SetSamples(

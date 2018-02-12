@@ -223,9 +223,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//        i.e. no noise is added to the point cloud, the noise model is merely
 	//        allow for errors at intermediate locations between the points and penalize
 	//        errors offset from the surface
-	double PointCloudNoisePerpPlane = 0.5;			// noise model for point cloud using mesh constructor
+	double PointCloudNoisePerpPlane = 1.0; // 0.5;			// noise model for point cloud using mesh constructor
 	//  Note: in-plane noise set automatically relative to triangle size
 
+	double rotbounds = DBL_MAX;
+	double transbounds = DBL_MAX;
+	double scalebounds = 0.3;
 	double shapeparambounds = 3.0;
 	
 	// Modify default values
@@ -327,6 +330,15 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		if (!cmdOpts.useDefaultShapeParamBounds)
 			shapeparambounds = cmdOpts.spbounds;
 	}
+
+	if (!cmdOpts.useDefaultRotationBounds)
+		rotbounds = cmdOpts.rbounds;
+
+	if (!cmdOpts.useDefaultTranslationBounds)
+		transbounds = cmdOpts.tbounds;
+
+	if (!cmdOpts.useDefaultScaleBounds)
+		scalebounds = cmdOpts.sbounds;
 
 	// Create target shape from mesh (as a PD tree)
 	if (TargetShapeAsMesh)
@@ -628,7 +640,8 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		else
 			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, bScale); 
 																		// ^ for cases when scale is specified, but must not be optimized over
-		pAlg->SetConstraints(shapeparambounds);
+
+		pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
 
 		mesh.TriangleCov.SetSize(mesh.NumTriangles());
 		mesh.TriangleCovEig.SetSize(mesh.NumTriangles());

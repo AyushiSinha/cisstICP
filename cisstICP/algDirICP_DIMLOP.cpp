@@ -71,8 +71,14 @@ algDirICP_DIMLOP::algDirICP_DIMLOP(
    SetSamples(samplePts, sampleNorms, sampleCov, sampleMsmtCov, meanShape, scale, bScale);
 }
 
-void algDirICP_DIMLOP::SetConstraints(double argSPbounds)
+void algDirICP_DIMLOP::SetConstraints(double argRotbounds,
+									double argTransbounds,
+									double argScalebounds,
+									double argSPbounds)
 {
+	rb = argRotbounds;
+	tb = argTransbounds;
+	sb = argScalebounds;
 	spb = argSPbounds;
 }
 
@@ -80,11 +86,16 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 {
 	double sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
+	double sqrMahalDist;
 	double sqrMatchDist;
+	double matchAngle;
 
+	double totalSumSqrMahalDist = 0.0;
 	double sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	double sqrMahalDist;
+	double totalSumSqrMatchAngle = 0.0;
+	double sumSqrMatchAngle = 0.0;
+
 	int nGoodSamples = 0;
 
 	vct3x3 M, Minv;
@@ -94,32 +105,47 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	//       compute statistics on only the inliers
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		if (outlierFlags[i]) continue;  // skip outliers
-
-		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
+		residual = /*matchPts[i]*/Tssm_Y[i] - (Freg * samplePts[i]) * sc;
 		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose();// +*Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
 
 		sqrMahalDist = residual*Minv*residual;
+		totalSumSqrMahalDist += sqrMahalDist;
+
+		matchAngle = acos( std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]) , 2*cmnPI) );
+
+		//sumMatchAngle += matchAngle;
+		totalSumSqrMatchAngle += k_init * matchAngle * matchAngle ;
+
+		if (outlierFlags[i]) continue;  // skip outliers
+
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 
 		sqrMatchDist = residual.NormSquare();
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
+
+		sumSqrMatchAngle += k_init * matchAngle * matchAngle ;
 		nGoodSamples++;
 	}
 
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
 
-	std::cout << "\nFinal Scale = " << sc << std::endl;
-	std::cout << "\n# good samples = " << nGoodSamples << std::endl;
-	std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
-	std::cout << "\nAverage Mahalanobis Distance = " << Avg << "(+/-" << StdDev << ")" << std::endl;
+	//std::cout << "\nFinal Scale = " << sc << std::endl;
+	//std::cout << "\n# good samples = " << nGoodSamples << std::endl;
+	//std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
+	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << "(+/-" << StdDev << ")" << std::endl;
 
 	//Avg = sumMatchDist / nSamples;
 	//StdDev = (sumSqrMatchDist / nSamples) + Avg*Avg;
+	
+	// For registration rejection purpose:
+	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
 }
 
 //void algDirICP_DIMLOP::ComputeMatchStatistics(
