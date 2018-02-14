@@ -109,7 +109,7 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 	{
 		//if (outlierFlags[i])	continue;	// skip outliers
 
-		residual = matchPts[i] - (Freg * samplePts[i]) /** sc*/;
+		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
 
 		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
 

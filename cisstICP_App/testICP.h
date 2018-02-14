@@ -352,15 +352,23 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	}
 	else
 	{
+		printf("Building point cloud PD tree... ");
 		// build Point Cloud PD tree from mesh
-		// (uses triangle center points as the point cloud)
 		//  Note: the mesh constructor for the point cloud PD tree
 		//        assumes the specified noise in direction perpendicular to surface
 		//        and sets the in-plane noise based on the triangle size in order
 		//        to allow for greater freedom of match anywhere along the triangle surface
 		//        even though each triangle surface is represented by only one point.
-		printf("Building point cloud PD tree... ");
+		// (uses triangle center points as the point cloud)
 		cisstPointCloud pointCloud(mesh, PointCloudNoisePerpPlane);
+		// (uses vertices as the point cloud)
+		//for (int i = 0; i < mesh.NumVertices(); i++)
+		//{
+		//	mesh.vertices[i][0] = mesh.vertices[i][0] * 10;
+		//	mesh.vertices[i][1] = mesh.vertices[i][1] * 10;
+		//	mesh.vertices[i][2] = mesh.vertices[i][2] * 10;
+		//}
+		//cisstPointCloud pointCloud(mesh.vertices);
 		PDTree_PointCloud *pPointCloudTree;
 		pPointCloudTree = new PDTree_PointCloud(pointCloud, nThresh, diagThresh);
 		pTree = pPointCloudTree;
@@ -410,15 +418,20 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
 
 	// Generate random samples from target mesh_ssm 
-	GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
+	//if (TargetShapeAsMesh)
+		GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
 		samples, sampleNorms, sampleDatums,
 		&saveSamplesPath);
+	//else
+	//	GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
+	//	samples, sampleNorms,
+	//	&saveSamplesPath);
 
 	if (!cmdOpts.useDefaultInput) {
 		for (int i = 0; i < nSamples; i++)
 		{
 			samples[i] = pts.vertices[i];
-			//sampleNorms[i] = pts.vertexNormals[i];
+			sampleNorms[i] = pts.vertexNormals[i];
 		}
 	}
 

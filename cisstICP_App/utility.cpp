@@ -1010,6 +1010,45 @@ void CreateMesh(cisstMesh &mesh,
   }
 }
 
+// Generate samples from point cloud
+void GenerateSamples(cisstMesh &mesh,
+	unsigned int randSeed, unsigned int &randSeqPos,
+	unsigned int nSamps,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	std::string *SavePath_Samples)
+{
+	//initialize random numbers
+	cmnRandomSequence &cisstRandomSeq = cmnRandomSequence::GetInstance();
+	cisstRandomSeq.SetSeed(randSeed);
+	cisstRandomSeq.SetSequencePosition(randSeqPos);
+
+	samples.SetSize(nSamps);
+	sampleNorms.SetSize(nSamps);
+
+	// generating samples
+	int m;
+	// initialize samples
+	for (unsigned int s = 0; s < nSamps; s++) {
+		// sampling the object surface and generating second pointcloud from it
+		m = cisstRandomSeq.ExtractRandomInt(0, nSamps);
+		samples.at(s) = mesh.vertices(m);
+		sampleNorms.at(s) = mesh.vertexNormals(m);
+	}
+	randSeqPos = cisstRandomSeq.GetSequencePosition();
+
+	// save samples
+	if (SavePath_Samples)
+	{
+		if (cisstPointCloud::WritePointCloudToFile(*SavePath_Samples, samples, sampleNorms) < 0)
+		{
+			std::cout << "ERROR: Samples save failed" << std::endl;
+			assert(0);
+		}
+	}
+}
+
+// Generate samples from mesh
 void GenerateSamples(cisstMesh &mesh,
   unsigned int randSeed, unsigned int &randSeqPos,
   unsigned int nSamps,

@@ -129,6 +129,15 @@ void GenerateSamples(
   vctDynamicVector<unsigned int>  &sampleDatums,
   std::string *SavePath_Samples = 0);
 
+//  cisstRandomSeq - source for uniform distributed random variables
+void GenerateSamples(
+	cisstMesh &mesh,
+	unsigned int randSeed, unsigned int &randSeqPos,
+	unsigned int nSamps,
+	vctDynamicVector<vct3>   &samples,
+	vctDynamicVector<vct3>   &sampleNorms,
+	std::string *SavePath_Samples = 0);
+
 // Generate noisy samples having the specified Gaussian distributions
 void GenerateNoisySamples_Gaussian(
   std::ifstream &randnStream,
