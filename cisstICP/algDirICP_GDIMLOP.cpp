@@ -127,7 +127,7 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		//axisAngle = (B[i] / k[i]) * acos(std::fmod(major*major, 2 * cmnPI) - std::fmod(minor*minor, 2 * cmnPI));
 		
 		//sumMatchAngle += matchAngle;
-		totalSumSqrMatchAngle += k[i] * matchAngle * matchAngle ;
+		totalSumSqrMatchAngle += k[i]/2.0 * matchAngle * matchAngle ;
 
 		if (outlierFlags[i])	continue;	// skip outliers
 
@@ -138,7 +138,7 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
 
-		sumSqrMatchAngle += k[i] * matchAngle * matchAngle ;
+		sumSqrMatchAngle += k[i]/2.0 * matchAngle * matchAngle ;
 		nGoodSamples++;
 	}
 	Avg = sumMahalDist / nGoodSamples;

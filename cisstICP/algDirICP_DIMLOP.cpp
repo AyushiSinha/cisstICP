@@ -115,7 +115,7 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 		matchAngle = acos( std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]) , 2*cmnPI) );
 
 		//sumMatchAngle += matchAngle;
-		totalSumSqrMatchAngle += k_init * matchAngle * matchAngle ;
+		totalSumSqrMatchAngle += k_init/2.0 * matchAngle * matchAngle ;
 
 		if (outlierFlags[i]) continue;  // skip outliers
 
@@ -126,7 +126,7 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
 
-		sumSqrMatchAngle += k_init * matchAngle * matchAngle ;
+		sumSqrMatchAngle += k_init/2.0 * matchAngle * matchAngle ;
 		nGoodSamples++;
 	}
 
