@@ -45,6 +45,7 @@
 #undef NDEBUG       // enable assert in release mode
 
 #define EPS  1e-14
+#define ENABLE_PARALLELIZATION
 
 // Constructor
 algDirICP_GIMLOP::algDirICP_GIMLOP(
@@ -1012,7 +1013,12 @@ void algDirICP_GIMLOP::UpdateOptimizerCalculations(const /*vct6*/ vctDynamicVect
   vctDynamicVectorRef<vct3>   Xn_xfm(sampleNormsXfmd);
   vctDynamicVectorRef<vct3>   Yp(matchPts);
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
-  for (unsigned int i = 0; i < nSamples; i++)
+
+  unsigned int i;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (i = 0; i < nSamples; i++)
   {
     //--- orientation ---//
     RaXn[i] = Ra*Xn_xfm[i];
@@ -1044,9 +1050,13 @@ double algDirICP_GIMLOP::CostFunctionValue(const /*vct6*/ vctDynamicVector<doubl
   }
 
   double f = 0.0;
+  unsigned int i;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
   //vctDynamicVectorRef<vct3>   Yp(matchPts);
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
-  for (unsigned int i = 0; i < nSamples; i++)
+  for (i = 0; i < nSamples; i++)
   {
     double major = RaRL[i].Column(0)*Yn[i];
     double minor = RaRL[i].Column(1)*Yn[i];
@@ -1091,7 +1101,12 @@ void algDirICP_GIMLOP::CostFunctionGradient(const /*vct6*/ vctDynamicVector<doub
   vctDynamicVectorRef<vct3>   Yp(matchPts);
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
   vct3x3 Jz_a;
-  for (unsigned int j = 0; j < nSamples; j++)
+
+  unsigned int j;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
 

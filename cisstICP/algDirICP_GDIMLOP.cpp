@@ -45,6 +45,7 @@
 #undef NDEBUG       // enable assert in release mode
 
 #define EPS  1e-14
+#define ENABLE_PARALLELIZATION
 
 // Constructor
 algDirICP_GDIMLOP::algDirICP_GDIMLOP(
@@ -1452,7 +1453,11 @@ void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const /*vct6*/vctDynamicVect
   // Update shape based on current s (and wi and meanshape)
   // Compute Tssm_Y based on current Mu and shape
   UpdateShape(s);
-  for (unsigned int i = 0; i < nSamples; i++)
+  unsigned int i;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (i = 0; i < nSamples; i++)
   {
     //--- orientation ---//
     RaXn[i] = Ra * Xn/*_xfm*/[i];
@@ -1492,6 +1497,10 @@ double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<doubl
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
 
   double f = 0.0;
+  unsigned int i;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
   for (unsigned int i = 0; i < nSamples; i++)
   {
 	if (outlierFlags[i])	continue;
@@ -1545,7 +1554,12 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
 
   vct3x3 Jz_a;
-  for (unsigned int j = 0; j < nSamples; j++)
+
+  unsigned int j;
+#ifdef ENABLE_PARALLELIZATION
+#pragma omp parallel for
+#endif
+  for (j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
 	if (outlierFlags[j])	continue;
