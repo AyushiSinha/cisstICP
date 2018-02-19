@@ -100,15 +100,16 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 	double sqrMahalDist;
 	double sqrMatchDist;
 	double matchAngle;
-	double axisAngle;
+	double axisAngle1;
+	double axisAngle2;
 
-	double totalSumSqrMahalDist = 0.0;
-	double sumSqrMahalDist = 0.0;
+	totalSumSqrMahalDist = 0.0;
+	sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	double totalSumSqrMatchAngle = 0.0;
-	double sumSqrMatchAngle = 0.0;
+	totalSumSqrMatchAngle = 0.0;
+	sumSqrMatchAngle = 0.0;
 
-	int nGoodSamples = 0;
+	nGoodSamples = 0;
 
 	vct3 residual;
 
@@ -123,11 +124,12 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 
 		//double major = RaRL[i].Column(0)*matchNorms[i];
 		//double minor = RaRL[i].Column(1)*matchNorms[i];
-		matchAngle = acos( std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]) , 2*cmnPI) ); 
-		//axisAngle = (B[i] / k[i]) * acos(std::fmod(major*major, 2 * cmnPI) - std::fmod(minor*minor, 2 * cmnPI));
+		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
+		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
+		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
 		
 		//sumMatchAngle += matchAngle;
-		totalSumSqrMatchAngle += k[i]/2.0 * matchAngle * matchAngle ;
+		totalSumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 
 		if (outlierFlags[i])	continue;	// skip outliers
 
@@ -137,8 +139,8 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		sqrMatchDist = residual.NormSquare();
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
-
-		sumSqrMatchAngle += k[i]/2.0 * matchAngle * matchAngle ;
+		
+		sumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 		nGoodSamples++;
 	}
 	Avg = sumMahalDist / nGoodSamples;
@@ -146,12 +148,15 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 
 	//std::cout << "\nFinal Scale = " << sc << std::endl;
 	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
 
+void algDirICP_GDIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
+{
 	// For registration rejection purpose:
-	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
-	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
+	tMsg << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	tMsg << "\nSum square match angle = " << totalSumSqrMatchAngle / 2.0 << " over " << nSamples << " samples";
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	tMsg << "\nSum square match angle = " << sumSqrMatchAngle / 2.0 << " over " << nGoodSamples << " inliers\n";
 }
 
 double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()

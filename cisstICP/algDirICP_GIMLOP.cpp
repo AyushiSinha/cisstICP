@@ -91,15 +91,16 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 	double sqrMahalDist;
 	double sqrMatchDist;
 	double matchAngle;
-	double axisAngle;
+	double axisAngle1;
+	double axisAngle2;
 
 	//double totalSumSqrMahalDist = 0.0;
-	double sumSqrMahalDist = 0.0;
+	sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
 	//double totalSumSqrMatchAngle = 0.0;
-	double sumSqrMatchAngle = 0.0;
+	sumSqrMatchAngle = 0.0;
 
-	int nGoodSamples = 0;
+	nGoodSamples = 0;
 
 	vct3 residual;
 
@@ -112,6 +113,8 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
 
 		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
+		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
+		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
 
 		sqrMahalDist = residual*invM[i]*residual;
 		sumSqrMahalDist += sqrMahalDist;
@@ -121,7 +124,7 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
 
-		sumSqrMatchAngle += k[i] * matchAngle * matchAngle;
+		sumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 		nGoodSamples++;
 	}
 	//Avg = sumMatchDist / (meanSigma2*nGoodSamples);
@@ -131,12 +134,15 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 
 	//std::cout << "\nSigma = " << sigma2;
 	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
 
+void algDirICP_GIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
+{
 	// For registration rejection purpose:
 	//std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
 	//std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
-	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	tMsg << "\nSum square match angle = " << sumSqrMatchAngle / 2.0 << " over " << nGoodSamples << " inliers\n";
 }
 
 double algDirICP_GIMLOP::ICP_EvaluateErrorFunction()

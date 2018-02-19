@@ -1127,7 +1127,7 @@ void GenerateSubSamples(cisstMesh &pts,
 		}
 		subsampledPts[i] = pts.vertices[currnum];
 		subsampledNormals[i] = pts.vertexNormals[currnum];
-#if 0 // sample from visible portion of left nostril
+#if 1 // sample from visible portion of left nostril
 		if (subsampledPts[i][0] < 5.50 && subsampledPts[i][0] > -1.00 &&	// left to right
 			subsampledPts[i][1] < 15.00 && subsampledPts[i][1] > -30.00 &&	// front to back
 			subsampledPts[i][2] < 20.00 && subsampledPts[i][2] > -12.00)	// top to bottom
@@ -1312,8 +1312,8 @@ void ComputeCovariances_SurfaceModel(
   //  assume a z-axis surface orientation
   M0.SetAll(0.0);
   M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
-  M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
-  M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+  M0.Element(2, 2) = StdDevInPlane * StdDevInPlane;
+  M0.Element(1, 1) = StdDevPerpPlane * StdDevPerpPlane;
   //invM0.SetAll(0.0);
   //invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
   //invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
@@ -1844,8 +1844,8 @@ void ReadSampleSurfaceNoise(bool bUseDefaultCov, bool bUseDefaultL,
 	//  assume a z-axis normal orientation
 	M0.SetAll(0.0);
 	M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
-	M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
-	M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+	M0.Element(2, 2) = StdDevInPlane * StdDevInPlane;
+	M0.Element(1, 1) = StdDevPerpPlane * StdDevPerpPlane;
 	invM0.SetAll(0.0);
 	invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
 	invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
@@ -2015,8 +2015,8 @@ void GenerateSampleSurfaceNoise(unsigned int randSeed, unsigned int &randSeqPos,
   //  assume a z-axis normal orientation
   M0.SetAll(0.0);
   M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
-  M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
-  M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+  M0.Element(2, 2) = StdDevInPlane * StdDevInPlane;
+  M0.Element(1, 1) = StdDevPerpPlane * StdDevPerpPlane;
   invM0.SetAll(0.0);
   invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
   invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);
@@ -2221,8 +2221,8 @@ void GenerateSampleSurfaceNoise2(unsigned int randSeed, unsigned int &randSeqPos
 	//  assume a z-axis normal orientation
 	M0.SetAll(0.0);
 	M0.Element(0, 0) = StdDevInPlane * StdDevInPlane;
-	M0.Element(1, 1) = StdDevInPlane * StdDevInPlane;
-	M0.Element(2, 2) = StdDevPerpPlane * StdDevPerpPlane;
+	M0.Element(2, 2) = StdDevInPlane * StdDevInPlane;
+	M0.Element(1, 1) = StdDevPerpPlane * StdDevPerpPlane;
 	invM0.SetAll(0.0);
 	invM0.Element(0, 0) = 1.0 / M0.Element(0, 0);
 	invM0.Element(1, 1) = 1.0 / M0.Element(1, 1);

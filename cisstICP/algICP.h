@@ -130,6 +130,7 @@ public:
   virtual void  SetSamples(const vctDynamicVector<vct3> &argSamplePts);
 
   virtual void ComputeMatchStatistics(double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg){};
 
   virtual void ReturnScale(double &scale){};
   virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam) {};

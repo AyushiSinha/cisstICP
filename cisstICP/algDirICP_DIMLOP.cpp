@@ -115,7 +115,7 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 		matchAngle = acos( std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]) , 2*cmnPI) );
 
 		//sumMatchAngle += matchAngle;
-		totalSumSqrMatchAngle += k_init/2.0 * matchAngle * matchAngle ;
+		totalSumSqrMatchAngle += k_init * matchAngle * matchAngle ;
 
 		if (outlierFlags[i]) continue;  // skip outliers
 
@@ -126,7 +126,7 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
 
-		sumSqrMatchAngle += k_init/2.0 * matchAngle * matchAngle ;
+		sumSqrMatchAngle += k_init * matchAngle * matchAngle ;
 		nGoodSamples++;
 	}
 
@@ -143,9 +143,9 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	
 	// For registration rejection purpose:
 	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle / 2.0 << " over " << nSamples << " samples";
 	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	std::cout << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
+	std::cout << "\nSum square match angle = " << sumSqrMatchAngle / 2.0 << " over " << nGoodSamples << " inliers\n";
 }
 
 //void algDirICP_DIMLOP::ComputeMatchStatistics(

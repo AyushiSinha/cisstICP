@@ -488,14 +488,15 @@ cisstICP::ReturnType cisstICP::IterateICP()
   }
   //std::cout << termMsg.str().c_str();
 
+  // compute final match distance
+  pAlgorithm->ComputeMatchStatistics(rt.MatchPosErrAvg, rt.MatchPosErrSD);
+  pAlgorithm->PrintMatchStatistics(termMsg);
+
   rt.termMsg = termMsg.str();
   rt.Freg = Freg;    
   rt.runTime = totalTimer.GetElapsedTime();
   rt.numIter = iter;  
   rt.nOutliers = nOutliers;
-
-  // compute final match distance
-  pAlgorithm->ComputeMatchStatistics(rt.MatchPosErrAvg, rt.MatchPosErrSD);
 
   return rt;
 }

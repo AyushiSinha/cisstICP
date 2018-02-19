@@ -158,6 +158,14 @@ protected:
   double sampleDmin;
   double sampleEmin;
 
+  // registration statistics
+  double totalSumSqrMahalDist;
+  double sumSqrMahalDist;
+  double totalSumSqrMatchAngle;
+  double sumSqrMatchAngle;
+
+  int nGoodSamples;
+
   // algorithm-specific termination
   bool bTerminateAlgorithm;
   unsigned char costFuncIncBits;
@@ -238,6 +246,7 @@ public:
   virtual ~algDirICP_GDIMLOP() {}
 
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg);
   void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
 
   virtual void ReturnScale(double &scale);

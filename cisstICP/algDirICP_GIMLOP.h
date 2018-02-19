@@ -159,6 +159,14 @@ protected:
   vctDynamicVector<vct3> RaXn;
   vctDynamicVector<vct3x2> RaRL;
 
+  // registration statistics
+  double totalSumSqrMahalDist;
+  double sumSqrMahalDist;
+  double totalSumSqrMatchAngle;
+  double sumSqrMatchAngle;
+
+  int nGoodSamples;
+
 
   //--- Algorithm Methods ---//
 
@@ -180,6 +188,7 @@ public:
   virtual ~algDirICP_GIMLOP() {}
 
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg);
 
   virtual void ReturnScale(double &scale);
 
