@@ -142,7 +142,7 @@ void algDirICP_GIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
 	//std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
 	//std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
 	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	tMsg << "\nSum square match angle = " << sumSqrMatchAngle / 2.0 << " over " << nGoodSamples << " inliers\n";
+	tMsg << "\nSum square match angle = " << sumSqrMatchAngle  << " over " << nGoodSamples << " inliers\n";
 }
 
 double algDirICP_GIMLOP::ICP_EvaluateErrorFunction()

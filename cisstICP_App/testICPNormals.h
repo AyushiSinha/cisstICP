@@ -726,13 +726,13 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  pAlg = new algDirICP_DIMLOP(
 			  pTreeMesh, noisySamples, noisySampleNorms,
 			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
-			  k, sigma2, wRpos, kfactor, scale,
+			  k, sigma2, wRpos, kfactor, 1,
 			  dynamicParamEst, bScale);
 	  else
 		  pAlg = new algDirICP_DIMLOP(
 			  pTreeMesh, noisySamples, noisySampleNorms,
 			  sampleNoiseCov, sampleNoiseCov, mesh_target.meanShape,
-			  k, sigma2, wRpos, kfactor, scale,
+			  k, sigma2, wRpos, kfactor, 1,
 			  dynamicParamEst);											// for cases when scale is specified, but must not be optimized over
 	  pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
 

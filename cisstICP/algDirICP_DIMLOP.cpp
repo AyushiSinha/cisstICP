@@ -143,9 +143,9 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	
 	// For registration rejection purpose:
 	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle / 2.0 << " over " << nSamples << " samples";
+	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle  << " over " << nSamples << " samples";
 	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	std::cout << "\nSum square match angle = " << sumSqrMatchAngle / 2.0 << " over " << nGoodSamples << " inliers\n";
+	std::cout << "\nSum square match angle = " << sumSqrMatchAngle  << " over " << nGoodSamples << " inliers\n";
 }
 
 //void algDirICP_DIMLOP::ComputeMatchStatistics(

@@ -649,9 +649,9 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		PDTree_Mesh *pTreeMesh = dynamic_cast<PDTree_Mesh*>(pTree);
 		algICP_DIMLP *pAlg;
 		if (bScale)
-			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, bScale);
+			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, 1, bScale);
 		else
-			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, scale, bScale); 
+			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, 1, bScale); 
 																		// ^ for cases when scale is specified, but must not be optimized over
 
 		pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
