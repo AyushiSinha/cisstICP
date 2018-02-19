@@ -1501,7 +1501,7 @@ double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<doubl
 #ifdef ENABLE_PARALLELIZATION
 #pragma omp parallel for
 #endif
-  for (unsigned int i = 0; i < nSamples; i++)
+  for (i = 0; i < nSamples; i++)
   {
 	if (outlierFlags[i])	continue;
 
@@ -1569,11 +1569,9 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
     {
       //  rotational effect
 		ga[i] += //-k[j] * ((Yn[j] * dRa[i]) * Xn[j])
-			-k[j] * ((dRa[i] * Xn[j]) * Yn[j])
-				//- 2.0 * B[j] * ( (/*R_*/L[j].Column(0) * dRa[i].TransposeRef()*Yn[j]) * (/*RaR*/L[j].Column(0) * Ra.TransposeRef() * Yn[j])
-				- 2.0 * B[j] * ((dRa[i] * /*R_*/L[j].Column(0)) * Yn[j] * (Yn[j] * RaRL[j].Column(0) /** Ra.TransposeRef()*/)
-				//- (/*R_*/L[j].Column(1) * dRa[i].TransposeRef()*Yn[j]) * (/*RaR*/L[j].Column(1) * Ra.TransposeRef() * Yn[j]) );
-				- (dRa[i].TransposeRef() * /*R_*/L[j].Column(1)) * Yn[j] * (Yn[j] * RaRL[j].Column(1)) /** Ra.TransposeRef()*/);
+			-k[j] * (Xn[j] * dRa[i] * Yn[j])
+				- 2.0 * B[j] * ((dRa[i] * /*R_*/L[j].Column(0) * Yn[j]) * (Yn[j] * RaRL[j].Column(0) /** Ra.TransposeRef()*/)
+				- (dRa[i] * /*R_*/L[j].Column(1) * Yn[j]) * (Yn[j] * RaRL[j].Column(1)) /** Ra.TransposeRef()*/);
 
 		//--- Gaussian term ---//   (positions)
 		//  rotational effect

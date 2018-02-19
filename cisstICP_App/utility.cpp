@@ -1118,19 +1118,19 @@ void GenerateSubSamples(cisstMesh &pts,
 	{
 		int currnum = distr(eng);
 
-		if (!selectedPts[currnum])
-			selectedPts[currnum] = true;
-		else
-		{
-			i--;
-			continue;
-		}
+		//if (!selectedPts[currnum])
+		//	selectedPts[currnum] = true;
+		//else
+		//{
+		//	i--;
+		//	continue;
+		//}
 		subsampledPts[i] = pts.vertices[currnum];
 		subsampledNormals[i] = pts.vertexNormals[currnum];
 #if 1 // sample from visible portion of left nostril
-		if (subsampledPts[i][0] < 5.50 && subsampledPts[i][0] > -1.00 &&	// left to right
-			subsampledPts[i][1] < 15.00 && subsampledPts[i][1] > -30.00 &&	// front to back
-			subsampledPts[i][2] < 20.00 && subsampledPts[i][2] > -12.00)	// top to bottom
+		if (subsampledPts[i][0] < 5.00 && subsampledPts[i][0] > -3.00 &&	// right to left (-1, 5.5)
+			subsampledPts[i][1] < 18.00 && subsampledPts[i][1] > -22.00 &&	// back to front (-30, 15)
+			subsampledPts[i][2] < 15.00 && subsampledPts[i][2] > -15.00)	// top to bottom (-12, 20)
 			continue;
 		else 
 			i--;
@@ -1146,14 +1146,15 @@ void GenerateSubSamples(cisstMesh &pts,
 		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
 #endif
 	}
-	printf("%d subsamples generated\n", nSubsamples);
 
 	pts.vertices = subsampledPts;
 	pts.vertexNormals = subsampledNormals;
+	printf("\n%d subsamples generated\n", nSubsamples);
 
 	// save samples
 	if (SavePath_Samples)
 	{
+		printf("Saving points\n");
 		if (cisstPointCloud::WritePointCloudToFile(*SavePath_Samples, subsampledPts) < 0)
 		{
 			std::cout << "ERROR: Samples save failed" << std::endl;
