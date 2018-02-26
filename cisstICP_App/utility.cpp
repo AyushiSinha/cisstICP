@@ -1127,7 +1127,7 @@ void GenerateSubSamples(cisstMesh &pts,
 		//}
 		subsampledPts[i] = pts.vertices[currnum];
 		subsampledNormals[i] = pts.vertexNormals[currnum];
-#if 1 // sample from visible portion of left nostril
+#if 0 // sample from visible portion of left nostril
 		if (subsampledPts[i][0] < 5.00 && subsampledPts[i][0] > -3.00 &&	// right to left (-1, 5.5)
 			subsampledPts[i][1] < 18.00 && subsampledPts[i][1] > -22.00 &&	// back to front (-30, 15)
 			subsampledPts[i][2] < 15.00 && subsampledPts[i][2] > -15.00)	// top to bottom (-12, 20)
@@ -2237,6 +2237,7 @@ void GenerateSampleSurfaceNoise2(unsigned int randSeed, unsigned int &randSeqPos
 
 		// Define the noise covariance for this sample
 		//  find rotation to rotate the sample normal to the z-axis
+		sampleNorms(i) = sampleNorms(i).Normalized();
 		R = XProdRotation(sampleNorms(i), z);
 		// compute noise covariance M of this sample
 		//   Note: rotate to align normal with z-axis, apply noise covariance, rotate back

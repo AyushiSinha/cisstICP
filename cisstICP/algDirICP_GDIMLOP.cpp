@@ -536,11 +536,11 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NO
 		//Myi_sigma2[s].Element(2, 2) += sigma2;
 	}
 
+	// update noise model
+	UpdateNoiseModel(sumSqrDist_Inliers, sumNormProducts_Inliers);
+
 	if (bFirstIter_Matches)
 	{
-		// update noise model
-		UpdateNoiseModel(sumSqrDist_Inliers, sumNormProducts_Inliers);
-
 		UpdateNoiseModel_SamplesXfmd(FGuess);
 	}
 
@@ -614,7 +614,7 @@ unsigned int algDirICP_GDIMLOP::ICP_FilterMatches()
 	double varExpansionFactor = StdDevExpansionFactor * StdDevExpansionFactor;
 
 	double ThetaThresh = StdDevExpansionFactor * circSD;
-	ThetaThresh = ThetaThresh > cmnPI ? cmnPI : ThetaThresh;
+	ThetaThresh = ThetaThresh > cmnPI_2 ? cmnPI_2 : ThetaThresh;
 	double NormProductThresh = cos(ThetaThresh);
 	//std::cout << "(" << circSD << ", " << ThetaThresh << ", " << NormProductThresh << ") ";
 
