@@ -237,6 +237,11 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	if (!cmdOpts.useDefaultNumIters)
 		maxIters = cmdOpts.niters;
 
+	if (!cmdOpts.useDefaultNThresh)
+		nThresh = cmdOpts.nthresh;
+	if (!cmdOpts.useDefaultDiagThresh)
+		diagThresh = cmdOpts.diagthresh;
+
 	if (!cmdOpts.useDefaultMinPos)
 		minOffsetPos = (double)cmdOpts.minpos;
 	if (!cmdOpts.useDefaultMaxPos)
@@ -345,7 +350,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	{
 		// build PD tree on the mesh directly
 		//  Note: defines measurement noise to be zero
-		printf("Building mesh PD tree... ");
+		printf("Building mesh PD tree with nThresh: %d and diagThresh: %f.... ", nThresh, diagThresh);
 		pTree = new PDTree_Mesh(mesh, nThresh, diagThresh);
 		//tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
 		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());

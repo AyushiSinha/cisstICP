@@ -283,6 +283,11 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   if (!cmdOpts.useDefaultNumIters)
 	  maxIters = cmdOpts.niters;
 
+  if (!cmdOpts.useDefaultNThresh)
+	  nThresh = cmdOpts.nthresh;
+  if (!cmdOpts.useDefaultDiagThresh)
+	  diagThresh = cmdOpts.diagthresh;
+
   if (!cmdOpts.useDefaultMinPos)
 	  minOffsetPos = (double)cmdOpts.minpos;
   if (!cmdOpts.useDefaultMaxPos)
@@ -358,7 +363,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  algType = DirAlgType_IMLOP;
 	  }
 	  mesh_ssm_target.vertices = mesh_target.meanShape;
-	  //mesh_ssm_target.SavePLY("currentMesh0.ply");
+	  mesh_ssm_target.SavePLY("currentMesh0.ply");
 
 	  if (cmdOpts.useDefaultInput)
 	  {
@@ -398,7 +403,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
   {
     // build PD tree on the mesh directly
     //  Note: defines measurement noise to be zero
-    printf("Building mesh PD tree .... ");
+    printf("Building mesh PD tree with nThresh: %d and diagThresh: %f... ", nThresh, diagThresh);
     pTree = new DirPDTree_Mesh(mesh_target, nThresh, diagThresh); 
     //tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
     printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
@@ -1002,7 +1007,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  samplePts.vertices[i] = Fi * noisySamples[i];
 		  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms2[i];
 	  }
-	  //samplePts.SavePLY("currentSamples0.ply");
+	  samplePts.SavePLY("currentSamples0.ply");
 	  samplePts.SavePLY(outputDir + "/initPts.ply");
 
 	  for (int i = 0; i < noisySamples.size(); i++) {
@@ -1020,7 +1025,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		  samplePts.vertices[i] = Fi * noisySamples[i];
 		  samplePts.vertexNormals[i] = Fi.Rotation() * noisySampleNorms[i];
 	  }
-	  //samplePts.SavePLY("currentSamples0.ply");
+	  samplePts.SavePLY("currentSamples0.ply");
 	  samplePts.SavePLY(outputDir + "/initPts.ply");
 
 	  for (int i = 0; i < noisySamples.size(); i++) {

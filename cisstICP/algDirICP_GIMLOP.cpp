@@ -95,10 +95,10 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 	double axisAngle1;
 	double axisAngle2;
 
-	//double totalSumSqrMahalDist = 0.0;
+	totalSumSqrMahalDist = 0.0;
 	sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	//double totalSumSqrMatchAngle = 0.0;
+	totalSumSqrMatchAngle = 0.0;
 	sumSqrMatchAngle = 0.0;
 
 	nGoodSamples = 0;
@@ -109,15 +109,19 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 	//       compute statistics on only the inliers
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		//if (outlierFlags[i])	continue;	// skip outliers
-
 		residual = matchPts[i] - (Freg * samplePts[i]) * sc;
+
+		sqrMahalDist = residual*invM[i] * residual;
+		totalSumSqrMahalDist += sqrMahalDist;
 
 		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
 		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
 		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
 
-		sqrMahalDist = residual*invM[i]*residual;
+		totalSumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ((k[i] - 2 * B[i]) * axisAngle1 * axisAngle1) + ((k[i] + 2 * B[i]) * axisAngle2 * axisAngle2);
+
+		if (outlierFlags[i])	continue;	// skip outliers
+
 		sumSqrMahalDist += sqrMahalDist;
 		sumMahalDist += sqrt(sqrMahalDist);
 
@@ -140,8 +144,8 @@ void algDirICP_GIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //got
 void algDirICP_GIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
 {
 	// For registration rejection purpose:
-	//std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	//std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	tMsg << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	tMsg << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
 	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
 	tMsg << "\nSum square match angle = " << sumSqrMatchAngle  << " over " << nGoodSamples << " inliers\n";
 }
@@ -159,6 +163,8 @@ double algDirICP_GIMLOP::ICP_EvaluateErrorFunction()
   double Error = 0.0;
   for (unsigned int i = 0; i < nSamples; i++)
   {
+	if (outlierFlags[i])	continue;	// skip outliers
+
     Error += MatchError(samplePtsXfmd[i], sampleNormsXfmd[i],
       matchPts[i], matchNorms[i],
       k[i], B[i], R_L[i], R_invM_Rt[i]);
@@ -218,6 +224,10 @@ void algDirICP_GIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   // initialize base class
   algDirICP::ICP_InitializeParameters(FGuess);
 
+  bFirstIter_Matches = true;
+  nOutliers = 0;
+  sigma2 = 0.0;
+
   // monitoring variables
   errFuncNormWeight = 0.0;
   errFuncPosWeight = 0.0;
@@ -236,6 +246,10 @@ void algDirICP_GIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
     std::cout << "ERROR: noise parameters not initialized for Kent algorithm" << std::endl;
     assert(0);
   }
+  
+  R_invM_Rt.SetAll(vct3x3::Eye());
+  R_MsmtM_Rt.SetAll(vct3x3(0.0));
+  outlierFlags.SetAll(0);
 
   // Initialize noise-model values
   switch (paramEstMethod)
@@ -312,6 +326,65 @@ void algDirICP_GIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   UpdateNoiseModel_SamplesXfmd(FGuess);
 }
 
+void algDirICP_GIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NORMAL INFO HERE - should not for sigma because that's from positional data
+{
+	// base class
+	algDirICP::ICP_UpdateParameters_PostMatch();
+
+	// compute sum of square distance of inliers
+	sumSqrDist_Inliers = 0.0;
+	double sumNormProducts_Inliers = 0.0;
+	for (unsigned int s = 0; s < nSamples; s++)
+	{
+		residuals_PostMatch[s] = samplePtsXfmd[s] - matchPts[s];
+		sqrDist_PostMatch[s] = residuals_PostMatch[s].NormSquare();
+
+		if (outlierFlags[s])	continue;	// skip outliers
+
+		sumSqrDist_Inliers += sqrDist_PostMatch[s];
+
+		sumNormProducts_Inliers +=
+			vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
+	}
+
+	// update the match uncertainty factor
+	sigma2 = sumSqrDist_Inliers / (nSamples - nOutliers);
+
+	// apply max threshold
+	if (sigma2 > sigma2Max)
+		sigma2 = sigma2Max;
+
+	//// update noise models of hte matches
+	//for (unsigned int s = 0; s < nSamples; s++)
+	//{
+	//	// update target covariances
+	//	Myi[s] = pDirTree->DatumCovPtr(matchDatums[s]);	// use pointer here for efficiency
+	//	//std::cout << matchDatums[s] << " = " << Myi[s] << std::endl;
+
+	//	// target covariance with match uncertainty
+	//	//Myi_sigma2[s] = *Myi[s];						// FIX THIS!!!
+	//	//Myi_sigma2[s].Element(0, 0) += sigma2;
+	//	//Myi_sigma2[s].Element(1, 1) += sigma2;
+	//	//Myi_sigma2[s].Element(2, 2) += sigma2;
+	//}
+
+	// update noise model
+	UpdateNoiseModel(sumSqrDist_Inliers, sumNormProducts_Inliers);
+
+	if (bFirstIter_Matches)
+	{
+		UpdateNoiseModel_SamplesXfmd(FGuess);
+	}
+
+	vctRot3 R(FGuess.Rotation());
+	for (unsigned int s = 0; s < nSamples; s++)
+	{
+		R_MsmtM_Rt[s] = R*M_msmt[s] * R.Transpose();
+	}
+
+	bFirstIter_Matches = false;
+}
+
 void algDirICP_GIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
   // base class
@@ -327,7 +400,115 @@ void algDirICP_GIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 
 unsigned int algDirICP_GIMLOP::ICP_FilterMatches()
 {
-  return 0;
+	//return 0;
+	//
+	// Filer Matches for Outliers
+	//  
+	// The Square Mahalanobis Distance of the matches follow a chi-square distribution
+	//  with 3 degrees of freedom (1 DOF for each spatial dimension).
+	//
+	//  Detect outliers as:  Square Mahalanobis Distance > ChiSquare(c)
+	//
+	//  Note:  ChiSquare(0.95) = 7.81     (1.96 Std Dev)
+	//         ChiSquare(0.975) = 9.35    (2.24 Std Dev)
+	//         ChiSquare(0.99) = 11.34    (2.56 Std Dev)
+	//         ChiSquare(0.9973) = 14.16  (3.0 Std Dev)     MATLAB: chi2inv(0.9973,3)
+	//
+	//  When an outlier is identified, increase the variance of its noise model
+	//  such that residual for that match is considered to be w/in 1 standard 
+	//  deviation of its mean. This will reduce the impact of this match error
+	//  on the registration result.
+	//
+
+	double StdDevExpansionFactor = 3.0;    // std dev expansion factor
+	double varExpansionFactor = StdDevExpansionFactor * StdDevExpansionFactor;
+
+	double ThetaThresh = StdDevExpansionFactor * circSD;
+	ThetaThresh = ThetaThresh > cmnPI_2 ? cmnPI_2 : ThetaThresh;
+	double NormProductThresh = cos(ThetaThresh);
+	//std::cout << "(" << circSD << ", " << ThetaThresh << ", " << NormProductThresh << ") ";
+
+	nOutliers = 0;
+	//nPosOutliers = 0;
+	//nNormOutliers = 0;
+	vct3x3 Mo, inv_Mo;
+	double sqrMahalDist = 0.0;
+	double normProduct = 0.0;
+
+	for (unsigned int s = 0; s < nSamples; s++)
+	{
+		// compute outlier noise model based on mearurment noise and sigma2 only
+		//  and not including the surface model covariance
+		//
+		// Note: the code below assumes that the covariance model of the target
+		//       shape is comprised of only a surface model covariance with zero
+		//       measurement noise; if this is not true, then the target measurement
+		//       noise should be added to the outlier covariance test below as well
+		//   
+		//Mo = R_M_Rt.Element(s);
+		//Mo.Element(0, 0) += sigma2;
+		//Mo.Element(1, 1) += sigma2;
+		//Mo.Element(2, 2) += sigma2;
+		//Mo = R_Mxi_Rt.Element(s) + Myi_sigma2.Element(s);
+		//Mo.Element(0, 0) += outlier_alpha;
+		//Mo.Element(1, 1) += outlier_alpha;
+		//Mo.Element(2, 2) += outlier_alpha;
+
+		// compute Mahalanobis distance
+		//ComputeCovInverse_NonIter(Mo, inv_Mo);
+		sqrMahalDist = residuals_PostMatch.Element(s)*R_invM_Rt[s]*residuals_PostMatch.Element(s);
+		normProduct = vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
+
+		// check if outlier
+		if (sqrMahalDist > ChiSquareThresh)
+		{ // an outlier
+			nOutliers++;
+			//nPosOutliers++;
+			outlierFlags[s] = 1;
+			// add isotropic outlier term to noise model for this match
+			//  with magnitude of half the square match distance
+			//double outlierScale = 0.5 * sqrDist_PostMatch.Element(s) * varExpansionFactor;
+			//Myi_sigma2[s].Element(0, 0) += outlierScale;
+			//Myi_sigma2[s].Element(1, 1) += outlierScale;
+			//Myi_sigma2[s].Element(2, 2) += outlierScale;
+			//R_M_Rt[s].Element(0, 0) += outlierScale;
+			//R_M_Rt[s].Element(1, 1) += outlierScale;
+			//R_M_Rt[s].Element(2, 2) += outlierScale;
+
+			// This shouldn't be done here, because alpha term is not used
+			//  in error function
+			//// For Error Function Evaluation:
+			//// update match covariance
+			//Mi.Element(s) = R_Mxi_Rt.Element(s) + Myi.Element(s);
+			//// match covariance decomposition
+			//ComputeCovDecomposition(Mi.Element(s), inv_Mi.Element(s), det_Mi.Element(s));
+			//// match Mahalanobis distance
+			//SqrMahalDist.Element(s) = Residuals.Element(s)*inv_Mi.Element(s)*Residuals.Element(s);
+		}
+		else if (normProduct < NormProductThresh)
+		{
+			nOutliers++;
+			//nNormOutliers++;
+			outlierFlags[s] = 1;
+			//std::cout << "\n(" << normProduct << " ? " << NormProductThresh << ") ";
+		}
+		else
+		{
+			outlierFlags[s] = 0;
+		}
+	}
+
+	return nOutliers;
+}
+
+void algDirICP_GIMLOP::UpdateNoiseModel(double sumSqrDist, double sumNormProducts)
+{
+	// angular error of normal orientations
+	ComputeCircErrorStatistics(sumNormProducts, Rnorm, circSD);
+
+#ifdef TEST_STD_ICP
+	k = 0.0;
+#endif
 }
 
 void algDirICP_GIMLOP::UpdateNoiseModel_DynamicEstimates()
@@ -427,6 +608,8 @@ void algDirICP_GIMLOP::ComputeMatchUncertaintyEstimates()
   double sumNormProducts = 0.0;
   for (unsigned int s = 0; s < nSamples; s++)
   {
+	  if (outlierFlags[s])	continue;	// skip outliers
+
     sumSqrDist += (samplePtsXfmd.Element(s) - matchPts.Element(s)).NormSquare();
     sumNormProducts += vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
   }
@@ -799,6 +982,11 @@ void algDirICP_GIMLOP::SetSamples(
   // base class
   nSamples = argSamplePts.size();
 
+  R_MsmtM_Rt.SetSize(nSamples);
+  outlierFlags.SetSize(nSamples);
+  residuals_PostMatch.SetSize(nSamples);
+  sqrDist_PostMatch.SetSize(nSamples);
+
   // scale sample points (remove this from here when you move it to IMLOP)
   sc = argScale;
   bScale = argbScale;
@@ -1058,6 +1246,8 @@ double algDirICP_GIMLOP::CostFunctionValue(const /*vct6*/ vctDynamicVector<doubl
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
   for (i = 0; i < nSamples; i++)
   {
+	if (outlierFlags[i])	continue;
+
     double major = RaRL[i].Column(0)*Yn[i];
     double minor = RaRL[i].Column(1)*Yn[i];
     // add extra k[i] * 1.0 to make cost function > 0
@@ -1109,6 +1299,7 @@ void algDirICP_GIMLOP::CostFunctionGradient(const /*vct6*/ vctDynamicVector<doub
   for (j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
+	  if (outlierFlags[j])	continue;
 
     //--- Kent term ---//   (orientations)        
     for (unsigned int i = 0; i < 3; i++)

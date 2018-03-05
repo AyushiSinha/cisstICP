@@ -84,6 +84,7 @@ public:
 		float outminang, outmaxang;
 		float noiseinplane, noiseperpplane;
 		float noisedeg, noiseecc;
+		float nthresh, diagthresh;
 		float rbounds, tbounds, sbounds, spbounds;
 
 		bool deformable;	// is algorithm deformable?
@@ -116,6 +117,8 @@ public:
 		bool useDefaultNoisePerpPlane;
 		bool useDefaultNoiseDeg;
 		bool useDefaultNoiseEcc;
+		bool useDefaultNThresh;
+		bool useDefaultDiagThresh;
 		bool useDefaultRotationBounds;
 		bool useDefaultTranslationBounds;
 		bool useDefaultScaleBounds;

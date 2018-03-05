@@ -54,17 +54,19 @@ cmdLineString	Alg("alg"), Target("target"), In("in"),
 				WorkingDir("workdir");
 cmdLineInt 		targetType("targettype"), 
 				nModes("modes"), nSamples("samples"),
+				nThresh("nthresh"), 					// PD-tree variables
 				nIters("iters");
-cmdLineFloat	Scale("scale"),
+cmdLineFloat	Scale("scale"),							// transformation offsets
 				MinPos("minpos"), MaxPos("maxpos"),
 				MinAng("minang"), MaxAng("maxang"),
-				pOutliers("poutliers"),
+				pOutliers("poutliers"),					// outlier variables
 				outMinPos("outminpos"), outMaxPos("outmaxpos"),
 				outMinAng("outminang"), outMaxAng("outmaxang"),
-				NoiseInPlane("noiseinplane"),
+				NoiseInPlane("noiseinplane"),			// noise variables
 				NoisePerpPlane("noiseperpplane"),
 				NoiseDeg("noisedeg"), NoiseEcc("noiseecc"),
-				RotationBounds("rbounds"),
+				diagThresh("diagthresh"),				// PD-tree variables
+				RotationBounds("rbounds"),				// optimization bounds
 				TranslationBounds("tbounds"),
 				ScaleBounds("sbounds"),
 				ShapeParamBounds("spbounds");
@@ -90,6 +92,7 @@ cmdLineReadable* params[] =
 	&NoiseInPlane, 
 	&NoisePerpPlane,
 	&NoiseDeg, &NoiseEcc,
+	&nThresh, &diagThresh,
 	&RotationBounds,
 	&TranslationBounds,
 	&ScaleBounds,
@@ -203,6 +206,12 @@ void SetParams()
 	// Angular noise eccentricity
 	params[i]->description = strdup("Eccentricity of angular noise (default = 0.5)\n\n");
 	i++;
+	// Min number of datums in each PD-tree node
+	params[i]->description = strdup("Min number of datums in each PD-tree node (default = 5 (without orientaion) or 15 (with orientation))\n\n");
+	i++;
+	// Min size of PD-tree node
+	params[i]->description = strdup("Min size of PD-tree node (default = 5 (without orientaion) or 15 (with orientation))\n\n");
+	i++;
 	// Rotation constraint
 	params[i]->description = strdup("Constrain rotation component search between [prev-n, prev+n] (default n = DBL_MAX)\n\n");
 	i++;
@@ -258,6 +267,8 @@ void Usage(const char* exec)
 	printf("\t--%s <out of plane noise>\n", NoisePerpPlane.name);
 	printf("\t--%s <angular noise (deg)>\n", NoiseDeg.name);
 	printf("\t--%s <angular noise eccentricity>\n", NoiseEcc.name);
+	printf("\t--%s <min datums in PD-tree node>\n", nThresh.name);
+	printf("\t--%s <min size of PD-tree node>\n", diagThresh.name);
 	printf("\t--%s <rotation constraints>\n", RotationBounds.name);
 	printf("\t--%s <translation constraints>\n", TranslationBounds.name);
 	printf("\t--%s <scale constraints>\n", ScaleBounds.name);
@@ -298,6 +309,8 @@ void Help(const char* exec)
 	printf("\t--%s <out of plane noise>\n\t\t%s", NoisePerpPlane.name, NoisePerpPlane.description);
 	printf("\t--%s <angular noise (deg)>\n\t\t%s", NoiseDeg.name, NoiseDeg.description);
 	printf("\t--%s <angular noise eccentricity>\n\t\t%s", NoiseEcc.name, NoiseEcc.description);
+	printf("\t--%s <min datums in PD-tree node>\n\t\t%s", nThresh.name, nThresh.description);
+	printf("\t--%s <min size of PD-tree node>\n\t\t%s", diagThresh.name, diagThresh.description);
 	printf("\t--%s <rotation constraints>\n\t\t%s", RotationBounds.name, RotationBounds.description);
 	printf("\t--%s <translation constraints>\n\t\t%s", TranslationBounds.name, TranslationBounds.description);
 	printf("\t--%s <scale constraints>\n\t\t%s", ScaleBounds.name, ScaleBounds.description);
@@ -538,6 +551,16 @@ int main( int argc, char* argv[] )
 	if (NoiseEcc.set) {
 		cmdLineOpts.noiseecc = NoiseEcc.value;
 		cmdLineOpts.useDefaultNoiseEcc = false;
+	}
+
+	if (nThresh.set) {
+		cmdLineOpts.nthresh = nThresh.value;
+		cmdLineOpts.useDefaultNThresh = false;
+	}
+
+	if (diagThresh.set) {
+		cmdLineOpts.diagthresh = diagThresh.value;
+		cmdLineOpts.useDefaultDiagThresh = false;
 	}
 
 	if (RotationBounds.set) {

@@ -86,7 +86,9 @@ public:
   double rb, tb, sb;		// rotation, translation, and scale bounds
   bool bScale;
 
-protected:  
+protected:
+
+	vctFrm3 FGuess; // intiial guess for registration
 
   Ellipsoid_OBB_Intersection_Solver IntersectionSolver;
   //wrapper_gsl gsl;
@@ -103,6 +105,9 @@ protected:
   //  match uncertainty model (dynamic)
   double k_est;
   double meanK_msmt;
+
+  double Rnorm;
+  double circSD;
 
   // Gaussian parameters for each sample
   //  effective noise model
@@ -126,6 +131,7 @@ protected:
   // noise parameters for xfmd samples
   vctDynamicVector<vct3x2> R_L;
   vctDynamicVector<vct3x3> R_invM_Rt;
+  vctDynamicVector<vct3x3> R_MsmtM_Rt;
   vctDynamicVector<vct3x3> N_Rt;
   vctDynamicVector<vct3x3> inv_N_Rt;   // inv(N*Rt) = R*invN
 
@@ -166,6 +172,21 @@ protected:
   double sumSqrMatchAngle;
 
   int nGoodSamples;
+
+  // outlier handling
+  unsigned int nOutliers;
+  double ChiSquareThresh = 7.81;
+  double sumSqrDist_Inliers;
+  vctDynamicVector<int>   outlierFlags;
+
+  // dynamic noise model
+  double sigma2;								  // match uncertainty (added to My covariances as sigma2*I)
+  double sigma2Max
+	  = std::numeric_limits<double>::max();		  // max threshold on match uncertainty
+  vctDynamicVector<vct3>  residuals_PostMatch;    // Pclosest - Psample
+  vctDoubleVec            sqrDist_PostMatch;      // ||Pclosest - Psample||^2
+
+  bool bFirstIter_Matches;  // flag that the first iteration is being run
 
 
   //--- Algorithm Methods ---//
@@ -224,6 +245,7 @@ public:
 						double argTransbounds = DBL_MAX,
 						double argScalebounds = 0.3);
 
+  void UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   void UpdateNoiseModel_DynamicEstimates();
   void UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg);
 
@@ -248,7 +270,7 @@ public:
   //--- ICP Interface Methods ---//
 
   void          ICP_InitializeParameters(vctFrm3 &FGuess);
-  //void          ICP_UpdateParameters_PostMatch();
+  void          ICP_UpdateParameters_PostMatch();
   void          ICP_UpdateParameters_PostRegister(vctFrm3 &Freg);
   vctFrm3       ICP_RegisterMatches();
   double        ICP_EvaluateErrorFunction();
