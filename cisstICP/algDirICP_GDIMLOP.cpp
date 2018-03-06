@@ -571,7 +571,7 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
   // Re-initialize to compute matches on updated mesh
   TCPS.init(pDirTree->mesh.vertices, pDirTree->mesh.faces);
 
-#if 1
+#if 0
   static int count = 1;
   cisstMesh currentSamples;
   currentSamples.vertices.SetSize(nSamples);

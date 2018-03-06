@@ -90,13 +90,13 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	double sqrMatchDist;
 	double matchAngle;
 
-	double totalSumSqrMahalDist = 0.0;
-	double sumSqrMahalDist = 0.0;
+	totalSumSqrMahalDist = 0.0;
+	sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
-	double totalSumSqrMatchAngle = 0.0;
-	double sumSqrMatchAngle = 0.0;
+	totalSumSqrMatchAngle = 0.0;
+	sumSqrMatchAngle = 0.0;
 
-	int nGoodSamples = 0;
+	nGoodSamples = 0;
 
 	vct3x3 M, Minv;
 	vct3 residual;
@@ -140,12 +140,15 @@ void algDirICP_DIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev)
 
 	//Avg = sumMatchDist / nSamples;
 	//StdDev = (sumSqrMatchDist / nSamples) + Avg*Avg;
-	
+}
+
+void algDirICP_DIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
+{
 	// For registration rejection purpose:
-	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	std::cout << "\nSum square match angle = " << totalSumSqrMatchAngle  << " over " << nSamples << " samples";
-	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
-	std::cout << "\nSum square match angle = " << sumSqrMatchAngle  << " over " << nGoodSamples << " inliers\n";
+	tMsg << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	tMsg << "\nSum square match angle = " << totalSumSqrMatchAngle << " over " << nSamples << " samples";
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers";
+	tMsg << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
 }
 
 //void algDirICP_DIMLOP::ComputeMatchStatistics(

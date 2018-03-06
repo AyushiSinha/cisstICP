@@ -67,20 +67,23 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
   //  based on point noise models only (measurement and surface model covariances)
   //  i.e. do not include sigma2
 
-  double sumSqrMahalDist = 0.0;
+  totalSumSqrMahalDist = 0.0;
+  sumSqrMahalDist = 0.0;
   double sumMahalDist = 0.0;
   double sqrMahalDist;
-  int nGoodSamples = 0;
+  nGoodSamples = 0;
   vct3x3 M, Minv;
   vct3 residual;
   for (unsigned int i = 0; i < nSamples; i++)
   {
-    if (outlierFlags[i]) continue;  // skip outliers
+	residual = matchPts[i] - Freg * samplePts[i];
+	M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
+	ComputeCovInverse_NonIter(M, Minv);
 
-    residual = matchPts[i] - Freg * samplePts[i];
-    M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
-    ComputeCovInverse_NonIter(M, Minv);
-    sqrMahalDist = residual*Minv*residual;
+	sqrMahalDist = residual*Minv*residual;
+	totalSumSqrMahalDist += sqrMahalDist;
+
+    if (outlierFlags[i]) continue;  // skip outliers
 
     sumSqrMahalDist += sqrMahalDist;
     sumMahalDist += sqrt(sqrMahalDist);
@@ -90,7 +93,7 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
   Avg = sumMahalDist / nGoodSamples;
   StdDev = sqrt( (sumSqrMahalDist / nGoodSamples) + Avg*Avg );
 
-  std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+  //std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 
   //// return the average match distance of the inliers
   //double matchDist = 0.0;
@@ -103,6 +106,13 @@ void algICP_IMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
   //  nGoodSamples++;
   //}
   //return matchDist / nGoodSamples;
+}
+
+void algICP_IMLP::PrintMatchStatistics(std::stringstream &tMsg)
+{
+	// For registration rejection purpose:
+	tMsg << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers\n";
 }
 
 // TODO: change this so that covariances for measurement noise

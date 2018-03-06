@@ -64,6 +64,12 @@ public:
 	double rb, tb, sb, spb;		// rotation, translation, scale, and shape parameter bounds
 	bool bScale;				// boolean for optional scale optimization
 
+	// registration statistics
+	double totalSumSqrMahalDist;
+	double sumSqrMahalDist;
+
+	int nGoodSamples;
+
 	// -- Optimizer calculations common to both cost and gradient function
 	vctRot3 Ra;
 	vct3 a, t;
@@ -123,6 +129,7 @@ public:
 						double argSPbounds = 3.0);
 
 	virtual void ComputeMatchStatistics(double &Avg, double &stdDev);
+	virtual void  PrintMatchStatistics(std::stringstream &tMsg);
 	void	UpdateShape(vctDynamicVector<double> &si);
 	void	UpdateTree();
 	//void    UpdateOptimizerCalculations(const vct7 &x);

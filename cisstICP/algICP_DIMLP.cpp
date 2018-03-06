@@ -85,11 +85,11 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	double sumMatchDist = 0.0;
 	double sqrMatchDist;
 
-	double totalSumSqrMahalDist = 0.0;
-	double sumSqrMahalDist = 0.0;
+	totalSumSqrMahalDist = 0.0;
+	sumSqrMahalDist = 0.0;
 	double sumMahalDist = 0.0;
 	double sqrMahalDist;
-	int nGoodSamples = 0;
+	nGoodSamples = 0;
 
 	vct3x3 M, Minv;
 	vct3 residual;
@@ -120,10 +120,13 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 	//std::cout << "\nFinal Scale = " << sc << std::endl;
 	//std::cout << "\nAverage Match Distance = " << sumMatchDist / nGoodSamples << std::endl;
 	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
 
+void algICP_DIMLP::PrintMatchStatistics(std::stringstream &tMsg)
+{
 	// For registration rejection purpose:
-	std::cout << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
-	std::cout << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers\n";
+	tMsg << "\nSum square mahalanobis distance = " << totalSumSqrMahalDist << " over " << nSamples << " samples";
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMahalDist << " over " << nGoodSamples << " inliers\n";
 }
 
 void algICP_DIMLP::SetSamples(

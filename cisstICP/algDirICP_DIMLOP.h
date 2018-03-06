@@ -118,6 +118,14 @@ protected:
 	double costFuncValue, prevCostFuncValue, prevIncCostFuncValue;
 	vctFrm3 Fdec;
 
+	// registration statistics
+	double totalSumSqrMahalDist;
+	double sumSqrMahalDist;
+	double totalSumSqrMatchAngle;
+	double sumSqrMatchAngle;
+
+	int nGoodSamples;
+
 	// outlier handling
 	unsigned int nOutliers;
 	double ChiSquareThresh = 7.81;
@@ -183,6 +191,7 @@ public:
 
   virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
 	  double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg);
   //virtual void algDirICP_DIMLOP::ComputeMatchStatistics(
 	 // double &PosAvg, double &PosStdDev,
 	 // double &AngAvg, double &AngStdDev);

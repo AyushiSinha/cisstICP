@@ -50,9 +50,11 @@ void  algDirICP_IMLOP::SetNoiseModel(
 
 void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gotta do this right with mahalanobis distance
 {
-	double sumSqrMatchDist = 0.0;
+	sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
 	double sqrMatchDist;
+	double matchAngle;
+	sumSqrMatchAngle = 0.0;
 
 	// NOTE: if using a method with outlier rejection, it may be desirable to
 	//       compute statistics on only the inliers
@@ -62,12 +64,23 @@ void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gott
 
 		sumSqrMatchDist += sqrMatchDist;
 		sumMatchDist += sqrt(sqrMatchDist);
+
+		matchAngle = acos(std::fmod(goodMatchNorms[i] * (Freg.Rotation() * goodSampleNorms[i]), 2 * cmnPI));
+
+		sumSqrMatchAngle += k_init * matchAngle * matchAngle;
 	}
 	Avg = sumMatchDist / (sigma2*nGoodSamples);
 	StdDev = sqrt( (sumSqrMatchDist / (sigma2*nGoodSamples))+Avg*Avg );
 	
-	std::cout << "\nSigma = " << sigma2;
-	std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+	//std::cout << "\nSigma = " << sigma2;
+	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
+}
+
+void algDirICP_IMLOP::PrintMatchStatistics(std::stringstream &tMsg)
+{
+	// For registration rejection purpose:
+	tMsg << "\nSum square mahalanobis distance = " << sumSqrMatchDist/sigma2 << " over " << nGoodSamples << " inliers";
+	tMsg << "\nSum square match angle = " << sumSqrMatchAngle << " over " << nGoodSamples << " inliers\n";
 }
 
 void algDirICP_IMLOP::SetSamples(

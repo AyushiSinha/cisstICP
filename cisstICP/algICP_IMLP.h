@@ -90,6 +90,12 @@ protected:
   //vctDynamicVector<double>  det_Mi;   // determinant of noise covariances of match |R*Mxi*Rt + Myi|
   //vctDynamicVector<double>  SqrMahalDist;  // square Mahalanobis distance of matches = (yi-Rxi-t)'*inv(Mi)*(yi-Rxi-t)
 
+	// registration statistics
+  double totalSumSqrMahalDist;
+  double sumSqrMahalDist;
+
+  int nGoodSamples;
+
   // outlier handling
   unsigned int nOutliers;
   double ChiSquareThresh; // Chi Square threshold for the outlier test  
@@ -146,6 +152,7 @@ public:
   virtual ~algICP_IMLP() {}
 
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg);
 
   // TODO: specify surface model independently and compute Mxi
   //       by adding surface and msmt covariances

@@ -94,6 +94,10 @@ protected:
   double R, Rnorm, Rpos;
   double circSD;
 
+  // registration statistics
+  double sumSqrMatchDist;
+  double sumSqrMatchAngle;
+
   // Match Filtering
   //
   //  Note: using buffers and buffer references for match filtering enables
@@ -154,6 +158,7 @@ public:
   virtual ~algDirICP_IMLOP() {}
 
   virtual void  ComputeMatchStatistics(double &Avg, double &StdDev);
+  virtual void  PrintMatchStatistics(std::stringstream &tMsg);
 
   void    UpdateNoiseModel(double sumSqrDist, double sumNormProducts);
   double  ComputeRpos();
