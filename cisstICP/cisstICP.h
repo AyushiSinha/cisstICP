@@ -130,7 +130,7 @@ public:
 			input(""), 
 			modeweights(""),
 			output(""),
-			workingdir(""),
+			workingdir("../../../test_data/"),
 			xfm(""),
 			ssm(""),
 			cov(""),

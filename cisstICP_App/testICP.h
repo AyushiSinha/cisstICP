@@ -101,10 +101,10 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	std::string outputDir;
 	std::string algDir;
 
-	//if (cmdOpts.useDefaultOutput)
+	/*if (cmdOpts.useDefaultWorkingDir)
 		workingDir = "../../../test_data/";
-	//else
-	//	workingDir = cmdOpts.output;
+	else*/
+		workingDir = cmdOpts.workingdir;
 
 	switch (algType)
 	{
@@ -139,9 +139,9 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	}
 	}
 
-	if (cmdOpts.useDefaultOutput)
-		outputDir = workingDir + algDir;
-	else
+	//if (cmdOpts.useDefaultOutput)
+	//	outputDir = workingDir + algDir;
+	//else
 		outputDir = workingDir + algDir + cmdOpts.output + "/";
 	CreateDirectory(outputDir.c_str(), NULL);
 
@@ -203,12 +203,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	double minAngOffsetOutlier	= 2.0;	// 0.0;
 	double maxAngOffsetOutlier	= 5.0;	// 0.0;
 
-	std::srand(time(NULL)); unsigned int randSeed1	 = /*0;		*/std::rand();	// generates samples
-	std::srand(time(NULL)); unsigned int randSeqPos1 = /*0;		*/std::rand();
-	std::srand(time(NULL)); unsigned int randSeed2	 = /*17;	*/std::rand();	// generates offsets
-	std::srand(time(NULL)); unsigned int randSeqPos2 = /*28;	*/std::rand();
-	std::srand(time(NULL)); unsigned int randSeed3	 = /*28;	*/std::rand();	// generates shape parameters
-	std::srand(time(NULL)); unsigned int randSeqPos3 = /*8;		*/std::rand();
+	std::srand(time(NULL)); unsigned int randSeed1	 = 0;		/*std::rand()*/;	// generates samples
+	std::srand(time(NULL)); unsigned int randSeqPos1 = 0;		/*std::rand()*/;
+	std::srand(time(NULL)); unsigned int randSeed2	 = 17;	/*std::rand()*/;	// generates offsets
+	std::srand(time(NULL)); unsigned int randSeqPos2 = 28;	/*std::rand()*/;
+	std::srand(time(NULL)); unsigned int randSeed3	 = 28;	/*std::rand()*/;	// generates shape parameters
+	std::srand(time(NULL)); unsigned int randSeqPos3 = 8;		/*std::rand()*/;
 
 	// Samples Noise Model
 	//  NOTE: this is a generative noise model 

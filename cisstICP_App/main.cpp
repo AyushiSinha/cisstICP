@@ -373,7 +373,7 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
-		std::cout << Alg.value << "\n";
+		//std::cout << Alg.value << "\n";
 		if (!strcmp(Alg.value, "StdICP"))
 			algType = AlgType_StdICP;
 		else if (!strcmp(Alg.value, "IMLP"))
