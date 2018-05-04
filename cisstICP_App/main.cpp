@@ -183,16 +183,16 @@ void SetParams()
 	params[i]->description = strdup("Enter the percentage of outliers to add to sampled points (default = 0%)\n\n");
 	i++;
 	// Minimum positional offset for outliers
-	params[i]->description = strdup("Enter the lower bound for outlier positional offset (default = 2)\n\n");
+	params[i]->description = strdup("Enter the lower bound for outlier positional offset (default = 5)\n\n");
 	i++;
 	// Maximum positional offset for outliers
-	params[i]->description = strdup("Enter the upper bound for outlier positional offset (default = 5)\n\n");
+	params[i]->description = strdup("Enter the upper bound for outlier positional offset (default = 10)\n\n");
 	i++;
 	// Minimum orientation offset for outliers
-	params[i]->description = strdup("Enter the lower bound for outlier orientation offset (default = 2)\n\n");
+	params[i]->description = strdup("Enter the lower bound for outlier orientation offset (default = 5)\n\n");
 	i++;
 	// Maximum orientation offset for outliers
-	params[i]->description = strdup("Enter the upper bound for outlier orientation offset (default = 5)\n\n");
+	params[i]->description = strdup("Enter the upper bound for outlier orientation offset (default = 10)\n\n");
 	i++;
 	// In-plane positional noise SD
 	params[i]->description = strdup("Standard deviation of positional noise in plane (default = 1)\n\n");
