@@ -279,9 +279,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 		std::cout << "ERROR: expected header at line: " << line << std::endl;
 		return -1;
 	}
-	std::cout << "Number of vertices = " << numVertices 
-				<< "\nTotal number of modes = " << numModes 
-				<< "\nUsing number of modes =  " << modes << std::endl;
+	std::cout << " out of " << numModes ;
 	if (vertices.size() != numVertices)
 	{
 		std::cout << "ERROR: model data does not match mesh data - number of vertices are different." << std::endl;
@@ -318,7 +316,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				std::cout << "ERROR: expected header at line: " << line << std::endl;
 				return -1;
 			}
-			std::cout << "\nMode : " << modeNum << "; Mean shape" << std::endl;
+			//std::cout << "\nMode : " << modeNum << "; Mean shape" << std::endl;
 		}
 		else
 		{
@@ -331,7 +329,7 @@ int cisstMesh::AddModelFile(const std::string &modelFilePath, int modes)
 				std::cout << "ERROR: expected header at line: " << line << std::endl;
 				return -1;
 			}
-			std::cout << "Mode : " << modeNum << "; Mode weight : " << modeWeight[modeCount - 1] << std::endl;
+			//std::cout << "Mode : " << modeNum << "; Mode weight : " << modeWeight[modeCount - 1] << std::endl;
 		}
 
 		while (vertCount < numVertices)
