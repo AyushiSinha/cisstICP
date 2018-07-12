@@ -97,33 +97,24 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//std::cin >> k;
 
 	// Set output directories
-	std::string workingDir;
-	std::string outputDir;
-	std::string algDir;
+	std::string workingDir,	outputDir,
+				algDir,		loadMeshPath;
 
 	/*if (cmdOpts.useDefaultWorkingDir)
 		workingDir = "../../../test_data/";
 	else*/
-		workingDir = cmdOpts.workingdir;
+	workingDir = cmdOpts.workingdir;
 
 	switch (algType)
 	{
 	case AlgType_StdICP:
-	{
-		std::cout << "\nRunning standard ICP\n" << std::endl;		algDir = "LastRun_StdICP/";		break;
-	}
+	{		std::cout << "\nRunning standard ICP\n" << std::endl;		algDir = "LastRun_StdICP/";		break;	}
 	case AlgType_IMLP:
-	{
-		std::cout << "\nRunning IMLP\n" << std::endl;				algDir = "LastRun_IMLP/";		break;
-	}
+	{		std::cout << "\nRunning IMLP\n" << std::endl;				algDir = "LastRun_IMLP/";		break;	}
 	case AlgType_DIMLP:
-	{
-		std::cout << "\nRunning D-IMLP\n" << std::endl;				algDir = "LastRun_DIMLP/";		break;
-	}
+	{		std::cout << "\nRunning D-IMLP\n" << std::endl;				algDir = "LastRun_DIMLP/";		break;	}
 	case AlgType_VIMLOP:
-	{
-		std::cout << "\nRunning V-IMLOP\n" << std::endl;			algDir = "LastRun_VIMLOP/";		break;
-	}
+	{		std::cout << "\nRunning V-IMLOP\n" << std::endl;			algDir = "LastRun_VIMLOP/";		break;	}
 	default:
 	{
 		std::cout << "ERROR: unknown algorithm type" << std::endl;
@@ -134,7 +125,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//if (cmdOpts.useDefaultOutput)
 	//	outputDir = workingDir + algDir;
 	//else
-		outputDir = workingDir + algDir + cmdOpts.output + "/";
+	outputDir = workingDir + algDir + cmdOpts.output + "/";
 	CreateDirectory(outputDir.c_str(), NULL);
 
 	// input files
@@ -164,98 +155,84 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 									noisySamples,		noisySampleNorms;
 	vctDynamicVector<vct3x3>		sampleNoiseCov,		sampleNoiseInvCov;
 	vctDynamicVector<vct3x2>		sampleNoiseL;
-	vctDynamicVector<vct2>			noisyEdgesV1,		noisyEdgesV2,
-									noisyNorms2d;
-	vctDynamicVector<vct2x2>		sampleNoiseCov2d,	normNoiseCov2d;
+	//vctDynamicVector<vct2>			noisyEdgesV1,		noisyEdgesV2,
+	//								noisyNorms2d;
+	//vctDynamicVector<vct2x2>		sampleNoiseCov2d,	normNoiseCov2d;
 
 
-	// Declare variables (Default values set in cisstICP.h) %%%%%% Change so that variable are initialized here as well!!! %%%%%%
-	int		nSamples;	// 300	(Default number of samples for default input)
-	int		maxIters;	// 100
-	double	scale;		// 1.0;
-	bool	bScale;		// false;
+	// Declare and initialize variables (Default values set in cisstICP.h) 
+	int		nSamples = cmdOpts.samples;	// 300	(Default number of samples for default input)
+	int		maxIters = cmdOpts.niters;	// 100
+	double	scale	 = cmdOpts.scale; 	// 1.0;	
+	bool	bScale	 = cmdOpts.bScale;	// false;
 
-	int		nThresh = 5;		// 5	(Cov Tree Params)
-	double	diagThresh = 5.0;	// 5.0		  ''
+	int		modes	= 1;				// +1 (for mean)
+	int		nThresh = 5;				// Cov Tree Params
+	if (!cmdOpts.useDefaultNThresh)
+		nThresh = cmdOpts.nthresh;
+	double	diagThresh = 5.0;			//  ''
+	if (!cmdOpts.useDefaultDiagThresh)
+		diagThresh = cmdOpts.diagthresh;
 
-	double minOffsetPos;	// 10.0
-	double maxOffsetPos;	// 20.0
-	double minOffsetAng;	//  6.0
-	double maxOffsetAng;	// 12.0 
+	double minOffsetPos = (double)cmdOpts.minpos;	// 10.0
+	double maxOffsetPos = (double)cmdOpts.maxpos;	// 20.0
+	double minOffsetAng = (double)cmdOpts.minang;	//  6.0
+	double maxOffsetAng = (double)cmdOpts.maxang;	// 12.0 
 
-	double percentOutliers;		//  0.0
-	double minPosOffsetOutlier;	//  5.0
-	double maxPosOffsetOutlier;	// 10.0
-	double minAngOffsetOutlier;	//  5.0
-	double maxAngOffsetOutlier;	// 10.0
+	double percentOutliers		= cmdOpts.poutliers / 100.0;	//  0.0
+	double minPosOffsetOutlier  = (double)cmdOpts.outminpos;	//  5.0
+	double maxPosOffsetOutlier  = (double)cmdOpts.outmaxpos;	// 10.0
+	double minAngOffsetOutlier  = (double)cmdOpts.outminang;	//  5.0
+	double maxAngOffsetOutlier  = (double)cmdOpts.outmaxang;	// 10.0
 
-	std::srand(time(NULL)); unsigned int randSeed1	 = 0;		/*std::rand()*/;	// generates samples
-	std::srand(time(NULL)); unsigned int randSeqPos1 = 0;		/*std::rand()*/;
-	std::srand(time(NULL)); unsigned int randSeed2	 = 17;		/*std::rand()*/;	// generates offsets
-	std::srand(time(NULL)); unsigned int randSeqPos2 = 28;		/*std::rand()*/;
-	std::srand(time(NULL)); unsigned int randSeed3	 = 28;		/*std::rand()*/;	// generates shape parameters
-	std::srand(time(NULL)); unsigned int randSeqPos3 = 8;		/*std::rand()*/;
+	std::srand(time(NULL)); unsigned int randSeed1	 = 0;		/*std::rand();*/	// generates samples
+	std::srand(time(NULL)); unsigned int randSeqPos1 = 0;		/*std::rand();*/
+	std::srand(time(NULL)); unsigned int randSeed2	 = 17;		/*std::rand();*/	// generates offsets
+	std::srand(time(NULL)); unsigned int randSeqPos2 = 28;		/*std::rand();*/
+	std::srand(time(NULL)); unsigned int randSeed3	 = 28;		/*std::rand();*/	// generates shape parameters
+	std::srand(time(NULL)); unsigned int randSeqPos3 = 8;		/*std::rand();*/
 
 	// Samples Noise Model
 	//  NOTE: this is a generative noise model 
 	//		  (i.e. noise is generated according
 	//        to the noise properties defined here)
 	//double noiseSampsSD[3] = {1.0, 1.0, 1.0};		// noise model for samples (std dev along each axis)
-	double sampleNoiseInPlane;		// 1.0	(Standard deviation of noise in and out of plane)
-	double sampleNoisePerpPlane;	// 1.0					   ''
+	double sampleNoiseInPlane	= (double)cmdOpts.noiseinplane;		// 1.0	(Standard deviation of noise in and out of plane)
+	double sampleNoisePerpPlane = (double)cmdOpts.noiseperpplane;	// 1.0					   ''
 
 	// Target Noise Model (for point cloud target only)
 	//  NOTE: this is a descriptive model, not a generative one
 	//        i.e. no noise is added to the point cloud, the noise model is merely
 	//        allow for errors at intermediate locations between the points and penalize
 	//        errors offset from the surface
-	double PointCloudNoisePerpPlane; // 1.0	(Noise model for point cloud using mesh constructor)
+	double PointCloudNoisePerpPlane	= 1.0;				// 1.0	(Noise model for point cloud using mesh constructor)
 	//  Note: in-plane noise set automatically relative to triangle size
 
-	double rotbounds;			// DBL_MAX;
-	double transbounds;			// DBL_MAX;
-	double scalebounds;			// 0.3;
-	double shapeparambounds;	// 3.0;
+	double rotbounds		= cmdOpts.rbounds;			// DBL_MAX;
+	double transbounds		= cmdOpts.tbounds;			// DBL_MAX;
+	double scalebounds		= cmdOpts.sbounds;			// 0.3;
+	double shapeparambounds = cmdOpts.spbounds;			// 3.0;
 	
 	// Modify default values
-	//if (!cmdOpts.useDefaultNumSamples)
-		nSamples = cmdOpts.samples;
+	//if (!cmdOpts.useDefaultNumSamples)		
 	//if (!cmdOpts.useDefaultNumIters)
-		maxIters = cmdOpts.niters;
 
-	if (!cmdOpts.useDefaultNThresh)
-		nThresh = cmdOpts.nthresh;
-	if (!cmdOpts.useDefaultDiagThresh)
-		diagThresh = cmdOpts.diagthresh;
+	//if (!cmdOpts.useDefaultMinPos)		
+	//if (!cmdOpts.useDefaultMaxPos)		
+	//if (!cmdOpts.useDefaultMinAng)		
+	//if (!cmdOpts.useDefaultMaxAng)		
 
-	//if (!cmdOpts.useDefaultMinPos)
-		minOffsetPos = (double)cmdOpts.minpos;
-	//if (!cmdOpts.useDefaultMaxPos)
-		maxOffsetPos = (double)cmdOpts.maxpos;
-	//if (!cmdOpts.useDefaultMinAng)
-		minOffsetAng = (double)cmdOpts.minang;
-	//if (!cmdOpts.useDefaultMaxAng)
-		maxOffsetAng = (double)cmdOpts.maxang;
+	//if (!cmdOpts.useDefaultNumOutliers)		
+	//if (!cmdOpts.useDefaultOutMinPos)		
+	//if (!cmdOpts.useDefaultOutMaxPos)		
+	//if (!cmdOpts.useDefaultOutMinAng)		
+	//if (!cmdOpts.useDefaultOutMaxAng)		
 
-	//if (!cmdOpts.useDefaultNumOutliers)
-		percentOutliers = cmdOpts.poutliers/100.0;
-	//if (!cmdOpts.useDefaultOutMinPos)
-		minPosOffsetOutlier = (double)cmdOpts.outminpos;
-	//if (!cmdOpts.useDefaultOutMaxPos)
-		maxPosOffsetOutlier = (double)cmdOpts.outmaxpos;
-	//if (!cmdOpts.useDefaultOutMinAng)
-		minAngOffsetOutlier = (double)cmdOpts.outminang;
-	//if (!cmdOpts.useDefaultOutMaxAng)
-		maxAngOffsetOutlier = (double)cmdOpts.outmaxang;
-
-	//if (!cmdOpts.useDefaultNoiseInPlane)
-		sampleNoiseInPlane = (double)cmdOpts.noiseinplane;
-	//if (!cmdOpts.useDefaultNoisePerpPlane)
-		sampleNoisePerpPlane = (double)cmdOpts.noiseperpplane;
+	//if (!cmdOpts.useDefaultNoiseInPlane)		
+	//if (!cmdOpts.useDefaultNoisePerpPlane)		
 
 #if 1
 	// load mesh
-	std::string loadMeshPath;
 	//if (cmdOpts.useDefaultTarget)
 	//	loadMeshPath = workingDir + "MT.ply";
 	//	//std::string loadMeshPath = workingDir + "ProximalFemur.ply";
@@ -263,20 +240,18 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	//	//std::string loadMeshPath = workingDir + "RIGHTHEMIPELVIS.mesh";
 	//	//std::string loadMeshPath = workingDir + "CTBreastImage_Dec20000_Shell.mesh";  
 	//else
-		loadMeshPath = cmdOpts.target;
+	loadMeshPath = cmdOpts.target;
 	CreateMesh(mesh, loadMeshPath, &saveMeshPath);
-
-	mesh_ssm = mesh;	// Initializing mesh_ssm to mesh for non-deformable algorithms 
-	int modes = 1;		// +1 (for mean)
+	mesh_ssm = mesh;									// Initializing mesh_ssm to mesh for non-deformable algorithms 
 	
-	if (algType == AlgType_DIMLP)
+	if (cmdOpts.deformable)
 	{
 		// load ssm
 		std::string loadModelPath;
 		//if (cmdOpts.useDefaultSSM)
 		//	loadModelPath = workingDir + "atlas_mt.txt";
 		//else
-			loadModelPath = cmdOpts.ssm;
+		loadModelPath = cmdOpts.ssm;
 
 /*		if (cmdOpts.useDefaultNumModes)
 			modes += 3;
@@ -288,12 +263,13 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 			}
 			else
 				modes += cmdOpts.modes;
+				weight.SetSize(modes - 1);
 		}
-		std::cout << "Number of modes = " << modes - 1 << std::endl;
+		std::cout << "Number of modes = " << modes - 1 ;
 		
 		int check = ReadShapeModel(mesh, loadModelPath, modes);		// makes sure mesh is mean mesh
 		if (check != 1) {
-			std::cout << "Unsuccessful in reading model data, switching to IMLP..." << std::endl;
+			std::cout << "\nWARNING: Could not read model data, switching to IMLP..." << std::endl;
 			algType = AlgType_IMLP;
 		}
 		mesh_ssm.vertices = mesh.meanShape;
@@ -301,7 +277,6 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 		if (cmdOpts.useDefaultInput)
 		{
-			weight.SetSize(modes - 1);
 			GenerateRandomShapeParams(randSeed3, randSeqPos3, modes - 1, weight);
 			// add deformation to mean shape
 			for (int j = 0; j < modes - 1; j++)
@@ -312,38 +287,32 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		}
 		else
 		{
-			weight.SetSize(modes - 1);
+			//weight.SetSize(modes - 1);
 			if (!cmdOpts.readModeWeights) {
 				weight.SetAll(0.0);
 			}
 		}
 
-		//if (!cmdOpts.useDefaultShapeParamBounds)
-			shapeparambounds = cmdOpts.spbounds;
+		//if (!cmdOpts.useDefaultShapeParamBounds)			
 	}
 
 	//if (!cmdOpts.useDefaultRotationBounds)
-		rotbounds = cmdOpts.rbounds;
-
 	//if (!cmdOpts.useDefaultTranslationBounds)
-		transbounds = cmdOpts.tbounds;
-
-	//if (!cmdOpts.useDefaultScaleBounds)
-		scalebounds = cmdOpts.sbounds;
+	//if (!cmdOpts.useDefaultScaleBounds)		
 
 	// Create target shape from mesh (as a PD tree)
 	if (TargetShapeAsMesh)
 	{
 		// build PD tree on the mesh directly
 		//  Note: defines measurement noise to be zero
-		printf("Building mesh PD tree with nThresh: %d and diagThresh: %f.... ", nThresh, diagThresh);
+		printf("\nBuilding mesh PD tree with nThresh: %d and diagThresh: %.2f... \n", nThresh, diagThresh);
 		pTree = new PDTree_Mesh(mesh, nThresh, diagThresh);
 		//tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
-		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
+		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
 	}
 	else
 	{
-		printf("Building point cloud PD tree... ");
+		printf("\nBuilding point cloud PD tree... \n");
 		// build Point Cloud PD tree from mesh
 		//  Note: the mesh constructor for the point cloud PD tree
 		//        assumes the specified noise in direction perpendicular to surface
@@ -364,13 +333,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		pPointCloudTree = new PDTree_PointCloud(pointCloud, nThresh, diagThresh);
 		pTree = pPointCloudTree;
 		//tree.RecomputeBoundingBoxesUsingExistingCovFrames();      //*** is this ever needed?
-		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
+		printf("Tree built: NNodes=%d  NData=%d  TreeDepth=%d\n\n", pTree->NumNodes(), pTree->NumData(), pTree->TreeDepth());
 		//printf(" Point Cloud Noise Model:\n  perp-plane variance = %f\n  in-plane variance = %f (avg)\n\n", 
 		//  PointCloudNoisePerpPlane, pPointCloudTree->avgVarInPlane);
 	}
 
-	scale = cmdOpts.scale; // (((double)rand() / (double)RAND_MAX) /** (1.5 - 0.5)*/) + 0.5; 
-	// sub-sample and scale input if need be
+	// subsample input if need be
 	if (!cmdOpts.useDefaultInput)
 	{
 		std::string loadPtsPath;
@@ -379,53 +347,54 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 		if (!cmdOpts.useDefaultNumSamples)
 		{
-			int nSubSamples = cmdOpts.samples;
-			vctDynamicVector<vct3> subsampledPts;
-			vctDynamicVector<bool> selectedPts;
-
-			subsampledPts.SetSize(nSubSamples);
-			selectedPts.SetSize(pts.NumVertices());
-
-			selectedPts.SetAll(false);
-			subsampledPts.Zeros();
-
-			GenerateSubSamples(pts, selectedPts, subsampledPts, nSubSamples, &saveSubSamplesPath); // change this to be more similar to generatesamples
-			//GenerateSamples(pts, randSeed1, randSeqPos1, nSubSamples,		
-			//	samples, sampleNorms, sampleDatums,
-			//	&saveSamplesPath);
+			nSamples = cmdOpts.samples;
+			if (nSamples > pts.NumVertices())
+			{
+				printf("WARNING: Cannot sample more points than number of vertices in input point cloud/mesh\n");
+				nSamples	= pts.NumVertices();
+				samples		= pts.vertices;
+				sampleNorms = pts.vertexNormals;
+			}
+			else
+				GenerateSamples(pts, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
+					samples, sampleNorms, 
+					&saveSubSamplesPath);
+				//GenerateSubSamples(pts, selectedPts, subsampledPts, nSubSamples, &saveSubSamplesPath); // change this to be more similar to generatesamples
 		}
 		else
-			nSamples = pts.NumVertices(); //samples.size();
-
-		if (!cmdOpts.useDefaultScale)
 		{
-			for (int i = 0; i < nSamples; i++)
-				//samples[i] = scale * samples[i];
-				pts.vertices[i] = scale * pts.vertices[i];
+			nSamples	= pts.NumVertices(); //samples.size();
+			samples		= pts.vertices;
+			sampleNorms = pts.vertexNormals;
 		}
 	}
-	//if (cmdOpts.bScale)
-		bScale = cmdOpts.bScale;
-
-	std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
-
 	// Generate random samples from target mesh_ssm 
-	//if (TargetShapeAsMesh)
+	else if (TargetShapeAsMesh)
 		GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
 		samples, sampleNorms, sampleDatums,
 		&saveSamplesPath);
-	//else
-	//	GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
-	//	samples, sampleNorms,
-	//	&saveSamplesPath);
+	else
+		GenerateSamples(mesh_ssm, randSeed1, randSeqPos1, nSamples,		// mesh_ssm = mesh, if registration algorithm is not deformable
+		samples, sampleNorms,
+		&saveSamplesPath);
 
-	if (!cmdOpts.useDefaultInput) {
+	// scale input if need be
+	if (!cmdOpts.useDefaultScale)
+	{
 		for (int i = 0; i < nSamples; i++)
-		{
-			samples[i] = pts.vertices[i];
-			sampleNorms[i] = pts.vertexNormals[i];
-		}
+			samples[i] = scale * samples[i];
+			//pts.vertices[i] = scale * pts.vertices[i];
 	}
+
+	std::ifstream randnStream(normRVFile.c_str());  // streams N(0,1) RV's
+	
+	//if (!cmdOpts.useDefaultInput) {
+	//	for (int i = 0; i < nSamples; i++)
+	//	{
+	//		samples[i] = pts.vertices[i];
+	//		sampleNorms[i] = pts.vertexNormals[i];
+	//	}
+	//}
 
 	// Add noise to samples
 	if (!cmdOpts.useDefaultCov || !cmdOpts.useDefaultAxes)
@@ -456,18 +425,16 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 			&saveCovPath);
 	}	
 
-	if (!cmdOpts.useDefaultInput && cmdOpts.useDefaultNumSamples) {
-		for (int i = 0; i < nSamples; i++)
-		{
-			noisySamples[i] = pts.vertices[i];
-			//noisySampleNorms[i] = pts.vertexNormals[i];
-		}
+	// If reading in points, assume that noise is already added
+	if (!cmdOpts.useDefaultInput /*&& cmdOpts.useDefaultNumSamples*/) {
+		noisySamples = samples; // pts.vertices[i];
+		noisySampleNorms = sampleNorms; // pts.vertexNormals[i];
 	}
 	std::cout << "Using " << nSamples << " noisy sample points";
-	if (!cmdOpts.useDefaultNumOutliers)
-		std::cout << " with " << percentOutliers*100 << "% outliers...\n";
-	else
-		std::cout << "...\n";
+	//if (!cmdOpts.useDefaultNumOutliers)
+	std::cout << " with " << percentOutliers * 100 << "% outliers...\n";
+	//else
+	//	std::cout << "...\n";
 
 	// Generate random initial offset
 	vctFrm3 Fi;
@@ -481,11 +448,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	}
 
 	//noisySamples2d.SetSize(1);
-	noisyEdgesV1.SetSize(1);
-	noisyEdgesV2.SetSize(1);
-	noisyNorms2d.SetSize(1);
-	sampleNoiseCov2d.SetSize(1);
-	normNoiseCov2d.SetSize(1);
+	// For V-IMLOP (WIP)
+	//noisyEdgesV1.SetSize(1);
+	//noisyEdgesV2.SetSize(1);
+	//noisyNorms2d.SetSize(1);
+	//sampleNoiseCov2d.SetSize(1);
+	//normNoiseCov2d.SetSize(1);
 
 #else
 	// Replay Randomized Trial
@@ -577,7 +545,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		std::cout << std::endl << "Applying Sample Offset Fi: " << std::endl << Fi << std::endl;
 		FGuess = Fi;
 	}
-	std::cout << "scale:\n   " << scale << std::endl;
+	std::cout << "scale:\n " << scale << std::endl;
 
 	// ICP Algorithm
 	algICP *pICPAlg = NULL;
@@ -643,8 +611,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 		//if (bScale)
 		//	pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, 1, bScale);
 		//else
-			pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, 1, bScale); 
-																		// ^ for cases when scale is specified, but must not be optimized over
+		pAlg = new algICP_DIMLP(pTreeMesh, noisySamples, sampleNoiseCov, sampleNoiseCov, mesh.meanShape, 1, bScale); 
 
 		pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
 
@@ -682,6 +649,8 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	cisstMesh samplePts;
 	samplePts.vertices.SetSize(noisySamples.size());
 	samplePts.vertices = noisySamples;
+	samplePts.vertexNormals.SetSize(noisySampleNorms.size());
+	samplePts.vertexNormals = noisySampleNorms;
 	samplePts.SavePLY(outputDir + "/Pts.ply");
 
 	// ICP Options
@@ -699,7 +668,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	opt.dAngTerm = 0.001*(cmnPI / 180); // 0.01*(cmnPI / 180);
 	opt.dShapeTerm = 0.001; // 0.01; 
 	//if (cmdOpts.deformable)
-		opt.deformable = cmdOpts.deformable;
+	opt.deformable = cmdOpts.deformable;
 
 	// Run ICP
 	int numRuns = 1;
@@ -732,7 +701,7 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	std::stringstream resultStream;
 	resultStream << std::endl;
-	if (algType == AlgType_DIMLP)
+	if (cmdOpts.deformable)
 	{
 		resultStream << "Starting Offset:   \tdAng: " << rinit * 180 / cmnPI << "\tdPos: " << tinit << "\tdShp: " << weight;
 		if (cmdOpts.bScale)
@@ -757,16 +726,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 
 	std::cout << "=============================================================\n" << std::endl;
 	
-	if (algType == AlgType_DIMLP)
+	if (cmdOpts.deformable)
 	{
 		mesh.vertices = mesh.meanShape;
 		for (int s = 0; s < mesh.NumVertices(); s++)
-		{
 			for (unsigned int i = 0; i < (unsigned int)(modes - 1); i++)
-			{
 				mesh.vertices(s) += (mesh.Si[i] * mesh.wi[i].Element(s));
-			}
-		}
 	}
 	mesh.SavePLY(outputDir + "/finalMesh.ply");
 
@@ -779,12 +744,12 @@ void testICP(bool TargetShapeAsMesh, ICPAlgType algType, cisstICP::CmdLineOption
 	samplePts.SavePLY("currentSamples0.ply");
 	samplePts.SavePLY(outputDir + "/initPts.ply");
 
-	for (int i = 0; i < noisySamples.size(); i++) {
-		if (bScale)
-			samplePts.vertices[i] = Freg * noisySamples[i] * scale;
-		else
-			samplePts.vertices[i] = Freg * noisySamples[i];
-	}
+	for (int i = 0; i < noisySamples.size(); i++) //{
+		//if (bScale)
+		samplePts.vertices[i] = Freg * noisySamples[i] * scale;
+		//else
+		//	samplePts.vertices[i] = Freg * noisySamples[i];
+	//}
 	samplePts.SavePLY(outputDir + "/finalPts.ply");
 
 	if (pICPAlg) delete pICPAlg;

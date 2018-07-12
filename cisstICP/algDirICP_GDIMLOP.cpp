@@ -1515,7 +1515,7 @@ double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<doubl
       //+ (Yp_RaXp_t[i] * invM_Yp_RaXp_t[i]) / 2.0;
   }
 
-  f += ( s.DotProduct(s) ) / 2.0;
+  f += (s.DotProduct(s)) / 2.0; // 0;
 
   return f;
 }
@@ -1610,7 +1610,7 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
     //gt -= invM_Yp_RaXp_t[j];
   }
 
-  gs += /*2.0 **/ s;// *1.0 / (double)nSamples;	// Cshape component
+  gs += /*2.0 **/ s;// *1.0 / (double)nSamples;	// Cshape component // 0;
 }
 
 //double algDirICP_GDIMLOP::MatchError(

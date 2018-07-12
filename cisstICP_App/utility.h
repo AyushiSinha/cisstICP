@@ -113,11 +113,11 @@ void SetMeshTriangleCovariances(
   double stdDevPerpPlane, double stdDevInPlane);
 
 // Generates a subsampled version of a big point cloud
-void GenerateSubSamples(cisstMesh &pts,
-	vctDynamicVector<bool> &selectedPts,
-	vctDynamicVector<vct3> &subsampledPts,
-	int nSubsamples,
-	std::string *SavePath_Samples = 0);
+//void GenerateSubSamples(cisstMesh &pts,
+//	vctDynamicVector<bool> &selectedPts,
+//	vctDynamicVector<vct3> &subsampledPts,
+//	int nSubsamples,
+//	std::string *SavePath_Samples = 0);
 
 //  cisstRandomSeq - source for uniform distributed random variables
 void GenerateSamples(

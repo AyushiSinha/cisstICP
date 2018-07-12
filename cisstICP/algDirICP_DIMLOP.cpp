@@ -551,7 +551,7 @@ double algDirICP_DIMLOP::CostFunctionValue(const vctDynamicVector<double> &x)
 		f += ( (Rat_Tssm_Y_t_x_invMx.Element(i) * Rat_Tssm_Y_t_x.Element(i)) / 2.0 ) + k*(1-Yn_Rat_Xn.Element(i));
 	}
 
-	f += ( s.DotProduct(s) ) / 2.0; // Comment out to test
+	f += (s.DotProduct(s)) / 2.0; // Comment out to test // 0;
 
 	return f;
 }
@@ -604,7 +604,7 @@ void algDirICP_DIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, v
 			gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
 	}
 
-	gs += /*2.0 **/ s;	// Cshape component
+	gs += /*2.0 **/ s;	// Cshape component // 0; // 
 }
 
 void algDirICP_DIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
