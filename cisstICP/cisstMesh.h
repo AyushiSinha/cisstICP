@@ -41,152 +41,115 @@
 #include <ply_io.h>
 //#include "cisstTriangle.h"
 
-class cisstMesh 
+class cisstMesh
 {
 
 public:
 
-  //--- Variables ---//
+	//--- Variables ---//
 
-  vctDynamicVector<vct3>      vertices;					// the coordinates for each vertex in the mesh
-  vctDynamicVector<vctInt3>   faces;					// the vertex indices for each triangle in the mesh
-  vctDynamicVector<vct3>      faceNormals;				// the face normal for each triangle in the mesh
+	vctDynamicVector<vct3>						vertices;				// the coordinates for each vertex in the mesh
+	vctDynamicVector<vctInt3>					faces;					// the vertex indices for each triangle in the mesh
+	vctDynamicVector<vct3>						faceNormals;			// the face normal for each triangle in the mesh
 
-  // optional mesh properties
-  vctDynamicVector<vct3>      vertexNormals;			// a normal orientation associated with each vertex  
-  vctDynamicVector<vctInt3>   faceNeighbors;			// the face indices for the neighbors of each triangle
-														//  in the mesh
-  // mode properties
-  vctDynamicVector<vct3>					meanShape;	// the coordinates for each vertex in the mean mesh
-  vctDynamicVector<vctDynamicVector<vct3>>	mode;		// the modes per vertex 
-  vctDynamicVector<double>					modeWeight;	// weights per mode
+	// optional mesh properties
+	vctDynamicVector<vct3>						vertexNormals;			// a normal orientation associated with each vertex  
+	vctDynamicVector<vctInt3>   				faceNeighbors;			// the face indices for the neighbors of each triangle
+	//  in the mesh
+	// mode properties
+	vctDynamicVector<vct3>						meanShape;				// the coordinates for each vertex in the mean mesh
+	vctDynamicVector<vctDynamicVector<vct3>>	mode;					// the modes per vertex 
+	vctDynamicVector<double>					modeWeight;				// weights per mode
 
-  vctDynamicVector<vctDynamicVector<vct3>>	wi;
-  vctDynamicVector<double>					Si;			// shape parameter
+	vctDynamicVector<vctDynamicVector<vct3>>	wi;
+	vctDynamicVector<double>					Si;						// shape parameter
 
-  // mesh noise model
-  //  NOTE: if used, this must be set manually by the user AFTER loading the mesh file
-  //        (defaults to all zeroes, i.e. zero measurement noise on the mesh)
-  vctDynamicVector<vct3x3>  TriangleCov;				// triangle covariances
-  vctDynamicVector<vct3>    TriangleCovEig;				// triangle covariance eigenvalues (in decreasing size)
+	// mesh noise model
+	//  NOTE: if used, this must be set manually by the user AFTER loading the mesh file
+	//        (defaults to all zeroes, i.e. zero measurement noise on the mesh)
+	vctDynamicVector<vct3x3>  					TriangleCov;			// triangle covariances
+	vctDynamicVector<vct3>    					TriangleCovEig;			// triangle covariance eigenvalues (in decreasing size)
 
 private:
 
-  ply_io ply_obj; 
+	ply_io ply_obj;
 
 public:
 
-  //--- Methods ---//
+	//--- Methods ---//
 
-  // constructor
-  cisstMesh() {};
+	// constructor
+	cisstMesh() {};
 
-  // destructor
-  ~cisstMesh() {}
+	// destructor
+	~cisstMesh() {}
 
-  // initializes all mesh properties to empty (default initializer);
-  //  this is a useful routine to use while building a mesh,
-  //  since some mesh properties are optional and may not be
-  //  initialized by the data used to build the mesh; calling this 
-  //  ensures that unused properties are emptied rather than left with
-  //  possibly invalid values
-  void ResetMesh();
-  void ResetModel();
+	// initializes all mesh properties to empty (default initializer);
+	//  this is a useful routine to use while building a mesh,
+	//  since some mesh properties are optional and may not be
+	//  initialized by the data used to build the mesh; calling this 
+	//  ensures that unused properties are emptied rather than left with
+	//  possibly invalid values
+	void ResetMesh();
+	void ResetModel();
 
-  inline int NumVertices() const { return (int)vertices.size(); }
-  inline int NumTriangles() const { return (int)faces.size(); }
+	inline int NumVertices() const { return (int)vertices.size(); }
+	inline int NumTriangles() const { return (int)faces.size(); }
 
-  // initializes triangle noise models to zero (default initializer)
-  void InitializeNoiseModel();
+	// initializes triangle noise models to zero (default initializer)
+	void InitializeNoiseModel();
 
-  // computes noise model covariances for each triangle in the mesh
-  //  such that the in-plane and perpendicular-plane directions have
-  //  the specified variance
-  void InitializeNoiseModel( double noiseInPlaneVar, double noisePerpPlaneVar);
+	// computes noise model covariances for each triangle in the mesh
+	//  such that the in-plane and perpendicular-plane directions have
+	//  the specified variance
+	void InitializeNoiseModel(double noiseInPlaneVar, double noisePerpPlaneVar);
 
-  void SaveTriangleCovariances(std::string &filePath);
+	void SaveTriangleCovariances(std::string &filePath);
 
- // // get mesh vertex index for the given triangle index and vertex
-	//inline int TriangleVertexIndex(int ti, int v)
- //   { return faces[ti][v]; 
- //   }
-
-	//// get mesh vertex indexes for the given triangle index
-	//inline virtual void TriangleVertexIndexes(int ti, int &v0, int &v1, int &v2) const
-	//	{ v0=Triangles[ti].Vx[0];
-	//		v1=Triangles[ti].Vx[1];
-	//		v2=Triangles[ti].Vx[2];
-	//	}
-
-  // get coordinates of all three vertices for a given face index
+	// get coordinates of all three vertices for a given face index
 	inline void FaceCoords(int ti, vct3 &v0, vct3 &v1, vct3 &v2) const
-	{ v0 = vertices[faces[ti][0]];
-    v1 = vertices[faces[ti][1]];
-    v2 = vertices[faces[ti][2]];
+	{
+		v0 = vertices[faces[ti][0]];
+		v1 = vertices[faces[ti][1]];
+		v2 = vertices[faces[ti][2]];
 	}
-  // get vertex coordinate for a given face/vertex index
+	// get vertex coordinate for a given face/vertex index
 	inline vct3& FaceCoord(int ti, int vi)
-  { return vertices[faces[ti][vi]];
-  }
+	{
+		return vertices[faces[ti][vi]];
+	}
 
-  // assumes vertex order follows right-hand rule with curl v1->v2->v3
-  void ComputeFaceNormalsFromVertices();
-
- // // set vertex coords for a given vertex index
- // //  Note: changing vertex coordinates changes the normal vectors
- // //        of all associated triangles
- // //        it is responsibility of the user to keep these values
- // //        consistent
-	//inline void SetVertexCoord(int vx, vct3 v)	{VertexCoordinates[vx].Assign(v);}
-	//inline void SetVertexCoord(int vx, float x, float y, float z) {VertexCoordinates[vx].Assign(x,y,z);}
-	//inline void SetVertexCoord(int vx, double x, double y, double z) {VertexCoordinates[vx].Assign(x,y,z);}
+	// assumes vertex order follows right-hand rule with curl v1->v2->v3
+	void ComputeFaceNormalsFromVertices();
 
 
-  // Mesh I/O
+	// Mesh I/O
 
-  // Build mesh from data arrays
-  int  LoadMesh(
-    const vctDynamicVector<vct3> *vertices,
-    const vctDynamicVector<vctInt3> *faces,
-    const vctDynamicVector<vct3> *face_normals = NULL, 
-    const vctDynamicVector<vctInt3> *face_neighbors = NULL,
-    const vctDynamicVector<vct3> *vertex_normals = NULL
-    );
+	// Build mesh from data arrays
+	int  LoadMesh(
+		const vctDynamicVector<vct3> *vertices,
+		const vctDynamicVector<vctInt3> *faces,
+		const vctDynamicVector<vct3> *face_normals = NULL,
+		const vctDynamicVector<vctInt3> *face_neighbors = NULL,
+		const vctDynamicVector<vct3> *vertex_normals = NULL
+		);
 
-  // Load mesh from PLY file
-  void LoadPLY(const std::string &input_file);
+	// Load mesh from PLY file
+	void LoadPLY(const std::string &input_file);
 
-  // Save mesh to PLY fle
-  void SavePLY(const std::string &output_file);
-  // Build new mesh from a single .mesh file
-  //int  LoadMeshFile(const std::string &meshFilePath);
+	// Save mesh to PLY fle
+	void SavePLY(const std::string &output_file);
+	// Build new mesh from a single .mesh file
+	//int  LoadMeshFile(const std::string &meshFilePath);
 
-  int  LoadModelFile(const std::string &modelFilePath, int numModes);
-
-
-  //// Save mesh to .mesh file
-  //int  SaveMeshFile( const std::string &filePath );
-
-  //// Build new mesh from .stl file
-  //int  LoadMeshFromSTLFile(const std::string &stlFilePath);
+	int  LoadModelFile(const std::string &modelFilePath, int numModes);
 
 private:
 
-  // Load .mesh file, adding it to the current mesh while preserving all
-  //  data currently existing in the mesh
-	//int  AddMeshFile(const std::string &meshFilePath);
+	// Load .mesh file, adding it to the current mesh while preserving all
+	//  data currently existing in the mesh
 
 	int  AddModelFile(const std::string &modelFilePath, int numModes);
-
-//public:
-//
-//  // Legacy Mesh I/O
-//	void ReadMeshFile(const char *fn);
-//  void ReadMeshMeshFile( const std::string &meshFilePath );
-//	void ReadSURMeshFile(const char *fn);
-//	void ReadSFCMeshFile(const char *fn);
-//	void WriteMeshFile(const char *fn);
-//	void WriteSURMeshFile(const char *fn);
 };
 
 #endif // _cisstMesh_h_

@@ -1,7 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2016, Ayushi Sinha, Seth Billings, Russell Taylor, 
-//	  Johns Hopkins University.
+//    Copyright (c) 2017, Ayushi Sinha, Seth Billings, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -132,11 +131,8 @@ public:
 	virtual void  PrintMatchStatistics(std::stringstream &tMsg);
 	void	UpdateShape(vctDynamicVector<double> &si);
 	void	UpdateTree();
-	//void    UpdateOptimizerCalculations(const vct7 &x);
 	void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
-	//void    CostFunctionGradient(const vct7 &x, vct7 &g);
 	void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
-	//double  CostFunctionValue(const vct7 &x);
 	double	CostFunctionValue(const vctDynamicVector<double> &x);
 
 protected:

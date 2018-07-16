@@ -195,22 +195,24 @@ public:
   struct Options 
   {
     // run-time options
-    std::string auxOutputDir; // directory for saving run-time logs
-    bool    printOutput;      // print runtime output
-	bool	deformable;
+    std::string auxOutputDir;		// directory for saving run-time logs
+    bool		printOutput;		// print runtime output
+	bool		deformable;
+
     // termination conditions
-    unsigned int  maxIter;        // max iterations
-    unsigned int  termHoldIter;   // min iterations for which termination condition must be satisfied
-	unsigned int  numShapeParams; // number of shape parameters
-    double  minE;             // min error value (E)                                                          (RHT: 0.00000000001)
-    double  tolE;             // min % change in error dE/E
-    double  dPosThresh;       // min change in position to consider termination (sample/model distance units) (RHT: 0.00005)
-    double  dAngThresh;       // min change in angle to consider termination (radians)                        (RHT: 0.00005)
+    unsigned int  maxIter;			// max iterations
+    unsigned int  termHoldIter;		// min iterations for which termination condition must be satisfied
+	unsigned int  numShapeParams;	// number of shape parameters
+
+    double  minE;					// min error value (E)                                                          (RHT: 0.00000000001)
+    double  tolE;					// min % change in error dE/E
+    double  dPosThresh;				// min change in position to consider termination (sample/model distance units) (RHT: 0.00005)
+    double  dAngThresh;				// min change in angle to consider termination (radians)                        (RHT: 0.00005)
 	double	dShapeThresh;
-    double  dPosTerm;         // terminate if position and angle are less than
-    double  dAngTerm;         //  these termination values
-	double	dShapeTerm;		  // terminate if shape parameter doesn't change
-    //double  errorRatioThresh; // error ratio constraint (E/Eprev > ratio && Eprev/E < ratio);               (RHT: 0.999) 
+    double  dPosTerm;				// terminate if position and angle are less than
+    double  dAngTerm;				//  these termination values
+	double	dShapeTerm;				// terminate if shape parameter doesn't change
+    //double  errorRatioThresh;		// error ratio constraint (E/Eprev > ratio && Eprev/E < ratio);					(RHT: 0.999) 
                             
     // default constructor
     Options() :

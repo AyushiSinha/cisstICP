@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -43,31 +43,6 @@
 #include "cisstPointCloud.h"
 #include "utilities.h"
 
-
-//void CreateDir(const std::string &dir)
-//{
-//  boost::filesystem::create_directories(dir.c_str());
-//}
-
-//#include <windows.h>
-//void CreateDir(const std::string &dir)
-//{
-//  int rv = CreateDirectory(dir.c_str(), NULL);
-//  if (rv || ERROR_ALREADY_EXISTS == GetLastError())
-//  {
-//    if (rv)
-//    { // created directory
-//      std::cout << "Creating directory: \"" << dir << "\"" << std::endl;
-//    }
-//    // else directory already exists
-//  }
-//  else
-//  { // failed to create directory
-//    std::cout << "ERROR! create directory failed: " << dir << std::endl;
-//    assert(0);
-//  }
-//}
-
 void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath)
 {
 	unsigned int itemsRead = 0;
@@ -82,37 +57,28 @@ void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath)
 		assert(0);
 	}
 
-	// read shape parameters
-	//while (fs.good())
-	//{
+	std::getline(fs, line, ' ');
+	nsp = std::stoi(line);
+	S.SetSize(nsp);
+	std::cout << "Number of mode weights = " << nsp << std::endl;
+
+	for (int i = 0; i < nsp; i++)
+	{
 		std::getline(fs, line, ' ');
-		nsp = std::stoi(line);
-		S.SetSize(nsp);
-		std::cout << "Number of mode weights = " << nsp << std::endl;
+		S[i] = std::stof(line);
 
-		for (int i = 0; i < nsp; i++)
-		{
-			std::getline(fs, line, ' ');
-			S[i] = std::stof(line);
+		std::cout << "shape parameter = " << S[i] << std::endl;
+		itemsRead++;
+	}
 
-			std::cout << "shape parameter = " << S[i] << std::endl;
-			itemsRead++;
-		}
+	if (itemsRead != nsp)
+	{
+		//break;
+		std::cerr << "ERROR: invalid transformation file!\nShape parameter file format should be as follows:\n"
+			"numShapeParams ShapeParam_1 ShapeParam_2 ... ShapeParam_numShapeParams\n" << std::endl;
+		assert(0);
+	}
 
-		if (itemsRead != nsp)
-		{
-			//break;
-			std::cerr << "ERROR: invalid transformation file!\nShape parameter file format should be as follows:\n"
-				"numShapeParams ShapeParam_1 ShapeParam_2 ... ShapeParam_numShapeParams\n" << std::endl;
-			assert(0);
-		}
-	//}
-
-	//if (fs.bad() || fs.fail())
-	//{
-	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-	//  assert(0);
-	//}
 	fs.close();
 }
 
@@ -167,11 +133,7 @@ void transform_read(vctFrm3 &F, std::string &filepath)
 		rot.Assign(f1, f2, f3, f4, f5, f6, f7, f8, f9);
 		trans.Assign(f10, f11, f12);
 	}
-	//if (fs.bad() || fs.fail())
-	//{
-	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-	//  assert(0);
-	//}
+
 	fs.close();
 
 	F.Rotation() = rot.Normalized();
@@ -238,11 +200,7 @@ vctDynamicVector<vctRot3> rotations_read(std::string &filepath)
     rotVct.push_back(rot);
     numRot++;
   }
-  //if (fs.bad() || fs.fail())
-  //{
-  //  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-  //  assert(0);
-  //}
+
   fs.close();
 
   vctDynamicVector<vctRot3> rotArray(numRot);
@@ -362,11 +320,7 @@ void ReadFromFile_Cov(vctDynamicVector<vct3x3> &cov,
 		cov(i).Assign(f1, f2, f3, f4, f5, f6, f7, f8, f9);
 		i++;
 	}
-	//if (fs.bad() || fs.fail())
-	//{
-	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-	//  assert(0);
-	//}
+
 	fs.close();
 }
 
@@ -443,11 +397,7 @@ void ReadFromFile_L(vctDynamicVector<vctFixedSizeMatrix<double, 3, 2> > &axes,
 		axes(i).Column(1).Assign(f4, f5, f6);
 		i++;
 	}
-	//if (fs.bad() || fs.fail())
-	//{
-	//  std::cerr << "ERROR: read pts from file failed; last line read: " << line << std::endl;
-	//  assert(0);
-	//}
+
 	fs.close();
 }
 
@@ -1100,68 +1050,6 @@ void GenerateSamples(cisstMesh &mesh,
     }
   }
 }
-
-//void GenerateSubSamples(cisstMesh &pts,
-//	vctDynamicVector<bool> &selectedPts,
-//	vctDynamicVector<vct3> &subsampledPts,
-//	int nSubsamples,
-//	std::string *SavePath_Samples)
-//{
-//	std::random_device rd;	// obtain a random number from hardware
-//	std::mt19937 eng(rd());	// seed the generator
-//	std::uniform_int_distribution<> distr(0, pts.NumVertices()); // define the range
-//
-//	vctDynamicVector<vct3> subsampledNormals;
-//	subsampledNormals.SetSize(nSubsamples);
-//
-//	for (int i = 0; i < nSubsamples; i++)
-//	{
-//		int currnum = distr(eng);
-//
-//		//if (!selectedPts[currnum])
-//		//	selectedPts[currnum] = true;
-//		//else
-//		//{
-//		//	i--;
-//		//	continue;
-//		//}
-//		subsampledPts[i] = pts.vertices[currnum];
-//		subsampledNormals[i] = pts.vertexNormals[currnum];
-//#if 0 // sample from visible portion of left nostril
-//		if (subsampledPts[i][0] < 5.00 && subsampledPts[i][0] > -3.00 &&	// right to left (-1, 5.5)
-//			subsampledPts[i][1] < 18.00 && subsampledPts[i][1] > -22.00 &&	// back to front (-30, 15)
-//			subsampledPts[i][2] < 15.00 && subsampledPts[i][2] > -15.00)	// top to bottom (-12, 20)
-//			continue;
-//		else 
-//			i--;
-//		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
-//#endif
-//#if 0 // sample from visible portion of pelvis
-//		if (//subsampledPts[i][0] < 5.50 && subsampledPts[i][0] > -1.00 &&	// left to right
-//			//subsampledPts[i][1] < 0.00 && subsampledPts[i][1] > -30.00 &&	// front to back
-//			subsampledPts[i][2] > 35.00 || subsampledPts[i][2] < -50.00)	// top to bottom
-//			continue;
-//		else
-//			i--;
-//		printf("%d out of %d: number generated: %d\r", i, nSubsamples, currnum);
-//#endif
-//	}
-//
-//	pts.vertices = subsampledPts;
-//	pts.vertexNormals = subsampledNormals;
-//	printf("\n%d subsamples generated\n", nSubsamples);
-//
-//	// save samples
-//	if (SavePath_Samples)
-//	{
-//		printf("Saving points\n");
-//		if (cisstPointCloud::WritePointCloudToFile(*SavePath_Samples, subsampledPts) < 0)
-//		{
-//			std::cout << "ERROR: Samples save failed" << std::endl;
-//			assert(0);
-//		}
-//	}
-//}
 
 void GenerateNoisySamples_Gaussian(
   std::ifstream &randnStream,

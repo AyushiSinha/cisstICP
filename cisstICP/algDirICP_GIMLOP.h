@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -111,29 +111,29 @@ protected:
 
   // Gaussian parameters for each sample
   //  effective noise model
-  vctDynamicVector<vct3x3> M;         // noise covariance of sample positions
-  vctDynamicVector<vct3x3> invM;      // inverse noise covariance of sample positions
-  vctDynamicVector<vct3x3> N;         // decomposition of inv(M) = N'N = R*D^2*R'
-  vctDynamicVector<vct3x3> invN;
-  vctDoubleVec Dmin;        // sqrt of smallest eigenvalue of inv(M)
-  vctDoubleVec Emin;        // smallest eigenvalue of inv(M)
+  vctDynamicVector<vct3x3>	M;				// noise covariance of sample positions
+  vctDynamicVector<vct3x3>	invM;			// inverse noise covariance of sample positions
+  vctDynamicVector<vct3x3>	N;				// decomposition of inv(M) = N'N = R*D^2*R'
+  vctDynamicVector<vct3x3>	invN;
+  vctDoubleVec				Dmin;			// sqrt of smallest eigenvalue of inv(M)
+  vctDoubleVec				Emin;			// smallest eigenvalue of inv(M)
   //  measurement noise model (static)
-  vctDynamicVector<vct3x3> M_msmt;         // noise covariance of sample positions
-  vctDynamicVector<vct3x3> invM_msmt;      // inverse noise covariance of sample positions
-  vctDynamicVector<vct3x3> N_msmt;         // decomposition of inv(M) = N'N = R*D^2*R'
-  vctDynamicVector<vct3x3> invN_msmt;
-  vctDoubleVec Dmin_msmt;   // sqrt of smallest eigenvalue of inv(M)
-  vctDoubleVec Emin_msmt;   // smallest eigenvalue of inv(M)
+  vctDynamicVector<vct3x3>	M_msmt;         // noise covariance of sample positions
+  vctDynamicVector<vct3x3>	invM_msmt;      // inverse noise covariance of sample positions
+  vctDynamicVector<vct3x3>	N_msmt;         // decomposition of inv(M) = N'N = R*D^2*R'
+  vctDynamicVector<vct3x3>	invN_msmt;
+  vctDoubleVec				Dmin_msmt;		// sqrt of smallest eigenvalue of inv(M)
+  vctDoubleVec				Emin_msmt;		// smallest eigenvalue of inv(M)
   //  match uncertainty model (dynamic)
   double traceM_est;
   double meanTraceM_msmt;
 
   // noise parameters for xfmd samples
-  vctDynamicVector<vct3x2> R_L;
-  vctDynamicVector<vct3x3> R_invM_Rt;
-  vctDynamicVector<vct3x3> R_MsmtM_Rt;
-  vctDynamicVector<vct3x3> N_Rt;
-  vctDynamicVector<vct3x3> inv_N_Rt;   // inv(N*Rt) = R*invN
+  vctDynamicVector<vct3x2>	R_L;
+  vctDynamicVector<vct3x3>	R_invM_Rt;
+  vctDynamicVector<vct3x3>	R_MsmtM_Rt;
+  vctDynamicVector<vct3x3>	N_Rt;
+  vctDynamicVector<vct3x3>	inv_N_Rt;		// inv(N*Rt) = R*invN
 
   // Variables for current sample point undergoing a match search
   //  these are set once for each sample point by the pre-match function
@@ -158,12 +158,12 @@ protected:
   vctRot3 Ra;
   //vctDynamicVector<vct3> Yp_RaXp_t;
 
-  vctDynamicVector<vct3> Xp_xfm;
-  vctDynamicVector<vct3> Yp_t;
-  vctDynamicVector<vct3> Rat_Yp_RaXp_t;
-  vctDynamicVector<vct3> invM_Rat_Yp_RaXp_t;
-  vctDynamicVector<vct3> RaXn;
-  vctDynamicVector<vct3x2> RaRL;
+  vctDynamicVector<vct3>	Xp_xfm;
+  vctDynamicVector<vct3>	Yp_t;
+  vctDynamicVector<vct3>	Rat_Yp_RaXp_t;
+  vctDynamicVector<vct3>	invM_Rat_Yp_RaXp_t;
+  vctDynamicVector<vct3>	RaXn;
+  vctDynamicVector<vct3x2>	RaRL;
 
   // registration statistics
   double totalSumSqrMahalDist;
@@ -180,11 +180,10 @@ protected:
   vctDynamicVector<int>   outlierFlags;
 
   // dynamic noise model
-  double sigma2;								  // match uncertainty (added to My covariances as sigma2*I)
-  double sigma2Max
-	  = std::numeric_limits<double>::max();		  // max threshold on match uncertainty
-  vctDynamicVector<vct3>  residuals_PostMatch;    // Pclosest - Psample
-  vctDoubleVec            sqrDist_PostMatch;      // ||Pclosest - Psample||^2
+  double sigma2;											// match uncertainty (added to My covariances as sigma2*I)
+  double sigma2Max = std::numeric_limits<double>::max();	// max threshold on match uncertainty
+  vctDynamicVector<vct3>  residuals_PostMatch;				// Pclosest - Psample
+  vctDoubleVec            sqrDist_PostMatch;				// ||Pclosest - Psample||^2
 
   bool bFirstIter_Matches;  // flag that the first iteration is being run
 
@@ -196,12 +195,12 @@ public:
   // constructor
   algDirICP_GIMLOP(
     DirPDTreeBase *pDirTree,
-    vctDynamicVector<vct3> &samplePts,
-    vctDynamicVector<vct3> &sampleNorms,
-    const vctDynamicVector<double> &argK,
-    const vctDynamicVector<double> &argE,
-    const vctDynamicVector<vct3x2> &argL,
-	const vctDynamicVector<vct3x3> &M,
+    vctDynamicVector<vct3>			&samplePts,
+    vctDynamicVector<vct3>			&sampleNorms,
+    const vctDynamicVector<double>	&argK,
+    const vctDynamicVector<double>	&argE,
+    const vctDynamicVector<vct3x2>	&argL,
+	const vctDynamicVector<vct3x3>	&M,
 	double scale = 1.0, bool bScale = false,
     PARAM_EST_TYPE paramEst = PARAMS_FIXED);
 
@@ -214,9 +213,9 @@ public:
   virtual void ReturnScale(double &scale);
 
   // dlib routines
-  void    UpdateOptimizerCalculations(const /*vct6*/ vctDynamicVector<double> &x);
-  void    CostFunctionGradient(const /*vct6*/ vctDynamicVector<double> &x, /*vct6*/ vctDynamicVector<double> &g);
-  double  CostFunctionValue(const /*vct6*/ vctDynamicVector<double> &x);
+  void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
+  void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
+  double  CostFunctionValue(const vctDynamicVector<double> &x);
 
   inline double MatchError(
     const vct3 &Xp, const vct3 &Xn,

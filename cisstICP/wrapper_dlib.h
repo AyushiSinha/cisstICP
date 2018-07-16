@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ public:
   // constructor
   wrapper_dlib(); // algDirICP_GIMLOP *kent );
 
-  /*vct6*/ vctDynamicVector<double> ComputeRegistration(const /*vct6*/ vctDynamicVector<double> &x0, algDirICP_GIMLOP *kent);
+  vctDynamicVector<double> ComputeRegistration(const vctDynamicVector<double> &x0, algDirICP_GIMLOP *kent);
 };
 
 #endif

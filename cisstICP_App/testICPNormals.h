@@ -1,3 +1,36 @@
+// ****************************************************************************
+//
+//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, Johns Hopkins University. 
+//	  All rights reserved.
+//
+//    Redistribution and use in source and binary forms, with or without
+//    modification, are permitted provided that the following conditions are
+//    met:
+//
+//    1. Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//
+//    2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+//    3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+//    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+//    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+//    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+//    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+//    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+//    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+//    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+//    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  
+// ****************************************************************************
 #ifndef _testICPNormals_H
 #define _testICPNormals_H
 
@@ -97,15 +130,15 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	case DirAlgType_StdICP:
 	{		  std::cout << "\nRunning directional ICP" << std::endl;		algDir = "LastRun_DirICP/";		break;  }
 	case DirAlgType_IMLOP:
-	{		  std::cout << "\nRunning IMLOP" << std::endl;				algDir = "LastRun_IMLOP/";		break;  }
+	{		  std::cout << "\nRunning IMLOP" << std::endl;					algDir = "LastRun_IMLOP/";		break;  }
 	case DirAlgType_DIMLOP:
 	{		  std::cout << "\nRunning D-IMLOP" << std::endl;				algDir = "LastRun_DIMLOP/";		break;  }
 	case DirAlgType_GIMLOP:
-	{		  std::cout << "\nRunning GIMLOP" << std::endl;				algDir = "LastRun_GIMLOP/";		break;  }
+	{		  std::cout << "\nRunning GIMLOP" << std::endl;					algDir = "LastRun_GIMLOP/";		break;  }
 	case DirAlgType_GDIMLOP:
 	{		  std::cout << "\nRunning GDIMLOP" << std::endl;				algDir = "LastRun_GDIMLOP/";	break;  }
 	case DirAlgType_PIMLOP:
-	{		  std::cout << "\nRunning PIMLOP" << std::endl;				algDir = "LastRun_PIMLOP/";		break;  }
+	{		  std::cout << "\nRunning PIMLOP" << std::endl;					algDir = "LastRun_PIMLOP/";		break;  }
 	default:
 	{
 		std::cout << "ERROR: unknown algorithm type" << std::endl;
@@ -173,13 +206,24 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	double maxPosOffsetOutlier  = (double)cmdOpts.outmaxpos;	// 10.0
 	double minAngOffsetOutlier  = (double)cmdOpts.outminang;	//  5.0
 	double maxAngOffsetOutlier  = (double)cmdOpts.outmaxang;	// 10.0
-
-	std::srand(time(NULL)); unsigned int randSeed1	 = 0;		/*std::rand();*/	// generates samples
-	std::srand(time(NULL)); unsigned int randSeqPos1 = 0;		/*std::rand();*/
-	std::srand(time(NULL)); unsigned int randSeed2	 = 17;		/*std::rand();*/	// generates offsets
-	std::srand(time(NULL)); unsigned int randSeqPos2 = 28;		/*std::rand();*/
-	std::srand(time(NULL)); unsigned int randSeed3	 = 28;		/*std::rand();*/	// generates shape parameters
-	std::srand(time(NULL)); unsigned int randSeqPos3 = 8;		/*std::rand();*/
+	
+	// generate random seeds
+	std::srand(time(NULL)); unsigned int randSeed1		= std::rand();	// generates samples
+	std::srand(time(NULL)); unsigned int randSeqPos1	= std::rand();
+	std::srand(time(NULL)); unsigned int randSeed2		= std::rand();	// generates offsets
+	std::srand(time(NULL)); unsigned int randSeqPos2	= std::rand();
+	std::srand(time(NULL)); unsigned int randSeed3		= std::rand();	// generates shape parameters
+	std::srand(time(NULL)); unsigned int randSeqPos3	= std::rand();
+	// use specific seeds if testing for release
+	if (cmdOpts.output == "testingforrelease")
+	{
+		randSeed1	= 0;			// generates samples
+		randSeqPos1	= 0;		
+		randSeed2	= 17;			// generates offsets
+		randSeqPos2	= 28;		
+		randSeed3	= 28;			// generates shape parameters
+		randSeqPos3	= 8;		
+	}
 
 	// Samples Noise Model
 	//  NOTE: this is a generative noise model (i.e. noise is generated according

@@ -1,7 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, 
-//	  Johns Hopkins University. 
+//    Copyright (c) 2017, Ayushi Sinha, Seth Billings, Russell Taylor, Johns Hopkins University. 
 //	  All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -96,7 +95,7 @@ void algICP_DIMLP::ComputeMatchStatistics(double &Avg, double &StdDev)
 
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		residual = /*matchPts[i]*/Tssm_Y[i] - (Freg * samplePts[i]) * sc;
+		residual = Tssm_Y[i] - (Freg * samplePts[i]) * sc;
 		M = Freg.Rotation() * Mxi[i] * Freg.Rotation().Transpose() + *Myi[i];
 		ComputeCovInverse_NonIter(M, Minv);
 
@@ -136,10 +135,6 @@ void algICP_DIMLP::SetSamples(
 	vctDynamicVector<vct3> &argMeanShape,
 	double argScale, bool argbScale)
 {
-	//std::cout << "Setting samples DIMLP...\n";
-	// base class
-	//algICP_IMLP::SetSamples(argSamplePts, argMxi, argMsmtMxi);
-
 	// scale sample points (remove this from here when you move it to IMLP)
 	sc = argScale;
 	bScale = argbScale;
@@ -157,7 +152,6 @@ void algICP_DIMLP::SetSamples(
 	Si = pTree->MeshP->Si;
 	wi = pTree->MeshP->wi;
 
-	//Tssm_wi.resize(nSamples);
 	Tssm_wi.resize(nModes);
 	for (int i = 0; i < Tssm_wi.size(); i++)
 		Tssm_wi[i].resize(nSamples);
@@ -252,7 +246,7 @@ void algICP_DIMLP::ICP_UpdateParameters_PostMatch()
 		R_MsmtMxi_Rt[s] = R*MsmtMxi[s] * R.Transpose();
 	}
 
-#ifdef DEBUG_IMLP
+#ifdef DEBUG_DIMLP
 	std::cout << "My0:" << std::endl << *Myi[0] << std::endl;
 	std::cout << "My1:" << std::endl << *Myi[1] << std::endl;
 #endif
@@ -304,23 +298,10 @@ void algICP_DIMLP::UpdateShape(vctDynamicVector<double>	&S)
 	for (s = 0; s < pMesh->NumVertices(); s++)
 		for (unsigned int i = 0; i < nModes; i++)
 			pTree->MeshP->vertices(s) += (S[i] * wi[i].Element(s));
-
-	//std::cout << "Si = " << Si[0] << " ";
-	//pMesh->Si = Si;
-	//std::string imesh = std::to_string(itermesh) + ".ply";
-	//cisstMesh currMesh;
-	//currMesh.vertices = pTree->MeshP->vertices;
-	//currMesh.faces = pTree->MeshP->faces;
-	//currMesh.SavePLY(imesh);
-	//itermesh++;
 }
 
 void algICP_DIMLP::UpdateTree()
 {
-	// TODO: fix this so you're updating for all vertices, <-- DONE
-	// TODO: and recursively for all parent bounding boxes
-	//for (unsigned int s = 0; s < pMesh->NumTriangles(); s++)
-	//	pTree->EnlargeBounds(Freg, s, pTree->Bounds);
 	vctFrm3 FId;
 	FId.Assign(vctFrm3::Identity());
 
@@ -496,7 +477,7 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 {
 	vctFrm3 F;
 	ComputeMu();
-#if 1
+
 	vctDynamicVector<double> x0;
 	vctDynamicVector<double> x;
 
@@ -504,11 +485,6 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	x.SetSize(nTrans + nModes);
 
 	x0 = x_prev; 
-
-	//for (int i = nTrans; i < x0.size(); i++) {
-	//	x0[i] = std::min(x0[i], 3.0);
-	//	x0[i] = std::max(x0[i], -3.0);
-	//}
 
 	// x_prev must be at a different value than x0
 	x_prev.SetAll(std::numeric_limits<double>::max());
@@ -538,15 +514,10 @@ vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 	Si = s;
 
 	pMesh->Si = Si;
-#else
-	RegisterP2P_TLS(samplePtsXfmd, Tssm_matchPts, //matchPts,
-		R_Mxi_Rt, Myi_sigma2, F);
-	Freg = F*Freg;
-#endif
+
 	return Freg;
 }
 
-//void algICP_DIMLP::UpdateOptimizerCalculations(const vct7 &x)
 void algICP_DIMLP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x)
 {
 	a.Assign(x[0], x[1], x[2]);
@@ -587,7 +558,6 @@ void algICP_DIMLP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x
 	x_prev = x;
 }
 
-//double algICP_DIMLP::CostFunctionValue(const vct7 &x)
 double algICP_DIMLP::CostFunctionValue(const vctDynamicVector<double> &x)
 {
 	// don't recompute these if already computed for gradient
@@ -608,12 +578,15 @@ double algICP_DIMLP::CostFunctionValue(const vctDynamicVector<double> &x)
 		f += ( Rat_Tssm_Y_t_x_invMx.Element(i) * Rat_Tssm_Y_t_x.Element(i) ) / 2.0;
 	}
 
-	f += (s.DotProduct(s)) / 2.0; // Comment out to test // 0;
+#ifdef NOREGULARIZER
+	f += 0;
+#else
+	f += (s.DotProduct(s)) / 2.0; 
+#endif
 
 	return f;
 }
 
-//void algICP_DIMLP::CostFunctionGradient(const vct7 &x, vct7 &g)
 void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g)
 {
 	vctFixedSizeVector<vctRot3, 3> dRa;  // Rodrigues Jacobians of R(a) wrt ax,ay,az
@@ -633,7 +606,6 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 	vctFixedSizeVectorRef<double, 1, 1> gsc;
 	if (bScale)
 		gsc.SetRef(g, 6);
-	//vctFixedSizeVectorRef<double, 1, 1> gs(g, 6);
 	vctDynamicVectorRef<double> gs(g, nTrans, nModes);
 
 	vct3x3 Jz_a;
@@ -649,16 +621,20 @@ void algICP_DIMLP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDy
 		for (unsigned int c = 0; c < 3; c++)
 			Jz_a.Column(c) = dRa[c].TransposeRef() * Tssm_Y_t[j]; // check this computation
 
-		ga += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * Jz_a;
-		gt += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-Ra.Transpose());
+		ga += Rat_Tssm_Y_t_x_invMx[j] * Jz_a;
+		gt += Rat_Tssm_Y_t_x_invMx[j] * (-Ra.Transpose());
 		if (bScale)
-			gsc += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-X.Element(j));
+			gsc += Rat_Tssm_Y_t_x_invMx[j] * (-X.Element(j));
 
 		for (unsigned int i = 0; i < nModes; i++)
-			gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
+			gs[i] += Rat_Tssm_Y_t_x_invMx[j] * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
 	}
 
-	gs +=  /*2.0 **/ s;	// Cshape component // 0; 
+#ifdef NOREGULARIZER
+	gs += 0; 
+#else
+	gs +=  s;	// Cshape component 
+#endif
 }
 
 

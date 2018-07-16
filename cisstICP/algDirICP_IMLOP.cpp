@@ -48,7 +48,7 @@ void  algDirICP_IMLOP::SetNoiseModel(
   dynamicParamEst = dynamicallyEstParams;
 }
 
-void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gotta do this right with mahalanobis distance
+void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //TODO: do this right with mahalanobis distance
 {
 	sumSqrMatchDist = 0.0;
 	double sumMatchDist = 0.0;
@@ -71,9 +71,6 @@ void algDirICP_IMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //gott
 	}
 	Avg = sumMatchDist / (sigma2*nGoodSamples);
 	StdDev = sqrt( (sumSqrMatchDist / (sigma2*nGoodSamples))+Avg*Avg );
-	
-	//std::cout << "\nSigma = " << sigma2;
-	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 }
 
 void algDirICP_IMLOP::PrintMatchStatistics(std::stringstream &tMsg)
@@ -128,21 +125,6 @@ double algDirICP_IMLOP::ICP_EvaluateErrorFunction()
   return B*(pICP->gSumSqrDist_PostMatch + pICP->oSumSqrDist_PostMatch); //- nSamples*logC;
 #endif
 
-  //// compute normalization constant
-  //double logEkE_k = 0.0;
-  //if (k >= 5)
-  //{ // exp(k)>>exp(-k)  =>  exp(k)-exp(-k) ~= exp(k)
-  //  //                  =>  log(exp(k)-exp(-k)) ~= log(exp(k)) = k
-  //  logEkE_k = k;
-  //}
-  //else
-  //{
-  //  logEkE_k = log(exp(k) - exp(-k));
-  //}
-  //// to avoid overflow/underflow, calculate logC directly 
-  ////  (rather than calculating C and then logC)
-  //logC = log(k) - (5.0 / 2.0)*log2PI - logEkE_k - (3.0 / 2.0)*log(sigma2);
-
   vct3 residual;
   double sumSqrDist = 0.0;
   double sumNormProducts = 0.0;
@@ -158,22 +140,6 @@ double algDirICP_IMLOP::ICP_EvaluateErrorFunction()
   //  to improve smoothness of cost function
   // NOTE: adding an extra k*nSamples to the cost produces a cost function >= 0
   return B*(sumSqrDist)+k*(nSamples - sumNormProducts); // -logC*nSamples;
-
-  //// including match errors of thresholded outliers helps improve
-  ////  smoothness of cost function
-  //return B*(gSumSqrDist_PostMatch + oSumSqrDist_PostMatch)
-  //  - k*(gSumNormProducts_PostMatch + oSumNormProducts_PostMatch)
-  //  - logC*nSamples;
-
-  // This method for computing logC is unstable
-  //   It produces C=0 => infinity for log(C) when k is large
-  //   The problem comes when computing log(exp(k)-exp(-k))
-  //   in that exp(k) blows up for big k
-  ////  von Mises-Fisher normalizing constant
-  //double Cp = k/(2*cmnPI*(exp(k)-exp(-k)));
-  ////  Gaussian normalizing constant
-  //double Cn = pow((2*cmnPI*sigma2),3/2);
-  //C = Cp/Cn;
 }
 
 vctFrm3 algDirICP_IMLOP::ICP_RegisterMatches()
@@ -197,9 +163,6 @@ void algDirICP_IMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   k = k_init;
   sigma2 = sigma2_init;
   B = 1.0 / (2.0*sigma2_init);
-  //B = 1.0;
-  //sigma2 = 1/(2.0*B);
-  //k = 1.0;
 
 #ifdef TEST_STD_ICP
   k = 0.0;
@@ -209,29 +172,6 @@ void algDirICP_IMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   errFuncNormWeight = k;
   errFuncPosWeight = B;
 }
-
-//void algDirICP_IMLOP::ICP_UpdateParameters_PostMatch()
-//{
-//  // base class
-  //algDirICP::ICP_UpdateParameters_PostMatch();
-//
-  //double SumSqrDist_PostMatch = 0.0;
-  //double sumNormProducts_PostMatch = 0.0;
-  //for (unsigned int s = 0; s < nSamples; s++)
-  //{
-	 // SumSqrDist_PostMatch +=
-		//  (samplePtsXfmd.Element(s) - matchPts.Element(s)).NormSquare();
-	 // sumNormProducts_PostMatch +=
-		//  vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
-  //}
-//
-  //// update noise model
-  //UpdateNoiseModel(SumSqrDist_PostMatch, sumNormProducts_PostMatch);
-//
-  //// update monitoring variables
-  ////pICP->errFuncNormWeight = k;
-  ////pICP->errFuncPosWeight = B;
-//}
 
 void algDirICP_IMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 {
@@ -247,11 +187,6 @@ void algDirICP_IMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
     sumNormProducts_PostRegister += 
       vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
   }
-
-  //matchDistSD_PostRegister = 
-  //  (sumSqrDist_PostRegister/nSamples) - matchDistAvg_PostRegister*matchDistAvg_PostRegister;
-  //matchDegErrSD_PostRegister =
-  //  (sumSqrDegErr_PostRegister / nSamples) - matchDegErrAvg_PostRegister*matchDegErrAvg_PostRegister;
 
   // update noise model
   UpdateNoiseModel(sumSqrDist_PostRegister, sumNormProducts_PostRegister);
@@ -289,236 +224,11 @@ unsigned int algDirICP_IMLOP::ICP_FilterMatches()
   goodSampleNorms.SetRef(goodSampleNormsBuf, 0, nGoodSamples);
   goodMatchNorms.SetRef(goodMatchNormsBuf, 0, nGoodSamples);
 
-  //gSumSqrDist_PostMatch = sumSqrDist_PostMatch;
-  //gSumNormProducts_PostMatch = sumNormProducts_PostMatch;
-  //oSumSqrDist_PostMatch = 0.0;
-  //oSumNormProducts_PostMatch = 0.0;
-
   return nOutliers;
 #endif 
 
   // Method 2: Chi-Square Outlier Test
-#if 0
-  // Filer Matches for Outliers
-  //  
-  // Positions:
-  //  The Square Mahalanobis Distance of the matches follow a chi-square distribution
-  //  with 3 degrees of freedom (1 DOF for each spatial dimension) assuming that the
-  //  residuals of position are normally distributed about the mean. Since the
-  //  positional noise model is isotropic, the square Mahalanobis distance reduces
-  //  to the square Euclidean distance divided by the variance along one spatial dimension.
-  //
-  //  Detect position outliers as: ||Py - (R*Px+t)||^2 > ChiSquare(c) * Var(Pos)
-  //
-  //  Note:  ChiSquare(0.95) = 7.81     (1.96 Std Dev)
-  //         ChiSquare(0.975) = 9.35    (2.24 Std Dev)
-  //         ChiSquare(0.99) = 11.34    (2.56 Std Dev)
-  //         ChiSquare(0.9973) = 14.16  (3.0 Std Dev)     MATLAB: chi2inv(0.9973,3)
-  //
-  //  Note:  Var(Pos) = (1/3*N)*Sum_i(||Pyi - (R*Pxi+t)||^2)
-  //          - here we assume the residual error to have zero mean
-  //          - we use 3*N as the denominator rather than N because
-  //            the square distance is a sum of three independent Guassian
-  //            RVs (one for each axis) and it is the variance along a single
-  //            axis that appears in the Mahalanobis distance and Gaussian
-  //            probability equations.
-  //
-  // Orientations:
-  // Consider a point as outlier if orientation angle (acos(Na'Nb)) > 3 circular
-  //  standard deviations
-  //  
-  //  Detect Orientation outlier as:  acos(dot(Nx,Ny)) > 3*circStdDev
-  //
-  //  Copies only non outlier points to "GoodsamplePts" and 
-  //   nondestructively resizes "Good Sample" reference vectors 
-  //   to the number of points transferred.
-  //
-
-  double ChiSquareThresh = 7.81;
-  double S2 = sumSqrDist / (3 * nSamples); // variance estimate along a single axis
-  double SquareDistThresh = S2 * ChiSquareThresh;
-
-  double ThetaThresh = 3.0*circSD;
-  ThetaThresh = ThetaThresh > cmnPI ? cmnPI : ThetaThresh;
-  double NormProductThresh = cos(ThetaThresh);
-
-  nGoodSamples = 0;
-  nOutliers = 0;
-  nPosOutliers = 0;
-  nNormOutliers = 0;
-
-  double gSumSqrDist_PostMatch = 0.0;
-  double gSumNormProducts_PostMatch = 0.0;
-  double oSumSqrDist_PostMatch = 0.0;
-  double oSumNormProducts_PostMatch = 0.0;
-  //gSumSqrNormDist_PostMatch = 0.0;
-  //oSumSqrNormDist_PostMatch = 0.0;
-
-  // for all model/sample sets
-  //for (unsigned int set = 0; set < pICP->nSets; set++)
-  //{
-    //unsigned int nSamps_Set = pICP->nsamplePtsSets[set];
-    unsigned int nGood_Set = 0;
-
-	vctDynamicVectorRef<vct3>   samplePts(samplePts); // (pICP->SampleSets[set]);
-	vctDynamicVectorRef<vct3>   sampleNorms(sampleNorms); // (pICP->SampleNormSets[set]);
-	vctDynamicVectorRef<vct3>   matchPts(matchPts); // (pICP->ClosestPointSets[set]);
-	vctDynamicVectorRef<vct3>   matchNorms(matchNorms); // (pICP->ClosestPointNormSets[set]);
-	//vctDynamicVectorRef<double> SquareDistances( pICP->SquareDistanceSets_PostMatch[set] );
-	//vctDynamicVectorRef<double> NormProducts(pICP->NormProductSets_PostMatch[set]);
-	vctDynamicVector<double> SquareDistances(nSamples);
-	vctDynamicVector<double> NormProducts(nSamples);
-    //vctDynamicVectorRef<double> Distances( pICP->DistanceSets_PostMatch[set] );
-    //vctDynamicVectorRef<vct3>   TransformedsamplePts( pICP->TransformedSampleSets[set] );    
-    //vctDynamicVectorRef<vct3>   TransformedsampleNorms( pICP->TransformedSampleNormSets[set] );
-    //vctDynamicVectorRef<double> SquareDistances( pICP->SquareDistanceSets_PostMatch[set] );
-    //vctDynamicVectorRef<vct3>   Residuals( pICP->ResidualSets_PostMatch[set] );
-    //vctDynamicVectorRef<double> dThetas( pICP->dThetaSets_PostMatch[set] );
-
-    // Filter Outliers
-    for (unsigned int s = 0; s < nSamples/*nSamps_Set*/; s++)
-    {
-		SquareDistances.Element(s) = (matchPts(s) - Freg*samplePts(s)).NormSquare();
-		NormProducts.Element(s) = matchNorms(s) * (Freg.Rotation() * sampleNorms(s));
-
-      // Positional Outlier Test
-      if ( SquareDistances.Element(s) > SquareDistThresh )
-      {	// a positional outlier
-        nPosOutliers += 1;
-
-        // Theshold the outlier error on position and (if applicable) orientation 
-        //  so that the cost function remains smooth, but the outlier does not
-        //  continue to increase the error.
-        //
-        // Dual error thresholds (one for position, one for orientation) are
-        //  not ideal, as the error of an outlier may then
-        //  change during its time as an outlier due to thresholding on
-        //  both positional and orientation error. The alternative is a single
-        //  threshold error value, but this would again create jumps in the error
-        //  when adding/removing outliers.
-        //
-        // Either way the optimization runs correctly, what this effects is the
-        //  error function value, which may be being monitored for the termination 
-        //  condition. We have two choices:
-        //   a) some change in outlier error affects the error function
-        //   b) jumpy cost function in between optimizations, when adding/removing
-        //      outliers, but cost of an outlier is always the same
-        // Since a) is smooth and b) may be jumpy, we choose situation a).
-        //
-		double normProduct; 
-        //double sqrNormDist;
-        // check if orientation is outlier as well
-        //  if so, threshold orientation component of error as well
-        // Note: smaller norm products mean larger error
-        if ( NormProducts.Element(s) < NormProductThresh )
-        { // orientation is outlier as well => threshold its error
-          normProduct = NormProductThresh;
-          //sqrNormDist = sqrNormDistThresh;
-        }
-        else
-        {
-          normProduct = NormProducts.Element(s);
-          //sqrNormDist = SquareNormDistances.Element(s);
-        }
-        // apply match error to outlier error
-        oSumSqrDist_PostMatch += SquareDistThresh;
-        oSumNormProducts_PostMatch += normProduct;
-        //oSumSqrNormDist_PostMatch += sqrNormDist; 
-      }
-      // Orientation Outlier Test
-      else if ( NormProducts.Element(s) < NormProductThresh )
-      { // an orientation outlier
-        nNormOutliers += 1;
-
-        // Threshold the outlier error on orientation so that the cost function is
-        //  smooth, but the outlier does not continue to increase the error.
-        //  (Don't have to threshold position error, because the position was
-        //   already checked and cannot be an outlying value here)
-        // apply match error to outlier error
-        oSumSqrDist_PostMatch += SquareDistances.Element(s);
-        oSumNormProducts_PostMatch += NormProductThresh;
-        //oSumSqrNormDist_PostMatch += sqrNormDistThresh;
-      }
-      else
-      { // inlier
-        // copy this sample to the good sample buffers
-        goodSamplePtsBuf.Element(nGoodSamples) = samplePts.Element(s);        
-        goodSampleNormsBuf.Element(nGoodSamples) = sampleNorms.Element(s);
-        goodMatchPtsBuf.Element(nGoodSamples) = matchPts.Element(s);
-        goodMatchNormsBuf.Element(nGoodSamples) = matchNorms.Element(s);
-        //AllGoodTransformedsamplePtsBuf.Element(pICP->nGoodSamples) = TransformedsamplePts.Element(s);
-        //AllGoodTransformedsampleNormsBuf.Element(pICP->nGoodSamples) = TransformedsampleNorms.Element(s);
-        //GoodSampleResiduals_PostMatch.Row(pICP->nGoodSamples).Assign(Residuals.Element(s));
-
-        // apply match error to good sample error
-        gSumSqrDist_PostMatch += SquareDistances.Element(s);
-        gSumNormProducts_PostMatch += NormProducts.Element(s);
-        //gSumSqrNormDist_PostMatch += SquareNormDistances.Element(s);
-
-        nGoodSamples++;
-        nGood_Set++;
-      }
-    }
-
-    //// renormalize weights for good samples
-    //for (unsigned int k = nGoodSamples-nGood_Set; k < nGoodSamples; k++)
-    //{ // set sample weights
-    //  // must know # of good samples in the set before setting the sample weights
-    //  //  due to normalization factor
-    //  AllGoodSampleWeightsBuf.at(k) = pICP->Weights[set]/nGood_Set;
-    //}
-    //nOutliersSets[set] = nSamps_Set - nGood_Set;
-	nOutliers += nSamples - nGoodSamples; // nSamps_Set - nGood_Set;
-  //}
-
-  goodSamplePts.SetRef( goodSamplePtsBuf,0,nGoodSamples );  
-  goodSampleNorms.SetRef( goodSampleNormsBuf,0,nGoodSamples );  
-  goodMatchPts.SetRef( goodMatchPtsBuf,0,nGoodSamples );
-  goodMatchNorms.SetRef( goodMatchNormsBuf,0,nGoodSamples );
-  //AllGoodSampleWeights.SetRef( AllGoodSampleWeightsBuf,0,nGoodSamples );
-  //AllGoodTransformedsamplePts.SetRef( AllGoodTransformedsamplePtsBuf,0,nGoodSamples );
-  //AllGoodTransformedsampleNorms.SetRef( AllGoodTransformedsampleNormsBuf,0,nGoodSamples );
-
-  //pICP->iterData->nOutliersPos = nPosOutliers;
-  //pICP->iterData->nOutliersNorm = nNormOutliers;
-
-  return nOutliers;
-
-  //if ( outlierDistFactor <= EPS && outlierNormFactor <= EPS )
-  //{	// outlier filtering is disabled => use all samples
-  //  for (unsigned int s = 0; s < nSamps_Set; s++)
-  //  { // copy all samples to buffer
-  //    goodSamplePtsBuf.Element(nGoodSamples) = samplePts.Element(s);
-  //    goodSampleNormsBuf.Element(nGoodSamples) = sampleNorms.Element(s);
-  //    goodMatchPtsBuf.Element(nGoodSamples) = matchPts.Element(s);        
-  //    goodMatchNormsBuf.Element(nGoodSamples) = matchNorms.Element(s);
-  //    AllGoodSampleWeightsBuf.Element(nGoodSamples) = pICP->Weights[set] / nSamps_Set;
-  //    nGoodSamples++;
-  //    //AllGoodTransformedsamplePtsBuf.Element(nGoodSamples) = TransformedsamplePts.Element(s);
-  //    //AllGoodTransformedsampleNormsBuf.Element(nGoodSamples) = TransformedsampleNorms.Element(s);
-  //  }
-  //  nGood_Set = nSamps_Set;
-  //  // apply all errors to good sample errors
-  //  gSumSqrDist_PostMatch += pICP->SumSquareDistanceSets_PostMatch[set];
-  //  gSumNormProducts_PostMatch += pICP->SumNormProductSets_PostMatch[set];
-  //  //gSumSqrNormDist_PostMatch += SumSquareNormDistanceSets_PostMatch[set];      
-  //}
-
-  //// compute outlier thresholds for position and orientation
-  //double sqrDistThresh = outlierDist2Factor * posVar;
-  //double thetaThresh = outlierNormFactor * pICP->circSD_PostMatch;    
-  //thetaThresh = thetaThresh > cmnPI ? cmnPI : thetaThresh;
-  //double normProductThresh = cos(thetaThresh);
-  ////// Use theta threshold to compute a threshold on the square geometric 
-  //////  distance between normal vectors; to compute this, compare a unit
-  //////  vector to itself rotated by theta threshold degrees
-  //////  (used for thresholding outlier square norm distance error, not
-  //////   used for detecting outlier)
-  ////vct3 t1(1.0,0.0,0.0);
-  ////vctAxAnRot3 AxAn(vct3(0.0,0.0,1.0),thetaThresh);
-  ////vct3 t2 = vctRot3(AxAn)*t1;   // *** why must convert to vctRot3 type?
-  ////double sqrNormDistThresh = (t1-t2).NormSquare();
-#endif
+  // TODO
 }
 
 
@@ -744,188 +454,3 @@ double algDirICP_IMLOP::ComputeRpos()
   //double posCircSD = sqrt(-2*log(Rpos));
   return Rpos;
 }
-
-
-// Below are various methods that were tried in an attempt to balance the k & B
-//  weights s.t. k does not blow up too large
-
-//switch (opt.errFunc)
-//{
-//case OptionsNorm::STDICP:
-//  {
-//    // orientation is not used in standard ICP => k=0
-//    double sigma2 = this->S2;
-//    k = 0.0;
-
-//    // perfect match threshold
-//    //  need to threshold both sigma2 & B, since sigma2 used for calculating
-//    //  normalization constant.
-//    //  Note:  if B > n, then sigma2 < 1/(2*n)
-//    //B = B > 1e5 ? 1e5 : B;
-//    sigma2 = sigma2 < 1.0/(2.0e5) ? 1.0/(2.0e5) : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;    
-//  }
-//case OptionsNorm::vMFG:
-//  {
-//    // update error function parameters
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // perfect match thresholds
-//    //  need to threshold both sigma2 & B, since sigma2 used for calculating
-//    //  normalization constant.
-//    //  Note:  if B > n, then sigma2 < 1/(2*n)
-//    //B = B > threshB ? threshB : B;
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    // compute normalization constant for probability distribution
-//    Compute_vMFGConstant( k,sigma2,logC );
-
-//    // compute error function
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kROTREG:
-//  {
-//    double sigma2 = this->S2;
-
-//    // regularize k by dR
-//    vctRodRot3 dR;
-//    dR.From(iterData->dF.Rotation());   // convert to Rodrigues notation
-//    double dAng = dR.Norm();
-//    double cSD = this->circSD + dAng;
-//    //  SD = sqrt(-2*log(R));
-//    //   =>  R = exp(-(SD^2)/2)
-//    double Rreg = exp(-(cSD*cSD)/2);
-//    double Rreg2 = Rreg*Rreg;
-//    k = Rreg*(3-Rreg2)/(1-Rreg2);
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kREG:
-//  {
-//    double prevK = k; 
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // regularization on k
-//    k = prevK + (k-prevK)*opt.kRegConst;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kbREG:
-//  {
-//    double prevK = k;
-//    double prevB = B;
-
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kTHRESH:
-//  {
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // Threshold K
-//    //  Note: k = 600 equates to about 3.25 degrees circular standard deviation
-//    k = k > opt.kThresh ? opt.kThresh : k;
-
-//    // perfect match thresholds
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kSCALE:
-//  {
-//    double sigma2;
-//    Compute_vMFGParams( k,sigma2 );
-
-//    // Scale K
-//    k /= opt.kScale;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kFIXED:
-//  {
-//    k = opt.k;
-//    double sigma2 = this->S2;
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );      
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::kbFIXED:
-//  {
-//    k = opt.k;
-//    B = opt.B;
-//    double sigma2 = 1.0/(2.0*B);
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//case OptionsNorm::WRAPNORMAL:
-//  {
-//    // assign k according to the variance of a
-//    //  wrapped normal distribution
-//    double sigma2 = this->S2;
-//    k = 1.0/(2.0*(this->circSD)*(this->circSD));  // ERROR: should be k = 1/circSD^2
-
-//    // perfect match thresholds
-//    k = k > threshK ? threshK : k;
-//    sigma2 = sigma2 < threshS2 ? threshS2 : sigma2;
-//    B = 1.0/(2.0*sigma2);
-
-//    Compute_vMFGConstant( k,sigma2,logC );
-//    err = ComputeErrorFunctionValue( B,k,logC,SumSquareDistances,SumNormProducts );
-//    break;
-//  }
-//default:
-//  {
-//    std::cout << "No valid error function chosen" << std::endl;
-//    assert(0);
-//  }
-//}

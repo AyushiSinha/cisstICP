@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -158,13 +158,13 @@ public:
 		double kfactor = 1.0, double scale = 1.0,
 		bool dynamicallyEstParams = true, 
 		bool bScale = false);
- //   : algDirICP_IMLOP(pDirTree, samplePts, sampleNorms),
- //   //algDirPDTree(pDirTree),
-	//pDirTree(pDirTree)
- // {
- //   // Ensure SetSamples function of this derived class gets called
- //   SetSamples(samplePts, sampleNorms);
- // }
+ //		: algDirICP_IMLOP(pDirTree, samplePts, sampleNorms),
+ //		algDirPDTree(pDirTree),
+ //		pDirTree(pDirTree)
+ //		{
+ //			// Ensure SetSamples function of this derived class gets called
+ //			SetSamples(samplePts, sampleNorms);
+ //		}
 
   // destructor
   virtual ~algDirICP_DIMLOP() {}

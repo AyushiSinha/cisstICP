@@ -84,29 +84,6 @@ public:
   ////        error routines to compute these if desired
   ////
 
-  //vctDynamicVector<vct2>  residuals_PostMatch;    // Pclosest - Psample
-  //vctDoubleVec            sqrDist_PostMatch;      // ||Pclosest - Psample||^2
-  //vctDoubleVec            dist_PostMatch;         // ||Pclosest - Psample||
-
-  //vctDynamicVector<vct2>  residuals_PostRegister; // Pclosest - Psample
-  //vctDoubleVec            sqrDist_PostRegister;   // ||Pclosest - Psample||^2
-  //vctDoubleVec            dist_PostRegister;      // ||Pclosest - Psample||
-
-  //vctDoubleVec  normProducts_PostMatch;     // dot(Nclosest,Nsamp)
-  //vctDoubleVec  normProducts_PostRegister;
-
-  //double  matchErrorAvg_PostMatch;
-  //double  matchDistAvg_PostMatch;
-  //double  sumSqrDist_PostMatch;
-
-  //double  matchErrorAvg_PostRegister;
-  //double  matchDistAvg_PostRegister;
-  //double  sumSqrDist_PostRegister;
-
-  //double  sumNormProducts_PostMatch;      // Sum_i( dot(Nclosest,Nsamp) )
-  //double  sumNormProducts_PostRegister;
-
-
   //--- Standard Algorithm Methods ---//
 
 public:
@@ -132,9 +109,6 @@ protected:
 
   virtual void  SamplePreMatch(unsigned int sampleIndex) {};
   virtual void  SamplePostMatch(unsigned int sampleIndex) {};
-
-  //virtual void  ComputeErrors_PostMatch();
-  //virtual void  ComputeErrors_PostRegister();
 
 
   //--- ICP Interface Methods ---//

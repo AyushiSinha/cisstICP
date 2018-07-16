@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -116,19 +116,19 @@ protected:
 
   // Gaussian parameters for each sample
   //  effective noise model
-  vctDynamicVector<vct3x3> M;         // noise covariance of sample positions
-  vctDynamicVector<vct3x3> invM;      // inverse noise covariance of sample positions
-  vctDynamicVector<vct3x3> N;         // decomposition of inv(M) = N'N = R*D^2*R'
-  vctDynamicVector<vct3x3> invN;
-  vctDoubleVec Dmin;        // sqrt of smallest eigenvalue of inv(M)
-  vctDoubleVec Emin;        // smallest eigenvalue of inv(M)
+  vctDynamicVector<vct3x3>	M;				// noise covariance of sample positions
+  vctDynamicVector<vct3x3>	invM;			// inverse noise covariance of sample positions
+  vctDynamicVector<vct3x3>	N;				// decomposition of inv(M) = N'N = R*D^2*R'
+  vctDynamicVector<vct3x3>	invN;
+  vctDoubleVec				Dmin;			// sqrt of smallest eigenvalue of inv(M)
+  vctDoubleVec				Emin;			// smallest eigenvalue of inv(M)
   //  measurement noise model (static)
-  vctDynamicVector<vct3x3> M_msmt;         // noise covariance of sample positions
-  vctDynamicVector<vct3x3> invM_msmt;      // inverse noise covariance of sample positions
-  vctDynamicVector<vct3x3> N_msmt;         // decomposition of inv(M) = N'N = R*D^2*R'
-  vctDynamicVector<vct3x3> invN_msmt;
-  vctDoubleVec Dmin_msmt;   // sqrt of smallest eigenvalue of inv(M)
-  vctDoubleVec Emin_msmt;   // smallest eigenvalue of inv(M)
+  vctDynamicVector<vct3x3>	M_msmt;         // noise covariance of sample positions
+  vctDynamicVector<vct3x3>	invM_msmt;      // inverse noise covariance of sample positions
+  vctDynamicVector<vct3x3>	N_msmt;         // decomposition of inv(M) = N'N = R*D^2*R'
+  vctDynamicVector<vct3x3>	invN_msmt;
+  vctDoubleVec				Dmin_msmt;		// sqrt of smallest eigenvalue of inv(M)
+  vctDoubleVec				Emin_msmt;		// smallest eigenvalue of inv(M)
   //  match uncertainty model (dynamic)
   double traceM_est;
   double meanTraceM_msmt;
@@ -139,10 +139,10 @@ protected:
   vctDynamicVector<vct3x3> R_invM_Rt;
   vctDynamicVector<vct3x3> R_MsmtM_Rt;
   vctDynamicVector<vct3x3> N_Rt;
-  vctDynamicVector<vct3x3> inv_N_Rt;   // inv(N*Rt) = R*invN
+  vctDynamicVector<vct3x3> inv_N_Rt;		// inv(N*Rt) = R*invN
 
-  vctDynamicVector<vct3x3*> Myi;        // noise covariances of target correspondence points
-  vctDynamicVector<vct3x3>  Myi_sigma2; // noise covariances of target correspondence points with match uncertainty added
+  vctDynamicVector<vct3x3*> Myi;			// noise covariances of target correspondence points
+  vctDynamicVector<vct3x3>  Myi_sigma2;		// noise covariances of target correspondence points with match uncertainty added
 
   // Variables for current sample point undergoing a match search
   //  these are set once for each sample point by the pre-match function
@@ -207,18 +207,14 @@ protected:
   vctDynamicVector<double> s;
   vctDynamicVector<double> x_prev;
 
-  vctDynamicVector<vct3> X;
-  vctDynamicVector<vct3> Tssm_Y;
-  vctDynamicVector<vct3> Tssm_Y_t;
-  vctDynamicVector<vct3> Rat_Tssm_Y_t_x;
-  vctDynamicVector<vct3> Rat_Tssm_Y_t_x_invMx;
-  vctDynamicVector<double> Yn_Rat_Xn;
-  //vctDynamicVector<vct3> Yp_RaXp_t;
-  //vctDynamicVector<vct3> Yp_t;				// replaced with Tssm_Y_t
-  //vctDynamicVector<vct3> Rat_Yp_RaXp_t;		// replaced with Rat_Tssm_Y_t_x
-  //vctDynamicVector<vct3> invM_Rat_Yp_RaXp_t;	// replaced with Rat_Tssm_Y_t_x_invMx
-  vctDynamicVector<vct3> RaXn;
-  vctDynamicVector<vct3x2> RaRL;
+  vctDynamicVector<vct3>	X;
+  vctDynamicVector<vct3>	Tssm_Y;
+  vctDynamicVector<vct3>	Tssm_Y_t;
+  vctDynamicVector<vct3>	Rat_Tssm_Y_t_x;
+  vctDynamicVector<vct3>	Rat_Tssm_Y_t_x_invMx;
+  vctDynamicVector<double>	Yn_Rat_Xn;
+  vctDynamicVector<vct3>	RaXn;
+  vctDynamicVector<vct3x2>	RaRL;
 
   // -- Deformable Methods -- //
   void ComputeMu();
@@ -256,9 +252,9 @@ public:
   void	UpdateTree();
 
   // dlib routines
-  void    UpdateOptimizerCalculations(const /*vct6*/vctDynamicVector<double> &x);
-  void    CostFunctionGradient(const /*vct6*/vctDynamicVector<double> &x, /*vct6*/vctDynamicVector<double> &g);
-  double  CostFunctionValue(const /*vct6*/vctDynamicVector<double> &x);
+  void    UpdateOptimizerCalculations(const vctDynamicVector<double> &x);
+  void    CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g);
+  double  CostFunctionValue(const vctDynamicVector<double> &x);
 
   //inline double MatchError(
   //  const vct3 &Xp, const vct3 &Xn,
@@ -334,11 +330,11 @@ public:
 
   virtual double FindClosestPointOnDatum(const vct3 &v, const vct3 &n,
     vct3 &closest, vct3 &closestNorm,
-    int datum) /*= 0*/;
+    int datum) ;
 
   virtual int DatumMightBeCloser(const vct3 &v, const vct3 &n,
     int datum,
-    double ErrorBound) /*= 0*/;
+    double ErrorBound) ;
 
 };
 #endif

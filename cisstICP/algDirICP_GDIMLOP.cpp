@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -118,18 +118,15 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 	//       compute statistics on only the inliers
 	for (unsigned int i = 0; i < nSamples; i++)
 	{
-		residual = /*matchPts[i]*/Tssm_Y[i] - (Freg * samplePts[i]) * sc;
+		residual = Tssm_Y[i] - (Freg * samplePts[i]) * sc;
 
 		sqrMahalDist = residual*invM[i]*residual;
 		totalSumSqrMahalDist += sqrMahalDist;
 
-		//double major = RaRL[i].Column(0)*matchNorms[i];
-		//double minor = RaRL[i].Column(1)*matchNorms[i];
 		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
 		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
 		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
 		
-		//sumMatchAngle += matchAngle;
 		totalSumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 
 		if (outlierFlags[i])	continue;	// skip outliers
@@ -146,9 +143,6 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 	}
 	Avg = sumMahalDist / nGoodSamples;
 	StdDev = sqrt((sumSqrMahalDist / nGoodSamples) + Avg*Avg);
-
-	//std::cout << "\nFinal Scale = " << sc << std::endl;
-	//std::cout << "\nAverage Mahalanobis Distance = " << Avg << " (+/-" << StdDev << ")" << std::endl;
 }
 
 void algDirICP_GDIMLOP::PrintMatchStatistics(std::stringstream &tMsg)
@@ -187,8 +181,8 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
 	if (outlierFlags[i])	continue;	// skip outliers
 
     Error += MatchError(samplePtsXfmd[i], sampleNormsXfmd[i],
-      /*matchPts[i]*/Tssm_Y[i], matchNorms[i],
-	  k[i], B[i], R_L[i], /*R_invM_Rt[i]*/inv_Mi[i]);
+      Tssm_Y[i], matchNorms[i],
+	  k[i], B[i], R_L[i], inv_Mi[i]);
 
 	// match covariance
 	nklog2PI += 5.0*log(2.0*cmnPI); // 1/2
@@ -202,8 +196,6 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
 
   prevCostFuncValue = costFuncValue;
   costFuncValue = Error;
-
-  //std::cout << "logCost: " << logCost << " ssmCost: " << ssmCost << " normCost(L): " << normCost << " normCost(R): " << normCost1 << " ";
 
   //-- Test for algorithm-specific termination --//
 
@@ -288,8 +280,6 @@ vctFrm3 algDirICP_GDIMLOP::ICP_RegisterMatches()
   }
   //x = gsl.ComputeRegistration( x0 );
   x = dlib.ComputeRegistration(x0, this);
-  //debugStream << "x0: " << x0 << std::endl;
-  //debugStream << "xf: " << x << std::endl;
 
   // update transform
   vctFixedSizeVectorRef<double, 3, 1> alpha(x, 0);
@@ -300,7 +290,7 @@ vctFrm3 algDirICP_GDIMLOP::ICP_RegisterMatches()
   vctDynamicVectorRef<double> s(x, nTrans, nModes);
   F.Rotation() = vctRot3(vctRodRot3(alpha));
   F.Translation() = t;
-  Freg = F /** Freg*/;
+  Freg = F ;
   if (bScale)
 	  sc = scale;
   Si = s;
@@ -371,13 +361,12 @@ void algDirICP_GDIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   if (k.size() != nSamples || B.size() != nSamples || L.size() != nSamples ||
     R_L.size() != nSamples || invM.size() != nSamples || N.size() != nSamples || invN.size() != nSamples ||
     R_invM_Rt.size() != nSamples || N_Rt.size() != nSamples || inv_N_Rt.size() != nSamples ||
-	Tssm_Y_t.size() != nSamples || Rat_Tssm_Y_t_x.size() != nSamples || //Yp_RaXp_t.size() != nSamples || 
+	Tssm_Y_t.size() != nSamples || Rat_Tssm_Y_t_x.size() != nSamples || 
 	Rat_Tssm_Y_t_x_invMx.size() != nSamples || RaXn.size() != nSamples ||
 	Yn_Rat_Xn.size() != nSamples || RaRL.size() != nSamples || M.size() != nSamples ||
     k_msmt.size() != nSamples || E_msmt.size() != nSamples ||
     M_msmt.size() != nSamples || invM_msmt.size() != nSamples || N_msmt.size() != nSamples ||
     invN_msmt.size() != nSamples || Dmin_msmt.size() != nSamples || Emin_msmt.size() != nSamples)
-    //traceM_msmt.size() != nSamples)
   {
     std::cout << "ERROR: noise parameters not initialized for Kent algorithm" << std::endl;
     assert(0);
@@ -494,7 +483,7 @@ void algDirICP_GDIMLOP::ICP_ComputeMatches()
 	Tssm_Y = matchPts;
 }
 
-void algDirICP_GDIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NORMAL INFO HERE - should not for sigma because that's from positional data
+void algDirICP_GDIMLOP::ICP_UpdateParameters_PostMatch() 
 {
 	// base class
 	algDirICP::ICP_UpdateParameters_PostMatch();
@@ -504,7 +493,7 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NO
 	double sumNormProducts_Inliers = 0.0;
 	for (unsigned int s = 0; s < nSamples; s++)
 	{
-		residuals_PostMatch[s] = samplePtsXfmd[s] - Tssm_Y[s]; //matchPts[s];
+		residuals_PostMatch[s] = samplePtsXfmd[s] - Tssm_Y[s]; 
 		sqrDist_PostMatch[s] = residuals_PostMatch[s].NormSquare();
 
 		if (outlierFlags[s])	continue;	// skip outliers
@@ -527,10 +516,9 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostMatch() // CHECK IF YOU NEED NO
 	{
 		// update target covariances
 		Myi[s] = pDirTree->DatumCovPtr(matchDatums[s]);	// use pointer here for efficiency
-		//std::cout << matchDatums[s] << " = " << Myi[s] << std::endl;
 
-		// target covariance with match uncertainty
-		//Myi_sigma2[s] = *Myi[s];						// FIX THIS!!!
+		// target covariance with match uncertainty		// TODO
+		//Myi_sigma2[s] = *Myi[s];
 		//Myi_sigma2[s].Element(0, 0) += sigma2;
 		//Myi_sigma2[s].Element(1, 1) += sigma2;
 		//Myi_sigma2[s].Element(2, 2) += sigma2;
@@ -560,7 +548,7 @@ void algDirICP_GDIMLOP::ICP_UpdateParameters_PostRegister(vctFrm3 &Freg)
 
   if (bScale)
 	  for (unsigned int s = 0; s < nSamples; s++)
-		  samplePtsXfmd.Element(s) = sc * samplePtsXfmd.Element(s); // move this to IMLOP also later
+		  samplePtsXfmd.Element(s) = sc * samplePtsXfmd.Element(s); // move this to IMLOP later
 
   UpdateNoiseModel_DynamicEstimates();
   UpdateNoiseModel_SamplesXfmd(Freg);
@@ -616,11 +604,8 @@ unsigned int algDirICP_GDIMLOP::ICP_FilterMatches()
 	double ThetaThresh = StdDevExpansionFactor * circSD;
 	ThetaThresh = ThetaThresh > cmnPI_2 ? cmnPI_2 : ThetaThresh;
 	double NormProductThresh = cos(ThetaThresh);
-	//std::cout << "(" << circSD << ", " << ThetaThresh << ", " << NormProductThresh << ") ";
 
 	nOutliers = 0;
-	//nPosOutliers = 0;
-	//nNormOutliers = 0;
 	vct3x3 Mo, inv_Mo;
 	double sqrMahalDist = 0.0;
 	double normProduct = 0.0;
@@ -653,7 +638,6 @@ unsigned int algDirICP_GDIMLOP::ICP_FilterMatches()
 		if (sqrMahalDist > ChiSquareThresh)
 		{ // an outlier
 			nOutliers++;
-			//nPosOutliers++;
 			outlierFlags[s] = 1;
 			// add isotropic outlier term to noise model for this match
 			//  with magnitude of half the square match distance
@@ -664,23 +648,11 @@ unsigned int algDirICP_GDIMLOP::ICP_FilterMatches()
 			R_M_Rt[s].Element(0, 0) += outlierScale;
 			R_M_Rt[s].Element(1, 1) += outlierScale;
 			R_M_Rt[s].Element(2, 2) += outlierScale;
-
-			// This shouldn't be done here, because alpha term is not used
-			//  in error function
-			//// For Error Function Evaluation:
-			//// update match covariance
-			//Mi.Element(s) = R_Mxi_Rt.Element(s) + Myi.Element(s);
-			//// match covariance decomposition
-			//ComputeCovDecomposition(Mi.Element(s), inv_Mi.Element(s), det_Mi.Element(s));
-			//// match Mahalanobis distance
-			//SqrMahalDist.Element(s) = Residuals.Element(s)*inv_Mi.Element(s)*Residuals.Element(s);
 		}
 		else if (normProduct < NormProductThresh)
 		{
 			nOutliers++;
-			//nNormOutliers++;
 			outlierFlags[s] = 1;
-			//std::cout << "\n(" << normProduct << " ? " << NormProductThresh << ") ";
 		}
 		else
 		{
@@ -791,7 +763,7 @@ void algDirICP_GDIMLOP::ComputeMatchUncertaintyEstimates()
   {
 	  if (outlierFlags[s])	continue;	// skip outliers
 
-    sumSqrDist += (samplePtsXfmd.Element(s) - /*matchPts*/Tssm_Y.Element(s)).NormSquare();
+    sumSqrDist += (samplePtsXfmd.Element(s) - Tssm_Y.Element(s)).NormSquare();
     sumNormProducts += vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
   }
 
@@ -851,7 +823,7 @@ double algDirICP_GDIMLOP::ComputeRpos()
   //  Procrustes problem as added indicator of rotational uncertainty
 
   vctDynamicVectorRef<vct3> S(samplePtsXfmd);
-  vctDynamicVectorRef<vct3> C(/*matchPts*/Tssm_Y);
+  vctDynamicVectorRef<vct3> C(Tssm_Y);
   unsigned int N = S.size();
   vct3 Smean = vctCentroid(S);
   vct3 Cmean = vctCentroid(C);
@@ -911,24 +883,6 @@ void algDirICP_GDIMLOP::SamplePreMatch(unsigned int sampleIndex)
   sampleN_Rt = N_Rt[sampleIndex];
   sample_inv_N_Rt = inv_N_Rt[sampleIndex];
 
-  //if (sampleIndex == 9)
-  //{
-  //  std::cout << "Sample " << sampleIndex << ": " << std::endl
-  //    << " k = " << sampleK << std::endl
-  //    << " B = " << sampleB << std::endl
-  //    << " R_L1 = [ " << sampleR_L.Column(0) << " ]" << std::endl
-  //    << " R_L2 = [ " << sampleR_L.Column(1) << " ]" << std::endl
-  //    << " Dmin = " << sampleDmin << std::endl
-  //    << " Emin = " << sampleEmin << std::endl
-  //    << " R_InvM_Rt = [ " << std::endl << sampleR_InvM_Rt << " ]" << std::endl
-  //    << " N_Rt = [ " << std::endl << sampleN_Rt << " ]" << std::endl
-  //    << " R = [ " << std::endl << pICP->Fact.Rotation() << " ]" << std::endl
-  //    << " L1 = [ " << L[sampleIndex].Column(0) << " ]" << std::endl
-  //    << " L2 = [ " << L[sampleIndex].Column(1) << " ]" << std::endl
-  //    << " sample = [ " << pICP->SampleSets[0].Element(sampleIndex) << " ]" << std::endl
-  //    << " sampleNorm = [ " << pICP->SampleNormSets[0].Element(sampleIndex) << " ]" << std::endl;
-  //}
-
 #ifdef SAVE_MATCHES
   if (MatchIsotropic)
   {
@@ -936,25 +890,6 @@ void algDirICP_GDIMLOP::SamplePreMatch(unsigned int sampleIndex)
   }
 #endif
 }
-
-//void SamplePostMatch( unsigned int sampleIndex, 
-//                      const vct3 &closestPoint, 
-//                      int closestPointDatum,
-//                      unsigned int setIndex = 0 )
-//{
-//  if (sampleIndex == 80 && !MatchIsotropic)
-//  {
-//    std::cout << "Match Stats for Sample 80: " << std::endl
-//      << " samplePos: " << pICP->SampleSets[0][80] << std::endl
-//      << " sampleNorm: " << pICP->SampleNormSets[0][80] << std::endl
-//      << " matchPos: " << pICP->SampleSets[0][80] << std::endl
-//      << " matchNorm: " << pICP->SampleNormSets[0][80] << std::endl
-//      << " k: " << sampleK << " B: " << sampleB << std::endl
-//      << " L1: " << sampleL.Column(0) << std::endl
-//      << " L2: " << sampleL.Column(1) << std::endl;
-//  }
-//}
-
 
 // fast check if a node might contain a datum having smaller match error
 //  than the error bound
@@ -1022,8 +957,6 @@ int algDirICP_GDIMLOP::NodeMightBeCloser(
     //       the global min.
     static const double x1 = 0.05*cmnPI / 180.0;
     static const double x2 = -0.05*cmnPI / 180.0;
-    //double f1 = KentBoundaryMatchError( x1,Xn,yNewton,node->Navg,sampleK,sampleB,sampleL );
-    //double f2 = KentBoundaryMatchError( x2,Xn,yNewton,node->Navg,sampleK,sampleB,sampleL );
 
     // Brent Method
     // bracket the global min
@@ -1031,12 +964,6 @@ int algDirICP_GDIMLOP::NodeMightBeCloser(
     brent.bracket(x1, x2, Xn, yNewton, node->Navg, sampleK, sampleB, sampleR_L);
     // find the global min
     MinKentError = brent.minimize(Xn, yNewton, node->Navg, sampleK, sampleB, sampleR_L);
-
-    //// Golden Method
-    //Golden golden;
-    //golden.bracket(x1,x2,Xn,yNewton,node->Navg,sampleK,sampleB,sampleL);
-    //// compute optimal boundary
-    //MinKentError = golden.minimize(Xn,yNewton,node->Navg,sampleK,sampleB,sampleL);
   }
 
 
@@ -1076,76 +1003,6 @@ int algDirICP_GDIMLOP::NodeMightBeCloser(
     MaxSqrMahalError,
     sampleN_Rt, sampleDmin);
 #endif
-
-  //double a,b,fNewton,fa,fb;
-  //double initialStep = 5.0;   // degrees
-  //// compute newton step boundary point
-  ////  (rotate Navg towards Xn by the max angular deviation within the node)
-  //vctAxAnRot3 Rnewton( axis, node->dThetaMax );
-  //yNewton = vctRot3(Rnewton) * node->Navg;
-  //
-  //// use newton step to initialize a line search for the minimum orientation
-  ////  match error around the circular node boundary
-  ////
-  //// Note: use domain knowledge to provide not only the Newton position but
-  ////       also the second point in the direction of the global min    
-  //fNewton = KentBoundaryMatchError(0.0,yNewton,node->Navg,k,B,L);
-  //// evaluate error +/- 0.05 deg on either side of newton point
-  ////  to find global min direction
-  //static const double x1 = 0.05*cmnPI/180.0;
-  //static const double x2 = -0.05*cmnPI/180.0;
-  //double f1 = KentBoundaryMatchError( x1,yNewton,node->Navg,k,B,L );
-  //double f2 = KentBoundaryMatchError( x2,yNewton,node->Navg,k,B,L );
-  //fa = f1 < f2 ? f1 : f2;
-  //if (fa >= fNewton)
-  //{ // fNewton is very close to optimal
-  //  MinKentError = fNewton;
-  //}
-  //else
-  //{
-  //  // Compute two points to initialize the bracket routine for
-  //  //  bracketing the global min
-  //  // step in direction of global min for first bracket point
-  //  a = f1 < f2 ? initialStep*cmnPI/180.0 : -initialStep*cmnPI/180.0;
-  //  fa = KentBoundaryMatchError( a,yNewton,node->Navg,k,B,L );
-  //  if (fa >= fNewton)
-  //  { // if using the newton point as the second bracket point,
-  //    // the first bracketing step (of the bracket routine) will take us
-  //    // to the other side of the newton point. This is undesirable for 
-  //    // a couple reaons:
-  //    //  1. we know the global min is between the newton point and "a"
-  //    //  2. if there is a second local min on the other side of the newton point, 
-  //    //     we don't want to fall into it
-  //    //
-  //    // => for the second bracket position in this case, backup towards "a" from the 
-  //    //    newton position by the golden factor so that the first bracketing step will
-  //    //    fall very close to (and never past) the newton point.
-  //    // 
-  //    //   b = xNewton + 0.6182*(a-xNewton)   Note: xNewton = 0.0 degrees
-  //    b = 0.6182*a;
-  //    fb = KentBoundaryMatchError( b,yNewton,node->Navg,k,B,L );
-  //  }
-  //  else
-  //  { // we can use the newton point as the second bracket point, because the
-  //    // first bracketing step will continue past "a" in the same direction.
-  //    b = 0.0;  // xNewton
-  //    fb = fNewton;
-  //  }
-  //
-  //  // Brent Method
-  //  // bracket the global min
-  //  Brent brent;
-  //  brent.bracket(a,b,fa,fb,yNewton,node->Navg,k,B,L);
-  //  // find the global min
-  //  MinKentError = brent.minimize(yNewton,node->Navg,k,B,L);
-  //
-  //  //// Golden Method
-  //  //Golden golden;
-  //  //golden.bracket(a,b,fa,fb,yNewton,Navg,k,B,L);
-  //  //// compute optimal boundary
-  //  //MinKentError = golden.minimize(yNewton,Navg,k,B,L);
-  //}
-
 }
 
 // Helper Methods
@@ -1163,11 +1020,6 @@ void algDirICP_GDIMLOP::SetSamples(
   PARAM_EST_TYPE paramEst)
 {
   // base class
-  //nSamples = samplePts.size();
-  //algDirICP::SetSamples(samplePts, sampleNorms);
-  
-  //samplePts = argSamplePts;
-  //sampleNorms = argSampleNorms;
   SetNoiseModel(argK, argE, argL, argM, paramEst);
 
   if (argM.size() != nSamples || argMsmtM.size() != nSamples)
@@ -1198,8 +1050,6 @@ void algDirICP_GDIMLOP::SetSamples(
   }
   else
 	  nTrans = 6; // 3 for rotation, 3 for translation
-  // Already printed by G-IMLOP
-  //std::cout << "# tranformation parameters: " << nTrans << std::endl;
 
   nModes = (unsigned int)pDirTree->mesh.modeWeight.size(); 
   Si = pDirTree->mesh.Si;
@@ -1291,7 +1141,6 @@ void algDirICP_GDIMLOP::SetNoiseModel(
   Yn_Rat_Xn.SetSize(nSamples);
   RaXn.SetSize(nSamples);
   RaRL.SetSize(nSamples);
-  //Yp_RaXp_t.SetSize(nSamples);
 }
 
 
@@ -1324,32 +1173,6 @@ void algDirICP_GDIMLOP::ComputeCovDecompositions(
     //   N = D*R'   invN = R*inv(D)
     ComputeCovDecomposition_NonIter(
       M[i], invM[i], N[i], invN[i], Dmin[i], Emin[i]);
-
-    //// Compute Decomposition of Minv
-    //try
-    //{
-    //  A.Assign(invM[i]);
-    //  nmrSVD(A, U, S, Vt, workspace);
-    //}
-    //catch (...)
-    //{
-    //  std::cout << "ERROR: SVD failed" << std::endl;
-    //  assert(0);
-    //} 
-    //// Compute Decomposition of Minv = N'*N
-    ////   Minv = N'*N = R*D^2*R' = U*S*V'   =>   R'=V', D=sqrt(S), R=U
-    ////   N = D*R'   invN = R*inv(D)
-    //D[0] = sqrt(S[0]);   // eigenvalues are arranged in order of decreasing magnitude
-    //D[1] = sqrt(S[1]);
-    //D[2] = sqrt(S[2]);
-    //N[i].Row(0) = Vt.Row(0)*D[0];
-    //N[i].Row(1) = Vt.Row(1)*D[1];
-    //N[i].Row(2) = Vt.Row(2)*D[2];
-    //Dmin[i] = D[2];
-    //Emin[i] = S[2];
-    //invN[i].Column(0) = U.Column(0) / D[0];
-    //invN[i].Column(1) = U.Column(1) / D[1];
-    //invN[i].Column(2) = U.Column(2) / D[2];
   }
 }
 
@@ -1427,7 +1250,7 @@ void algDirICP_GDIMLOP::ComputeCovDecomposition_NonIter(
 }
 
 
-void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const /*vct6*/vctDynamicVector<double> &x)
+void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const vctDynamicVector<double> &x)
 {
   a.Assign(x[0], x[1], x[2]);
   t.Assign(x[3], x[4], x[5]);
@@ -1460,8 +1283,8 @@ void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const /*vct6*/vctDynamicVect
   for (i = 0; i < nSamples; i++)
   {
     //--- orientation ---//
-    RaXn[i] = Ra * Xn/*_xfm*/[i];
-    RaRL[i] = Ra * /*R_*/L[i];
+    RaXn[i] = Ra * Xn[i];
+    RaRL[i] = Ra * L[i];
 
     //--- position---//
 	Tssm_Y.Element(i) = Mu[i][0] * pMesh->vertices[f[i][0]]
@@ -1469,31 +1292,24 @@ void algDirICP_GDIMLOP::UpdateOptimizerCalculations(const /*vct6*/vctDynamicVect
 		+ Mu[i][2] * pMesh->vertices[f[i][2]];
 
 	Tssm_Y_t[i] = Tssm_Y[i] - t;
-	Rat_Tssm_Y_t_x[i] = Ra.TransposeRef() * Tssm_Y_t[i] - /*Xp_xfm*/sc * X[i];
-    //Yp_RaXp_t[i] = Yp[i] - Ra*Xp_xfm[i] - t;    
+	Rat_Tssm_Y_t_x[i] = Ra.TransposeRef() * Tssm_Y_t[i] - sc * X[i];
 #ifdef KENT_POS_ISOTROPIC
-	Rat_Tssm_Y_t_x_invMx[i] = Emin[i]*(Ra.TransposeRef() * Tssm_Y_t[i] - /*Xp_xfm*/X[i]);
-    //Rat_Tssm_Y_t_x_invMx[i] = Emin[i]*Yp_RaXp_t[i];
-    //invM_Yp_RaXp_t[i] = Emin[i] * Yp_RaXp_t[i];
+	Rat_Tssm_Y_t_x_invMx[i] = Emin[i]*(Ra.TransposeRef() * Tssm_Y_t[i] - X[i]);
 #else
-	//Rat_Tssm_Y_t_x_invMx[i] = Rat_Tssm_Y_t_x[i] * R_invM_Rt[i];
 	Rat_Tssm_Y_t_x_invMx[i] = R_invM_Rt[i] * Rat_Tssm_Y_t_x[i];
-    //Rat_Tssm_Y_t_x_invMx[i] = R_invM_Rt[i] * (Ra.TransposeRef() * Yp_RaXp_t[i]);
-    //invM_Yp_RaXp_t[i] = R_invM_Rt[i] * Yp_RaXp_t[i];
 #endif
-	Yn_Rat_Xn[i] = vctDotProduct(RaXn/*_xfm*/.Element(i), Yn.Element(i));
+	Yn_Rat_Xn[i] = vctDotProduct(RaXn.Element(i), Yn.Element(i));
   }
   x_prev = x;
 }
 
-double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<double> &x)
+double algDirICP_GDIMLOP::CostFunctionValue(const vctDynamicVector<double> &x)
 {
   // don't recompute these if already computed for gradient
   if (x.NotEqual(x_prev))
   {
     UpdateOptimizerCalculations(x);
   }
-  //vctDynamicVectorRef<vct3>   Yp(matchPts);
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
 
   double f = 0.0;
@@ -1505,23 +1321,24 @@ double algDirICP_GDIMLOP::CostFunctionValue(const /*vct6*/vctDynamicVector<doubl
   {
 	if (outlierFlags[i])	continue;
 
-	double major = RaRL[i].Column(0)/**Ra.TransposeRef()*/*Yn[i];
-	double minor = RaRL[i].Column(1)/**Ra.TransposeRef()*/*Yn[i];
+	double major = RaRL[i].Column(0) * Yn[i];
+	double minor = RaRL[i].Column(1) * Yn[i];
     // add extra k[i] * 1.0 to make cost function > 0
-	f += k[i] * (1.0 - /*Yn_Rat_Xn[i]*/RaXn[i]*Yn[i]) - B[i] * (major*major - minor*minor)
-		//+ (Rat_Tssm_Y_t_x_invMx[i] * Rat_Tssm_Y_t_x[i]) / 2.0;
+	f += k[i] * (1.0 - RaXn[i]*Yn[i]) - B[i] * (major*major - minor*minor)
 		+ (Rat_Tssm_Y_t_x[i] * Rat_Tssm_Y_t_x_invMx[i]) / 2.0;
-      //+ (Yp_RaXp_t[i] * Ra * Rat_Tssm_Y_t_x_invMx[i]) / 2.0;
-      //+ (Yp_RaXp_t[i] * invM_Yp_RaXp_t[i]) / 2.0;
   }
 
-  f += (s.DotProduct(s)) / 2.0; // 0;
+#ifdef NOREGULARIZER
+  f += 0;
+#else
+  f += (s.DotProduct(s)) / 2.0;
+#endif
 
   return f;
 }
 
 
-void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<double> &x, /*vct6*/vctDynamicVector<double> &g)
+void algDirICP_GDIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, vctDynamicVector<double> &g)
 {
   //vct3 alpha;         // alpha = a/norm(a)
   //double theta;       // theta = norm(a)
@@ -1568,68 +1385,35 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const /*vct6*/vctDynamicVector<doub
     for (unsigned int i = 0; i < 3; i++)
     {
       //  rotational effect
-		ga[i] += //-k[j] * ((Yn[j] * dRa[i]) * Xn[j])
+		ga[i] += 
 			-k[j] * (Xn[j] * dRa[i] * Yn[j])
-				- 2.0 * B[j] * ((dRa[i] * /*R_*/L[j].Column(0) * Yn[j]) * (Yn[j] * RaRL[j].Column(0) /** Ra.TransposeRef()*/)
-				- (dRa[i] * /*R_*/L[j].Column(1) * Yn[j]) * (Yn[j] * RaRL[j].Column(1)) /** Ra.TransposeRef()*/);
+				- 2.0 * B[j] * ((dRa[i] * L[j].Column(0) * Yn[j]) * (Yn[j] * RaRL[j].Column(0))
+				- (dRa[i] * L[j].Column(1) * Yn[j]) * (Yn[j] * RaRL[j].Column(1)));
 
 		//--- Gaussian term ---//   (positions)
 		//  rotational effect
 		Jz_a.Column(i) = dRa[i].TransposeRef() * Tssm_Y_t[j];
     }
 
- //   //--- Gaussian term ---//   (positions)
- //   //  rotational effect
-	//Jz_a.Column(0) = dRa[0].TransposeRef() * Tssm_Y_t[j];
-	//Jz_a.Column(1) = dRa[1].TransposeRef() * Tssm_Y_t[j];
-	//Jz_a.Column(2) = dRa[2].TransposeRef() * Tssm_Y_t[j];
-	ga += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * Jz_a;
+    //--- Gaussian term ---//   (positions)
+    //  rotational effect
+	ga += Rat_Tssm_Y_t_x_invMx[j] * Jz_a;
 
     // translational effect
-	//gt += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-Ra.Transpose());
-	gt -= Ra * Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ ;
+	gt -= Ra * Rat_Tssm_Y_t_x_invMx[j] ;
 
 	if (bScale)
-		gsc += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (-X.Element(j));
+		gsc += Rat_Tssm_Y_t_x_invMx[j] * (-X.Element(j));
 
 	for (unsigned int i = 0; i < nModes; i++)
-		gs[i] += Rat_Tssm_Y_t_x_invMx[j] /** 2.0*/ * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
-
-    //// wrt rodrigues elements
-    //for (unsigned int i = 0; i < 3; i++)
-    //{
-    //  ga[i] += 
-    //    // orientation
-    //    -k[j] * ((dRa[i] * Xn[j])*Yn[j])
-    //    - 2.0*B[j] * ((dRa[i] * L[j].Column(0))*Yn[j] * (Yn[j] * RaRL[j].Column(0))
-    //    - (dRa[i] * L[j].Column(1))*Yn[j] * (Yn[j] * RaRL[j].Column(1)))
-    //    // position
-    //    - (dRa[i] * Xp[j])*invM_Yp_RaXp_t[j];
-    //}
-    //// wrt translation
-    //gt -= invM_Yp_RaXp_t[j];
+		gs[i] += Rat_Tssm_Y_t_x_invMx[j] * (Ra.Transpose() * Tssm_wi[i][j]);	// Cmatch component	
   }
-
-  gs += /*2.0 **/ s;// *1.0 / (double)nSamples;	// Cshape component // 0;
+#ifdef NOREGULARIZER
+  gs += 0;
+#else
+  gs += s;	// Cshape component 
+#endif
 }
-
-//double algDirICP_GDIMLOP::MatchError(
-//  const vct3 &Xp, const vct3 &Xn,
-//  const vct3 &Yp, const vct3 &Yn,
-//  double k, double B, const vctFixedSizeMatrix<double, 3, 2> &L,
-//  const vct3x3 &invM)
-//{
-//  double major = L.Column(0)*Yn;
-//  double minor = L.Column(1)*Yn;
-//
-//#ifdef KENT_POS_ISOTROPIC
-//  // add extra k term so that match error >= 0
-//  return k*(1 - Xn*Yn) - B*(major*major - minor*minor) + (Xp-Yp).NormSquare()*invM(0,0)/2.0;
-//#else
-//  // add extra k term so that match error >= 0  
-//  return k*(1 - Xn*Yn) - B*(major*major - minor*minor) + ((Xp - Yp)*invM*(Xp - Yp)) / 2.0;
-//#endif
-//}
 
 // PD Tree Methods
 
@@ -1662,9 +1446,6 @@ double algDirICP_GDIMLOP::FindClosestPointOnDatum(
 	// noise parameters set by the pre-match routine of the base class
 	double major = vctDotProduct(sampleR_L.Column(0), closestNorm);
 	double minor = vctDotProduct(sampleR_L.Column(1), closestNorm);
-
-	//debugStream << "RL1*Xn: " << sampleR_L.Column(0) * Xn << std::endl
-	//  << "RL2*Xn: " << sampleR_L.Column(1) * Xn << std::endl;
 
 
 	// return the match error
@@ -1716,53 +1497,3 @@ void algDirICP_GDIMLOP::ReturnShapeParam(vctDynamicVector<double> &shapeParam)
 {
 	shapeParam = Si;
 }
-
-//// Note: this function depends on the SamplePreMatch() function
-////       to set the noise model of the current transformed sample
-////       point before this function is called
-//void algDirICP_GIMLOP::ComputeCovDecompositions_SVD()
-//{
-//  if (nSamples <= 0 || invM.size() != nSamples)
-//  {
-//    std::cout << "ERROR: cannot compute Gaussian noise model decomposition; "
-//      << "noise model has not been specified or no samples exist" << std::endl;
-//    assert(0);
-//  }
-//
-//  // compute decomposition of Gaussian noise for each sample
-//  static vctFixedSizeMatrix<double, 3, 3, VCT_COL_MAJOR> A;
-//  static vctFixedSizeMatrix<double, 3, 3, VCT_COL_MAJOR> U;
-//  static vctFixedSizeMatrix<double, 3, 3, VCT_COL_MAJOR> Vt;
-//  static vct3 S;
-//  static vct3 D;
-//  static nmrSVDFixedSizeData<3, 3, VCT_COL_MAJOR>::VectorTypeWorkspace workspace;
-//  for (unsigned int i = 0; i < nSamples; i++)
-//  {
-//    // Compute Decomposition of Minv
-//    try
-//    {
-//      A.Assign(invM[i]);
-//      nmrSVD(A, U, S, Vt, workspace);
-//    }
-//    catch (...)
-//    {
-//      std::cout << "ERROR: SVD failed" << std::endl;
-//      assert(0);
-//    }
-//
-//    // Compute Decomposition of Minv = N'*N
-//    //   Minv = N'*N = R*D^2*R' = U*S*V'   =>   R'=V', D=sqrt(S), R=U
-//    //   N = D*R'   invN = R*inv(D)
-//    D[0] = sqrt(S[0]);   // eigenvalues are arranged in order of decreasing magnitude
-//    D[1] = sqrt(S[1]);
-//    D[2] = sqrt(S[2]);
-//    N[i].Row(0) = Vt.Row(0)*D[0];
-//    N[i].Row(1) = Vt.Row(1)*D[1];
-//    N[i].Row(2) = Vt.Row(2)*D[2];
-//    Dmin[i] = D[2];
-//    Emin[i] = S[2];
-//    invN[i].Column(0) = U.Column(0) / D[0];
-//    invN[i].Column(1) = U.Column(1) / D[1];
-//    invN[i].Column(2) = U.Column(2) / D[2];
-//  }
-//}

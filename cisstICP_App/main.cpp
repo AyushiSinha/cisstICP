@@ -1,7 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, 
-//	  Johns Hopkins University.
+//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -353,21 +352,8 @@ int main( int argc, char* argv[] )
 		 // It is recommended NOT to do this - you can set the algorithm to run via command line
 
 		//-- Registration Test Runs --//
-		//algType = AlgType_StdICP;	Alg.value = "StdICP";
 		algType = AlgType_IMLP;		//Alg.value = "IMLP";
-		//algType = AlgType_DIMLP;	Alg.value = "DIMLP";
-		//algType = AlgType_VIMLOP; Alg.value = "VIMLOP";
-
 		testICP(TargetShapeAsMesh, algType, cmdLineOpts);
-
-		// If you switch to one of the oriented point algorithms,
-		// don't forget to uncomment testICPNormals, and comment testICP
-
-		//dirAlgType = DirAlgType_StdICP;	Alg.value = "DirICP";
-		//dirAlgType = DirAlgType_IMLOP;	Alg.value = "IMLOP";
-		////dirAlgType = DirAlgType_GIMLOP;	Alg.value = "GIMLOP";
-		//dirAlgType = DirAlgType_PIMLOP;	Alg.value = "PIMLOP";
-		//testICPNormals(TargetShapeAsMesh, dirAlgType);
 		
 		return 0;
 	}

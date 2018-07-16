@@ -1,6 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Seth Billings, Russell Taylor, Johns Hopkins University
+//    Copyright (c) 2014, Seth Billings, Ayushi Sinha, Russell Taylor, Johns Hopkins University.
 //    All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,6 @@
 
 #include "cisstMesh.h"
 #include "cisstICP.h"
-
-void CreateDir(const std::string &dir);
 
 void shapeparam_read(vctDynamicVector<double> &s, std::string &filename);
 void shapeparam_write(vctDynamicVector<double> &s, std::string &filename);
@@ -111,13 +109,6 @@ void GenerateNoisyMesh(
 void SetMeshTriangleCovariances(
   cisstMesh &mesh,
   double stdDevPerpPlane, double stdDevInPlane);
-
-// Generates a subsampled version of a big point cloud
-//void GenerateSubSamples(cisstMesh &pts,
-//	vctDynamicVector<bool> &selectedPts,
-//	vctDynamicVector<vct3> &subsampledPts,
-//	int nSubsamples,
-//	std::string *SavePath_Samples = 0);
 
 //  cisstRandomSeq - source for uniform distributed random variables
 void GenerateSamples(

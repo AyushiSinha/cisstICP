@@ -99,17 +99,6 @@ void alg2D_DirICP::SetSamples(
 
   sampleNormsXfmd.SetSize(nSamples);
   matchNorms.SetSize(nSamples);
-
-  //residuals_PostMatch.SetSize(nSamples);
-  //sqrDist_PostMatch.SetSize(nSamples);
-  //dist_PostMatch.SetSize(nSamples);
-
-  //residuals_PostRegister.SetSize(nSamples);
-  //sqrDist_PostRegister.SetSize(nSamples);
-  //dist_PostRegister.SetSize(nSamples);
-
-  //normProducts_PostMatch.SetSize(nSamples);
-  //normProducts_PostRegister.SetSize(nSamples);
 }
 
 void alg2D_DirICP::ICP_InitializeParameters(vctFrm2 &FGuess)
@@ -124,15 +113,6 @@ void alg2D_DirICP::ICP_InitializeParameters(vctFrm2 &FGuess)
       samplePtsXfmd[i], sampleNormsXfmd[i],
       matchPts[i], matchNorms[i]);
   }
-
-  //// initialize matches to any model point
-  ////  i.e. we don't know the closest match => set it to anything valid
-  //for (unsigned int s = 0; s < nSamples; s++)
-  //{
-  //  matchDatums.Element(s) = 0;
-  //  matchPts.Element(s) = pDirTree->DatumSortPoint(0);
-  //  matchNorms.Element(s) = pDirTree->DatumNorm(0);
-  //}
 
   nOutliers = 0;
 }
@@ -298,56 +278,6 @@ void alg2D_DirICP::UpdateSampleXfmPositions(const vctFrm2 &F)
     sampleNormsXfmd.Element(s) = R * sampleNorms.Element(s);
   }
 }
-
-//void alg2D_DirICP::ComputeErrors_PostMatch()
-//{
-//  //matchErrorAvg_PostMatch = 0.0;
-//  matchDistAvg_PostMatch = 0.0;
-//  sumSqrDist_PostMatch = 0.0;
-//  sumNormProducts_PostMatch = 0.0;
-//
-//  for (unsigned int s = 0; s < nSamples; s++)
-//  {
-//    residuals_PostMatch.Element(s) = samplePtsXfmd.Element(s) - matchPts.Element(s);
-//    sqrDist_PostMatch.Element(s) = residuals_PostMatch.Element(s).NormSquare();
-//    dist_PostMatch.Element(s) = sqrt(sqrDist_PostMatch.Element(s));
-//
-//    sumSqrDist_PostMatch += sqrDist_PostMatch.Element(s);
-//    matchDistAvg_PostMatch += dist_PostMatch.Element(s);
-//    //matchErrorAvg_PostMatch += matchErrors.Element(s);
-//
-//    normProducts_PostMatch.Element(s) = vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
-//    sumNormProducts_PostMatch += normProducts_PostMatch.Element(s);
-//  }
-//
-//  //matchErrorAvg_PostMatch /= nSamples;
-//  matchDistAvg_PostMatch /= nSamples;
-//}
-//
-//void alg2D_DirICP::ComputeErrors_PostRegister()
-//{
-//  //matchErrorAvg_PostRegister = 0.0;
-//  matchDistAvg_PostRegister = 0.0;
-//  sumSqrDist_PostRegister = 0.0;
-//  sumNormProducts_PostRegister = 0.0;
-//
-//  for (unsigned int s = 0; s < nSamples; s++)
-//  {
-//    residuals_PostRegister.Element(s) = samplePtsXfmd.Element(s) - matchPts.Element(s);
-//    sqrDist_PostRegister.Element(s) = residuals_PostRegister.Element(s).NormSquare();
-//    dist_PostRegister.Element(s) = sqrt(sqrDist_PostRegister.Element(s));
-//
-//    sumSqrDist_PostRegister += sqrDist_PostRegister.Element(s);
-//    matchDistAvg_PostRegister += dist_PostRegister.Element(s);
-//    //matchErrorAvg_PostRegister += matchErrors.Element(s);
-//
-//    normProducts_PostRegister.Element(s) += vctDotProduct(sampleNormsXfmd.Element(s), matchNorms.Element(s));
-//    sumNormProducts_PostRegister += normProducts_PostRegister.Element(s);
-//  }
-//
-//  //matchErrorAvg_PostRegister /= nSamples;
-//  matchDistAvg_PostRegister /= nSamples;
-//}
 
 
 // *** May be required post-match for filtering matches

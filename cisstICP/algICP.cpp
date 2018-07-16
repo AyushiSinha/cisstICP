@@ -122,14 +122,6 @@ void algICP::SetSamples(const vctDynamicVector<vct3> &argSamplePts)
   matchPts.SetSize(nSamples);
   matchDatums.SetSize(nSamples);
   matchErrors.SetSize(nSamples);
-
-  //residuals_PostMatch.SetSize(nSamples);
-  //sqrDist_PostMatch.SetSize(nSamples);
-  //dist_PostMatch.SetSize(nSamples);
-
-  //residuals_PostRegister.SetSize(nSamples);
-  //sqrDist_PostRegister.SetSize(nSamples);
-  //dist_PostRegister.SetSize(nSamples);
 }
 
 void algICP::ICP_InitializeParameters(vctFrm3 &FGuess)
@@ -335,50 +327,6 @@ void algICP::UpdateSampleXfmPositions(const vctFrm3 &F)
     samplePtsXfmd.Element(s) = F * samplePts.Element(s);
   }
 }
-
-//// this is a convenience routine that is not called by the base algorithm
-//void algICP::ComputeErrors_PostMatch()
-//{
-//  //matchErrorAvg_PostMatch = 0.0;
-//  matchDistAvg_PostMatch = 0.0;
-//  sumSqrDist_PostMatch = 0.0;
-//
-//  for (unsigned int s = 0; s < nSamples; s++)
-//  {
-//    residuals_PostMatch.Element(s) = samplePtsXfmd.Element(s) - matchPts.Element(s);
-//    sqrDist_PostMatch.Element(s) = residuals_PostMatch.Element(s).NormSquare();
-//    dist_PostMatch.Element(s) = sqrt(sqrDist_PostMatch.Element(s));
-//
-//    sumSqrDist_PostMatch += sqrDist_PostMatch.Element(s);
-//    matchDistAvg_PostMatch += dist_PostMatch.Element(s);
-//    //matchErrorAvg_PostMatch += matchErrors.Element(s);
-//  }
-//
-//  //matchErrorAvg_PostMatch /= nSamples;
-//  matchDistAvg_PostMatch /= nSamples;
-//}
-
-//// this is a convenience routine that is not called by the base algorithm
-//void algICP::ComputeErrors_PostRegister()
-//{
-//  //matchErrorAvg_PostRegister = 0.0;
-//  matchDistAvg_PostRegister = 0.0;
-//  sumSqrDist_PostRegister = 0.0;
-//
-//  for (unsigned int s = 0; s < nSamples; s++)
-//  {
-//    residuals_PostRegister.Element(s) = samplePtsXfmd.Element(s) - matchPts.Element(s);
-//    sqrDist_PostRegister.Element(s) = residuals_PostRegister.Element(s).NormSquare();
-//    dist_PostRegister.Element(s) = sqrt(sqrDist_PostRegister.Element(s));
-//
-//    sumSqrDist_PostRegister += sqrDist_PostRegister.Element(s);
-//    matchDistAvg_PostRegister += dist_PostRegister.Element(s);
-//    //matchErrorAvg_PostRegister += matchErrors.Element(s);
-//  }
-//
-//  //matchErrorAvg_PostRegister /= nSamples;
-//  matchDistAvg_PostRegister /= nSamples;
-//}
 
 void algICP::ComputeMatchStatistics(double &Avg, double &StdDev)
 {

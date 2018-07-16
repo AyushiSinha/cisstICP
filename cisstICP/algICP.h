@@ -73,7 +73,7 @@ class algICP
   // This is the base class for a family of ICP algorithms
   //
 
-  //--- Standard Algorithm Parameters ---//
+//--- Standard Algorithm Parameters ---//
 
 public:
 
@@ -93,31 +93,8 @@ public:
   // current registration
   vctFrm3 Freg;
 
-  //// TODO: put these only in the derived classes that actually use them
-  //// Match Error Statistics
-  ////  NOTE: these are not computed by default
-  ////        derived classes must call the appropriate match
-  ////        error routines to compute these if desired
-  ////
 
-  //vctDynamicVector<vct3>  residuals_PostMatch;    // Pclosest - Psample
-  //vctDoubleVec            sqrDist_PostMatch;      // ||Pclosest - Psample||^2
-  //vctDoubleVec            dist_PostMatch;         // ||Pclosest - Psample||
-
-  //vctDynamicVector<vct3>  residuals_PostRegister; // Pclosest - Psample
-  //vctDoubleVec            sqrDist_PostRegister;   // ||Pclosest - Psample||^2
-  //vctDoubleVec            dist_PostRegister;      // ||Pclosest - Psample||
-
-  ////double  matchErrorAvg_PostMatch;
-  //double  matchDistAvg_PostMatch;
-  //double  sumSqrDist_PostMatch;
-
-  ////double  matchErrorAvg_PostRegister;
-  //double  matchDistAvg_PostRegister;
-  //double  sumSqrDist_PostRegister;
-
-
-  //--- Standard Algorithm Methods ---//
+//--- Standard Algorithm Methods ---//
 
 public:
 
@@ -142,12 +119,8 @@ protected:
   virtual void  SamplePreMatch(unsigned int sampleIndex) {};
   virtual void  SamplePostMatch(unsigned int sampleIndex) {};
 
-  //// these are convenience routines that are not called by the base algorithm
-  //virtual void  ComputeErrors_PostMatch();
-  //virtual void  ComputeErrors_PostRegister();
 
-
-  //--- ICP Interface Methods ---//
+//--- ICP Interface Methods ---//
 
 public:
 

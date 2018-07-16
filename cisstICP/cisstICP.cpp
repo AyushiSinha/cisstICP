@@ -139,9 +139,10 @@ cisstICP::ReturnType cisstICP::IterateICP()
   sp.SetAll(0.0);
   ShapeNorm = 0.0;
   prevShapeNorm = 0.0;
-  //std::cout << "Init... ";
+#ifdef ENABLE_CODE_TRACE
+  std::cout << "InitializeParameters()" << std::endl;
+#endif
   pAlgorithm->ICP_InitializeParameters(FGuess);
-  //std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
   time_Extras = codeProfiler.GetElapsedTime();
@@ -151,6 +152,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 
   //------------ ICP Iterate ----------------//
 
+  // compute matches
   unsigned int iter;
   for (iter = 1; iter <= opt.maxIter; iter++)
   {
@@ -158,11 +160,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #ifdef ENABLE_CODE_TRACE
     std::cout << "ComputeMatches()" << std::endl;
 #endif
-
-    // compute matches
-	//std::cout << "Compute Matches... ";
 	pAlgorithm->ICP_ComputeMatches();
-	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_Match = codeProfiler.GetElapsedTime();
@@ -173,11 +171,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #ifdef ENABLE_CODE_TRACE
     std::cout << "UpdateParameters_PostMatch()" << std::endl;
 #endif
-
-    // update algorithm's post-match parameters
-	//std::cout << "Updating parameters... ";
 	pAlgorithm->ICP_UpdateParameters_PostMatch();
-	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_UpdateParams_PostMatch = codeProfiler.GetElapsedTime();
@@ -188,11 +182,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #ifdef ENABLE_CODE_TRACE
     std::cout << "FilterMatches()" << std::endl;
 #endif
-
-    // filter matches for outliers
-	//std::cout << "Filtering matches... ";
 	nOutliers = pAlgorithm->ICP_FilterMatches();
-	//std::cout << "Done." << std::endl;
 
 #ifdef ENABLE_CODE_PROFILER
     time_FilterMatches = codeProfiler.GetElapsedTime();
@@ -206,11 +196,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #ifdef ENABLE_CODE_TRACE
       std::cout << "EvaluateErrorFunction()" << std::endl;
 #endif
-
-      // Compute initial error function value
-	  //std::cout << "Evaluating Error... ";
 	  E = pAlgorithm->ICP_EvaluateErrorFunction();
-	  //std::cout << "Done." << std::endl;
       E0 = E1 = std::numeric_limits<double>::max();
       E2 = E;
       tolE = 0.0;
@@ -274,9 +260,6 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #ifdef ENABLE_CODE_TRACE
     std::cout << "RegisterMatches()" << std::endl;
 #endif
-
-    // compute registration
-	//std::cout << "Registering matches... ";
 	Freg = pAlgorithm->ICP_RegisterMatches();
     Freg0 = Freg1;
     Freg1 = Freg2;
@@ -293,7 +276,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
 #endif
 
     // dF = xfm from Freg1 to Freg2
-    //  first go back along Freg1 then go forward along Freg2
+    // first go back along Freg1 then go forward along Freg2
 	dF = Freg2 * Freg1.Inverse();
 	dS = abs(prevShapeNorm - ShapeNorm);
 
@@ -421,9 +404,6 @@ cisstICP::ReturnType cisstICP::IterateICP()
 
     // Consider termination
     if (dAng < opt.dAngThresh && dPos < opt.dPosThresh && dS < opt.dShapeThresh)
-    //if (JustDidAccelStep == false
-    //  && (dAng < opt.dAngThresh && dPos < opt.dPosThresh)
-    //  )
     {
       // Termination Test
       //  Note: max iterations is enforced by for loop
@@ -521,172 +501,3 @@ void cisstICP::ClearIterationCallbacks()
   this->iterationCallbacks.clear();
 }
 
-
-//// Code for Accelerated ICP
-////  NOTE: there are bugs in this code in that the accelerated ICP step seems to
-////        not actually be applied once computed
-//template <class T> inline T __cisststMIN(const T& a, const T& b) { return a < b ? a : b; };
-//// Accelerated ICP
-//int DecreaseCount = 0;
-//int IncreaseCount = 0;
-//int TinyChangeCount=0;
-//double res0Save;
-//double resPreAccel;
-//int DecreaseCountPreAccel;
-//vctFrm3 FregPreAccel, Freg0Save;
-//double e01,e12,e2,s01,s12,s2;
-//double res0, res1, res2;
-//double accelThreshConst;
-////// number of sequential increases / decreases in residual error
-////DecreaseCount = (res2 < res1) ? (1 + DecreaseCount) : 0;
-////IncreaseCount = (res2 > res1) ? (1 + IncreaseCount) : 0;
-////
-//// check for tiny change in transformation parameters
-////double dRmin = 0.00001;
-////double dPmin = 0.00001;
-////if ((e12 < dPmin) && (s12 < dRmin)) ++TinyChangeCount;
-////else TinyChangeCount = 0;
-////
-////// Consider termination
-//////  *** why if decrease count > 1 ? 
-////if ( JustDidAccelStep == 0 &&   // don't terminate immediately after accelation step
-////     // don't terminate when E is oscillating, unless dF is repeatedly very small
-////     (TinyChangeCount > 2 || DecreaseCount > 1 || res2 == res1 || IncreaseCount > 5) &&
-////     iter > 2)                  // run at least 2 iterations
-////{
-////  if ( s01 < dAngThresh && s12 < dAngThresh && e01 < dPosThresh && e12 < dPosThresh )
-////  {
-////    // vctFrm3 is not changing very much
-////    double ratio1 = res1 / res0;
-////    double ratio2 = res2 / res1;
-//
-////    if ( TinyChangeCount > 2 ||
-////         ((ratio1 > resRatioThresh && ratio1 < (1.0 / resRatioThresh)) &&
-////         (ratio2 > resRatioThresh && ratio2 < (1.0 / resRatioThresh))))
-////    { // residual ratio has also stopped changing
-////      // *** matches not filtered in calculation of Fbest?
-////      Freg = Fbest;
-////      // SDB: commented these out since now calculating resRMS after
-////      //      rather than before each solved registration
-////      //ICP_Match();
-////      //resRMS = UpdateSampleXfmPositions();
-////      break;  
-////    }
-////  }
-////}
-//
-////--- Accelerated ICP ---//
-////
-//// NOTE: this adds about 4ms to the loop runtime
-////
-//
-//// TODO: F12 should be Freg2 * Freg1.Inverse()???
-////F01 = F12;
-//F01 = Freg0.Inverse() * Freg1;
-//F12 = Freg1.Inverse() * Freg2;
-//F02 = Freg0.Inverse() * Freg2;
-//
-//vctQuatRot3 q01(F01.Rotation()); vct3 q01v(q01.X(), q01.Y(), q01.Z());
-//vctQuatRot3 q12(F12.Rotation()); vct3 q12v(q12.X(), q12.Y(), q12.Z());
-//vctQuatRot3 q02(F02.Rotation()); vct3 q02v(q02.X(), q02.Y(), q02.Z());
-//
-//e01 = F01.Translation().Norm();
-//e12 = F12.Translation().Norm();
-//e2 = vctDotProduct(F01.Translation(), F12.Translation());  // *** forgot sqrt?
-//s01 = q01v.Norm();
-//s12 = q12v.Norm();
-//s2 = q01v * q12v;   // *** forgot sqrt?
-//
-//if (JustDidAccelStep)
-//{ // did it help???
-//  if (res2 > res1)
-//  { // oops, better undo (error got worse)
-//    Freg1 = Freg0; res1 = res0;
-//    Freg0 = Freg0Save; res0 = res0Save;
-//    Freg = Freg2 = FregPreAccel; resRMS = res2 = resPreAccel;
-//    DecreaseCount = DecreaseCountPreAccel;
-//    JustDidAccelStep = false;
-//
-//    std::cout << "     undoing accel step ... " << std::endl;
-//
-//    continue; // skip accel step
-//  }
-//}
-//
-//// Consider Accelerating
-//// *** Linear Acceleration not fully implemented?
-////   i.e. parabolic acceleration is considered, but not linear acceleration
-//// *** accelThreshConst not initialized
-//JustDidAccelStep = false;
-//if (accelThreshConst > 0.0 &&
-//  s2 > 0.9 * s01 * s12 &&
-//  e2 > 0.9 * e01 * e12 &&
-//  iter > 2)   // need dF values from past two iterations before accelerating
-//{
-//  // Linear Acceleration
-//  //  find linear fit for recent xfm parameters ("thetas" in dF.Translation() and q.v)
-//  //  i.e., find a value lam1 that best approximates:
-//  //    theta1[j] = lam1*theta2[j]
-//  double lam1 = 2 * (F01.Translation() * F02.Translation() + q01v * q02v) /
-//    (F02.Translation() * F02.Translation() + q02v * q02v);
-//  // sanity check
-//  if (lam1 <= 0 || lam1 >= 1)
-//  { // not sensible
-//    continue;
-//  }
-//
-//  // Parabolic Acceleration
-//  //  find parabolic fit for recent xfm parameters
-//  //  i.e. fit the model res = a+b*lam+c*lam**2
-//  //      a = res0
-//  //      b+c = res2-a
-//  //      b*lam1+c*lam1**2 = res1-a
-//  //  i.e.
-//  //      b*lam1+(res2-a-b)*lam1**2 = res1-a
-//  //  i.e.
-//  //      b*(lam1-lam1**2)=res1-a-(res2-a)*lam1**2
-//  double a = res0;
-//  double b = ((res1 - res0) - (res2 - res0) * lam1 * lam1) / (lam1 - lam1 * lam1);
-//  double c = res2 - res0 - b;
-//  // find a value of lambda that minimizes |a+b*lambda+c*lambda**2|
-//  double lambdaMin;
-//  double d = b * b - 4 * a * c;
-//  if (d <= 0)
-//  {
-//    lambdaMin = -b / (2 * c);
-//  }
-//  else
-//  {
-//    double dd = sqrt(d);
-//    double root1 = (-b + dd) / (2 * c);
-//    double root2 = (-b - dd) / (2 * c);
-//    lambdaMin = (root1 < 0) ? root2 : ((root2 < 0) ? root1 : __cisststMIN(root1, root2));
-//  }
-//  if (lambdaMin <= 0) continue;
-//
-//  // Now cut this off at some maximum
-//  double lambda = __cisststMIN(lambdaMin, accelThreshConst);
-//  double s02squared = q02v * q02v;
-//  if (lambda * lambda * s02squared > 0.01)
-//  {
-//    lambda = sqrt(0.01 / s02squared);
-//  }
-//
-//  // Now guess an accelerated dF
-//  vct3 dqAccel;
-//  vct3 dPaccel;
-//  for (int j = 0; j<3; j++) {
-//    // compute accelerated angles
-//    dqAccel(j) = q02v(j)*lambda;
-//    dPaccel(j) = F02.Translation()[j] * lambda;
-//  }
-//
-//  FregPreAccel = Freg;
-//  resPreAccel = res2;
-//  DecreaseCountPreAccel = DecreaseCount;
-//  vctFrm3 dFaccel(vctRot3(vctRodRot3(dqAccel[0], dqAccel[1], dqAccel[2])), dPaccel);
-//  Freg = Freg2 = Freg0 * dFaccel;
-//  JustDidAccelStep = true;
-//
-//  std::cout << std::endl << "=== Doing Accel Step ===" << std::endl << std::endl;
-//}

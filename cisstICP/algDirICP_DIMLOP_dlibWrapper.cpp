@@ -1,7 +1,6 @@
 // ****************************************************************************
 //
-//    Copyright (c) 2014, Ayushi Sinha, Seth Billings, Russell Taylor, 
-//	  Johns Hopkins University. 
+//    Copyright (c) 2017, Ayushi Sinha, Russell Taylor, Johns Hopkins University. 
 //	  All rights reserved.
 //
 //    Redistribution and use in source and binary forms, with or without
@@ -53,18 +52,11 @@ namespace
   //  (needed for function pointers)
   double fValue(const algDirICP_DIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
-    //static vct7 x;
 	  static vctDynamicVector<double> x;
 	  x.SetSize(x_dlib.size());
-   // x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-   //   x_dlib(3), x_dlib(4), x_dlib(5),
-	  //x_dlib(6));
 
 	  for (int i = 0; i < x_dlib.size(); i++)
-		  /*if (i < 3)
-			  x[i] = 0;
-		  else*/
-			  x[i] = x_dlib(i);
+		  x[i] = x_dlib(i);
 
     return alg->CostFunctionValue(x);
   }
@@ -72,36 +64,20 @@ namespace
   algDirICP_DIMLOP_dlibWrapper::dlib_vector fDerivative(
 	  const algDirICP_DIMLOP_dlibWrapper::dlib_vector &x_dlib)
   {
-    //static vct7   x;
-    //static vct7   g;
 	  static vctDynamicVector<double> x;
 	  static vctDynamicVector<double> g;
-	//static algICP_DIMLP_dlibWrapper::dlib_vector  g_dlib(7);  // 7-element vector
 	  static algDirICP_DIMLOP_dlibWrapper::dlib_vector  g_dlib;
 	  x.SetSize(x_dlib.size());
 	  g.SetSize(x_dlib.size());
 	  g_dlib.set_size(x_dlib.size());
 
-  //  x.Assign(x_dlib(0), x_dlib(1), x_dlib(2),
-		//x_dlib(3), x_dlib(4), x_dlib(5),
-		//x_dlib(6));
 	  for (int i = 0; i < x_dlib.size(); i++)
 		  x[i] = x_dlib(i);
 
     alg->CostFunctionGradient(x, g);
- //   g_dlib(0) = g[0];
- //   g_dlib(1) = g[1];
- //   g_dlib(2) = g[2];
- //   g_dlib(3) = g[3];
- //   g_dlib(4) = g[4];
-	//g_dlib(5) = g[5];
-	//g_dlib(6) = g[6];
 
 	for (int i = 0; i < x_dlib.size(); i++)
-		/*if (i < 3)
-			g_dlib(i) = 0;
-		else*/
-			g_dlib(i) = g[i];
+		g_dlib(i) = g[i];
 
     return g_dlib;
   }
@@ -123,7 +99,6 @@ algDirICP_DIMLOP_dlibWrapper::algDirICP_DIMLOP_dlibWrapper(algDirICP_DIMLOP *arg
 //vct7 algICP_DIMLP_dlibWrapper::ComputeRegistration(const vct7 &x0)
 vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const vctDynamicVector<double> &x0)
 {
-  //dlib_vector x_dlib(7);  // 7-element vector
 	int nComponents = x0.size();
 
 	dlib_vector x_dlib(nComponents); // n_trans+n_modes-element vector
@@ -145,14 +120,6 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 	// parameters being optimized:
 	//	 transformation paramters:	unconstrained
 	//	 shape paramters:			constrained between -3.0 and 3.0 (default) or user specified limits
-
- //   x_dlib(0) = x0[0];
- //   x_dlib(1) = x0[1];
- //   x_dlib(2) = x0[2];
- //   x_dlib(3) = x0[3];
- //   x_dlib(4) = x0[4];
-	//x_dlib(5) = x0[5];
-	//x_dlib(6) = x0[6];
 
 	  int nRot = 3;
 	  int nTrans = 6;
@@ -193,27 +160,13 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 
 
 #ifdef DLIB_VERBOSE
-    //dlib::find_min(
-    //  dlib::bfgs_search_strategy(),
-    //  //dlib::objective_delta_stop_strategy( tol_df,maxIter ).be_verbose(),
-    //  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
-    //  fValue, dlib::derivative(fValue), //fDerivative,
-    //  x_dlib, -1.0);
-
-	dlib::find_min_box_constrained(
+    dlib::find_min_box_constrained(
 		dlib::bfgs_search_strategy(),
 		//dlib::objective_delta_stop_strategy( tol_df,maxIter ).be_verbose(),
 		dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter).be_verbose(),
 		fValue, dlib::derivative(fValue), //fDerivative,
 		x_dlib, x_lower, x_upper);
 #else 
-	//dlib::find_min(
-	//  dlib::bfgs_search_strategy(),
-	//  //dlib::objective_delta_stop_strategy( tol_df,maxIter ),
-	//  dlib::gradient_norm_stop_strategy(gradientNormThresh, maxIter),
-	//  fValue, fDerivative, //dlib::derivative(fValue),
-	//  x_dlib, -1.0);
-
 	dlib::find_min_box_constrained(
 		dlib::bfgs_search_strategy(),
 		//dlib::objective_delta_stop_strategy( tol_df,maxIter ),
@@ -221,12 +174,6 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
 		fValue, fDerivative, //dlib::derivative(fValue),
 		x_dlib, x_lower, x_upper);
 #endif
-
-    //dlib::find_min_using_approximate_derivatives(
-    //  dlib::bfgs_search_strategy(),
-    //  dlib::objective_delta_stop_strategy(Tol_df).be_verbose(),
-    //  dlib_fValue, 
-    //  x0_dlib, -1.0);
   }
   catch (std::exception& e)
   {
@@ -234,21 +181,9 @@ vctDynamicVector<double> algDirICP_DIMLOP_dlibWrapper::ComputeRegistration(const
     assert(0);
   }
 
-  //return vct7( x_dlib(0), x_dlib(1), x_dlib(2), 
-		//	   x_dlib(3), x_dlib(4), x_dlib(5),
-		//	   x_dlib(6));
-
   for (int i = 0; i < nComponents; i++)
   {
-	  /*if (i < 3)
-		  x[i] = 0;
-	  else
-		  */
 	  x[i] = x_dlib(i);
-	  //if (i > 5) {
-		 // x[i] = std::min(x[i], 3.0);
-		 // x[i] = std::max(x[i], -3.0);
-	  //}
   }
 
   return x;
