@@ -1,0 +1,40 @@
+iter=0  E=14412.337  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.0667  NOut=0/
+iter=1  E=7028.713  tolE=0.5123  (dAng/dPos)= 13.69/5.61  t=0.0895  NOut=0/
+iter=2  E=4138.705  tolE=0.4112  (dAng/dPos)= 7.10/5.19  t=0.0944  NOut=0/
+iter=3  E=2973.684  tolE=0.2815  (dAng/dPos)= 0.39/2.30  t=0.0838  NOut=0/
+iter=4  E=2648.381  tolE=0.1094  (dAng/dPos)= 2.69/1.52  t=0.0770  NOut=0/
+iter=5  E=2319.708  tolE=0.1241  (dAng/dPos)= 0.91/1.50  t=0.0757  NOut=0/
+iter=6  E=2275.653  tolE=0.0190  (dAng/dPos)= 0.00/0.00  t=0.0832  NOut=0/
+iter=7  E=2275.464  tolE=0.0001  (dAng/dPos)= 0.00/0.00  t=0.0916  NOut=0/
+
+Termination Condition satisfied for 2 iterations: 
+reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
+ E: 2275.46
+ dE/E: 8.28864e-005
+ dAng: 0 0 (deg)
+ dPos: 1.33342e-015 4.44089e-016
+ dShp: 2.28192 2.28192
+ iter: 7
+ runtime: 0.689578
+
+translation: 
+    0.267757     -2.97805      2.21367
+rotation: 
+    0.999985  -0.00458533   0.00305651
+  0.00450636     0.999668    0.0253593
+ -0.00317178   -0.0253452     0.999674
+scale:
+   1
+shape parameters:
+     1.58031     0.531220      1.55808
+
+Sum square mahalanobis distance = 1584.44 over 300 samples
+Sum square match angle = 989.916 over 300 samples
+Sum square mahalanobis distance = 1584.44 over 300 inliers
+Sum square match angle = 989.916 over 300 inliers
+
+Starting Offset:   	dAng: 9.78918	dPos: 17.1429	dShp:      1.08435     0.542175     0.271088
+Registration Error:	dAng: 1.48666	dPos: 3.72032	dShp:    -0.495960    0.0109551     -1.28699
+
+Average Match Error (Mahalanobis):	2.03957 (+/-3.07267)
+

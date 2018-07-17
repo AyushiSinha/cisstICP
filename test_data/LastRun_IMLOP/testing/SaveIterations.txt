@@ -1,0 +1,51 @@
+iter=0  E=28169.596  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.0768  NOut=0/
+iter=1  E=1254.093  tolE=0.9555  (dAng/dPos)= 2.19/8.25  t=0.0001  NOut=0/
+iter=2  E=1819.300  tolE=0.4507  (dAng/dPos)= 1.45/3.77  t=0.0305  NOut=0/
+iter=3  E=1847.681  tolE=0.0156  (dAng/dPos)= 1.55/1.89  t=0.0191  NOut=0/
+iter=4  E=1756.207  tolE=0.0495  (dAng/dPos)= 1.64/1.44  t=0.0160  NOut=0/
+iter=5  E=1570.779  tolE=0.1056  (dAng/dPos)= 1.69/0.98  t=0.0136  NOut=0/
+iter=6  E=1283.849  tolE=0.1827  (dAng/dPos)= 1.16/0.75  t=0.0118  NOut=0/
+iter=7  E=1037.730  tolE=0.1917  (dAng/dPos)= 0.80/0.58  t=0.0111  NOut=0/
+iter=8  E=863.153  tolE=0.1682  (dAng/dPos)= 0.73/0.41  t=0.0104  NOut=0/
+iter=9  E=735.909  tolE=0.1474  (dAng/dPos)= 0.42/0.30  t=0.0101  NOut=0/
+iter=10  E=697.439  tolE=0.0523  (dAng/dPos)= 0.23/0.19  t=0.0101  NOut=0/
+iter=11  E=679.512  tolE=0.0257  (dAng/dPos)= 0.23/0.11  t=0.0100  NOut=0/
+iter=12  E=672.750  tolE=0.0100  (dAng/dPos)= 0.16/0.08  t=0.0100  NOut=0/
+iter=13  E=668.912  tolE=0.0057  (dAng/dPos)= 0.09/0.06  t=0.0099  NOut=0/
+iter=14  E=667.362  tolE=0.0023  (dAng/dPos)= 0.02/0.05  t=0.0099  NOut=0/
+iter=15  E=669.216  tolE=0.0028  (dAng/dPos)= 0.01/0.03  t=0.0098  NOut=0/
+iter=16  E=670.966  tolE=0.0026  (dAng/dPos)= 0.01/0.01  t=0.0098  NOut=0/
+iter=17  E=671.040  tolE=0.0001  (dAng/dPos)= 0.00/0.00  t=0.0098  NOut=0/
+iter=18  E=671.064  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0098  NOut=0/
+iter=19  E=671.072  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0097  NOut=0/
+iter=20  E=671.074  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0098  NOut=0/
+
+Termination Condition satisfied for 2 iterations: 
+reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
+ E: 671.074
+ dE/E: 3.90313e-006
+ dAng: 0 0 (deg)
+ dPos: 0.000141054 0.000421625
+ dShp: 0 0
+ iter: 20
+ runtime: 0.380755
+
+translation: 
+    0.120140   0.00922675   -0.0423149
+rotation: 
+    0.999982  -0.00528930  -0.00297008
+  0.00528674     0.999986 -0.000869623
+  0.00297463  0.000853905     0.999995
+scale:
+   1.18022e-317
+
+WARNING: best iteration (14) is not the final iteration
+
+Sum square mahalanobis distance = 900 over 300 inliers
+Sum square match angle = 539.745 over 300 inliers
+
+Starting Offset:   	dAng: 9.78918	dPos: 17.1429
+Registration Error:	dAng: 0.351056	dPos: 0.127708
+
+Average Match Error (Mahalanobis):	2.03558 (+/-2.67275)
+

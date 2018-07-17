@@ -1,0 +1,45 @@
+iter=0  E=14203.449  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.4121  NOut=1/
+iter=1  E=12272.397  tolE=0.1360  (dAng/dPos)= 11.16/5.64  t=0.0171  NOut=1/
+iter=2  E=5969.421  tolE=0.5136  (dAng/dPos)= 3.31/5.16  t=0.3351  NOut=0/
+iter=3  E=3576.106  tolE=0.4009  (dAng/dPos)= 2.33/2.90  t=0.2450  NOut=2/
+iter=4  E=2991.064  tolE=0.1636  (dAng/dPos)= 0.10/0.01  t=0.1918  NOut=0/
+iter=5  E=2968.171  tolE=0.0077  (dAng/dPos)= 0.06/0.02  t=0.1803  NOut=1/
+iter=6  E=2982.149  tolE=0.0047  (dAng/dPos)= 0.04/0.00  t=0.1823  NOut=0/
+iter=7  E=2732.537  tolE=0.0837  (dAng/dPos)= 0.83/1.71  t=0.1771  NOut=1/
+iter=8  E=2397.390  tolE=0.1227  (dAng/dPos)= 0.35/1.24  t=0.1655  NOut=0/
+iter=9  E=2239.295  tolE=0.0659  (dAng/dPos)= 0.00/0.00  t=0.1493  NOut=2/
+iter=10  E=2271.129  tolE=0.0142  (dAng/dPos)= 0.00/0.00  t=0.1456  NOut=0/
+
+Termination Condition satisfied for 2 iterations: 
+reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
+ E: 2271.13
+ dE/E: 0.0142165
+ dAng: 0 0 (deg)
+ dPos: 2.22045e-016 2.48253e-016
+ dShp: 2.05678 2.05678
+ iter: 10
+ runtime: 2.23908
+
+translation: 
+    0.190937     -1.97464      1.58262
+rotation: 
+    0.999992  -0.00133809   0.00365433
+  0.00133419     0.999999   0.00107016
+ -0.00365576  -0.00106528     0.999993
+scale:
+   1
+shape parameters:
+     1.52723     0.609591      1.23544
+
+WARNING: best iteration (9) is not the final iteration
+
+Sum square mahalanobis distance = 1121.13 over 300 samples
+Sum square match angle = 1410.33 over 300 samples
+Sum square mahalanobis distance = 1121.13 over 300 inliers
+Sum square match angle = 1410.33 over 300 inliers
+
+Starting Offset:   	dAng: 9.78918	dPos: 17.1429	dShp:      1.08435     0.542175     0.271088
+Registration Error:	dAng: 0.231213	dPos: 2.53779	dShp:    -0.442875   -0.0674153    -0.964351
+
+Average Match Error (Mahalanobis):	1.73403 (+/-2.59692)
+

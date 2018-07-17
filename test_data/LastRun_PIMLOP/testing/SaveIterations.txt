@@ -1,0 +1,122 @@
+iter=0  E=13862.174  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.1127  NOut=0/
+iter=1  E=6223.609  tolE=0.5510  (dAng/dPos)= 5.89/6.54  t=0.0037  NOut=0/
+iter=2  E=2485.684  tolE=0.6006  (dAng/dPos)= 2.35/2.81  t=0.1041  NOut=0/
+iter=3  E=1362.779  tolE=0.4517  (dAng/dPos)= 0.82/1.66  t=0.0828  NOut=0/
+iter=4  E=917.956  tolE=0.3264  (dAng/dPos)= 0.75/1.07  t=0.0748  NOut=0/
+iter=5  E=678.593  tolE=0.2608  (dAng/dPos)= 0.84/0.80  t=0.0676  NOut=0/
+iter=6  E=541.038  tolE=0.2027  (dAng/dPos)= 1.00/0.60  t=0.0637  NOut=0/
+iter=7  E=449.531  tolE=0.1691  (dAng/dPos)= 0.89/0.51  t=0.0614  NOut=0/
+iter=8  E=383.967  tolE=0.1458  (dAng/dPos)= 0.53/0.44  t=0.0606  NOut=0/
+iter=9  E=335.595  tolE=0.1260  (dAng/dPos)= 0.24/0.39  t=0.0602  NOut=0/
+iter=10  E=298.204  tolE=0.1114  (dAng/dPos)= 0.18/0.34  t=0.0610  NOut=0/
+iter=11  E=267.644  tolE=0.1025  (dAng/dPos)= 0.15/0.31  t=0.0611  NOut=0/
+iter=12  E=243.117  tolE=0.0916  (dAng/dPos)= 0.09/0.28  t=0.0604  NOut=0/
+iter=13  E=222.849  tolE=0.0834  (dAng/dPos)= 0.05/0.25  t=0.0615  NOut=0/
+iter=14  E=207.286  tolE=0.0698  (dAng/dPos)= 0.02/0.22  t=0.0606  NOut=0/
+iter=15  E=194.286  tolE=0.0627  (dAng/dPos)= 0.08/0.20  t=0.0592  NOut=0/
+iter=16  E=183.514  tolE=0.0554  (dAng/dPos)= 0.09/0.18  t=0.0593  NOut=0/
+iter=17  E=174.831  tolE=0.0473  (dAng/dPos)= 0.07/0.17  t=0.0596  NOut=0/
+iter=18  E=167.759  tolE=0.0405  (dAng/dPos)= 0.06/0.15  t=0.0594  NOut=0/
+iter=19  E=161.771  tolE=0.0357  (dAng/dPos)= 0.08/0.14  t=0.0595  NOut=0/
+iter=20  E=156.744  tolE=0.0311  (dAng/dPos)= 0.07/0.13  t=0.0592  NOut=0/
+iter=21  E=152.641  tolE=0.0262  (dAng/dPos)= 0.06/0.11  t=0.0587  NOut=0/
+iter=22  E=149.378  tolE=0.0214  (dAng/dPos)= 0.05/0.10  t=0.0588  NOut=0/
+iter=23  E=146.181  tolE=0.0214  (dAng/dPos)= 0.16/0.10  t=0.0592  NOut=0/
+iter=24  E=143.303  tolE=0.0197  (dAng/dPos)= 0.09/0.09  t=0.0594  NOut=0/
+iter=25  E=140.957  tolE=0.0164  (dAng/dPos)= 0.07/0.08  t=0.0597  NOut=0/
+iter=26  E=138.968  tolE=0.0141  (dAng/dPos)= 0.09/0.08  t=0.0599  NOut=0/
+iter=27  E=137.176  tolE=0.0129  (dAng/dPos)= 0.08/0.07  t=0.0602  NOut=0/
+iter=28  E=135.695  tolE=0.0108  (dAng/dPos)= 0.06/0.07  t=0.0615  NOut=0/
+iter=29  E=134.486  tolE=0.0089  (dAng/dPos)= 0.05/0.06  t=0.0604  NOut=0/
+iter=30  E=133.442  tolE=0.0078  (dAng/dPos)= 0.04/0.06  t=0.0600  NOut=0/
+iter=31  E=132.602  tolE=0.0063  (dAng/dPos)= 0.04/0.05  t=0.0603  NOut=0/
+iter=32  E=131.967  tolE=0.0048  (dAng/dPos)= 0.02/0.04  t=0.0600  NOut=0/
+iter=33  E=131.341  tolE=0.0047  (dAng/dPos)= 0.07/0.04  t=0.0597  NOut=0/
+iter=34  E=130.722  tolE=0.0047  (dAng/dPos)= 0.09/0.04  t=0.0601  NOut=0/
+iter=35  E=130.282  tolE=0.0034  (dAng/dPos)= 0.05/0.03  t=0.0607  NOut=0/
+iter=36  E=129.929  tolE=0.0027  (dAng/dPos)= 0.04/0.03  t=0.0598  NOut=0/
+iter=37  E=129.625  tolE=0.0023  (dAng/dPos)= 0.05/0.03  t=0.0597  NOut=0/
+iter=38  E=129.369  tolE=0.0020  (dAng/dPos)= 0.04/0.03  t=0.0598  NOut=0/
+iter=39  E=129.159  tolE=0.0016  (dAng/dPos)= 0.04/0.02  t=0.0596  NOut=0/
+iter=40  E=128.974  tolE=0.0014  (dAng/dPos)= 0.03/0.02  t=0.0599  NOut=0/
+iter=41  E=128.806  tolE=0.0013  (dAng/dPos)= 0.03/0.02  t=0.0596  NOut=0/
+iter=42  E=128.639  tolE=0.0013  (dAng/dPos)= 0.04/0.02  t=0.0596  NOut=0/
+iter=43  E=128.492  tolE=0.0011  (dAng/dPos)= 0.04/0.02  t=0.0595  NOut=0/
+iter=44  E=128.372  tolE=0.0009  (dAng/dPos)= 0.04/0.02  t=0.0596  NOut=0/
+iter=45  E=128.280  tolE=0.0007  (dAng/dPos)= 0.03/0.02  t=0.0603  NOut=0/
+iter=46  E=128.212  tolE=0.0005  (dAng/dPos)= 0.02/0.01  t=0.0601  NOut=0/
+iter=47  E=128.162  tolE=0.0004  (dAng/dPos)= 0.02/0.01  t=0.0601  NOut=0/
+iter=48  E=128.126  tolE=0.0003  (dAng/dPos)= 0.02/0.01  t=0.0602  NOut=0/
+iter=49  E=128.084  tolE=0.0003  (dAng/dPos)= 0.02/0.01  t=0.0606  NOut=0/
+iter=50  E=128.046  tolE=0.0003  (dAng/dPos)= 0.02/0.01  t=0.0602  NOut=0/
+iter=51  E=128.015  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0613  NOut=0/
+iter=52  E=127.980  tolE=0.0003  (dAng/dPos)= 0.01/0.01  t=0.0603  NOut=0/
+iter=53  E=127.949  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0600  NOut=0/
+iter=54  E=127.922  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0597  NOut=0/
+iter=55  E=127.895  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0609  NOut=0/
+iter=56  E=127.872  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0596  NOut=0/
+iter=57  E=127.854  tolE=0.0001  (dAng/dPos)= 0.01/0.01  t=0.0602  NOut=0/
+iter=58  E=127.839  tolE=0.0001  (dAng/dPos)= 0.01/0.01  t=0.0604  NOut=0/
+iter=59  E=127.828  tolE=0.0001  (dAng/dPos)= 0.01/0.01  t=0.0598  NOut=0/
+iter=60  E=127.819  tolE=0.0001  (dAng/dPos)= 0.01/0.00  t=0.0601  NOut=0/
+iter=61  E=127.813  tolE=0.0001  (dAng/dPos)= 0.01/0.00  t=0.0600  NOut=0/
+iter=62  E=127.808  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0599  NOut=0/
+iter=63  E=127.804  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0601  NOut=0/
+iter=64  E=127.789  tolE=0.0001  (dAng/dPos)= 0.04/0.01  t=0.0594  NOut=0/
+iter=65  E=127.780  tolE=0.0001  (dAng/dPos)= 0.01/0.00  t=0.0599  NOut=0/
+iter=66  E=127.773  tolE=0.0001  (dAng/dPos)= 0.01/0.00  t=0.0601  NOut=0/
+iter=67  E=127.768  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0602  NOut=0/
+iter=68  E=127.762  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0600  NOut=0/
+iter=69  E=127.757  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0596  NOut=0/
+iter=70  E=127.754  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0598  NOut=0/
+iter=71  E=127.752  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0598  NOut=0/
+iter=72  E=127.749  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0598  NOut=0/
+iter=73  E=127.747  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0597  NOut=0/
+iter=74  E=127.744  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0603  NOut=0/
+iter=75  E=127.742  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0597  NOut=0/
+iter=76  E=127.740  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0597  NOut=0/
+iter=77  E=127.739  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0598  NOut=0/
+iter=78  E=127.737  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0596  NOut=0/
+iter=79  E=127.735  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0596  NOut=0/
+iter=80  E=127.734  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0601  NOut=0/
+iter=81  E=127.732  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0596  NOut=0/
+iter=82  E=127.731  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0596  NOut=0/
+iter=83  E=127.730  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0606  NOut=0/
+iter=84  E=127.729  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0597  NOut=0/
+iter=85  E=127.729  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0598  NOut=0/
+iter=86  E=127.728  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0595  NOut=0/
+iter=87  E=127.728  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0602  NOut=0/
+iter=88  E=127.727  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0595  NOut=0/
+iter=89  E=127.726  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0597  NOut=0/
+iter=90  E=127.725  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.0599  NOut=0/
+iter=91  E=127.725  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0598  NOut=0/
+iter=92  E=127.724  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0594  NOut=0/
+iter=93  E=127.724  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0595  NOut=0/
+iter=94  E=127.724  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0596  NOut=0/
+iter=95  E=127.724  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0597  NOut=0/
+iter=96  E=127.724  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0595  NOut=0/
+
+Termination Condition satisfied for 2 iterations: 
+reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
+ E: 127.724
+ dE/E: 5.67745e-007
+ dAng: 0 0.000959429 (deg)
+ dPos: 0.000424815 0.000496546
+ dShp: 0 0
+ iter: 96
+ runtime: 6.21504
+
+translation: 
+    0.212189    -0.145249     0.102928
+rotation: 
+    0.999860  -0.00606400   -0.0155697
+  0.00614839     0.999967   0.00537834
+   0.0155366  -0.00547331     0.999864
+scale:
+   1.01833e-317
+
+Starting Offset:   	dAng: 9.78918	dPos: 17.1429
+Registration Error:	dAng: 1.00661	dPos: 0.276976
+
+Average Match Error (Mahalanobis):	0.742078 (+/-1.40217)
+
