@@ -21,8 +21,8 @@ This repository provides data and source code for algorithms developed within th
 
 NOTE: This repository also contains an implementation of ICP, directional ICP, robust ICP.
 
-## Required Software Dependencies:
----------------------------------
+## Required Software Dependencies
+=================================
  - CMake (http://www.cmake.org)
  - Visual Studio for Windows: http://www.visualstudio.com/downloads/download-visual-studio-vs
     > application was developed in Visual Studio 2013
@@ -44,7 +44,7 @@ http://numerical.recipes/
 
 
 ## Instructions for Compiling Dependencies
------------------------------------------
+==========================================
  
 ### CISST Libraries: 
 https://github.com/jhu-cisst/cisst/
@@ -85,7 +85,7 @@ if using Matlab
  - Extract source from the `PLY_IO` file located in the `dependencies/Matlab Dependencies` folder
 
 ## Instructions for Compiling Source Code
------------------------------------------
+=========================================
 These instructions are based on the Windows platform with VisualStudio 2013. The output is a static library (cisstICP.lib).
  
 ### Compile cisstICP Library:
@@ -146,7 +146,7 @@ to
 NOTE: If you do not have the Numerical Recipes code, then the Matlab interface for GIMLOP will fail to compile (since GIMLOP will not have been compiled in the C++ library), giving an error. This is not a problem, as the Matlab interfaces for the other algorithms won't be affected and can still be used. 
 
 ## Test Run
-------------
+===========
  - `cd` to 'cisstICP_App/cisstICP_App_build/Release/' and run `ICP_App` via command line
     > this should run the executable with default settings
  - Test whether everything is running correctly
