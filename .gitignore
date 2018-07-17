@@ -2,5 +2,47 @@
 #.gitignore
 
 # build directories
-*_build/
-*_build_debug/
+cisstICP/build/
+cisstICP_App/build/
+cisstICP_App/build_debug/
+
+# inputs
+test_data/IdentityXfm.txt
+test_data/ASL.ply
+test_data/ASR.ply
+test_data/ASR_copy.ply
+test_data/ASR_front.ply
+test_data/ASR_part.ply
+test_data/MSL.ply
+test_data/MTn.ply
+test_data/MiddleTurbinate.ply
+test_data/MiddleTurbinate_Transformed.ply
+test_data/OffsetXfm*
+test_data/Pts.ply
+test_data/Warped_MT.*
+test_data/Warped_MT_*
+test_data/atlas_a*
+test_data/atlas_msl.txt
+test_data/dense_*
+test_data/initPts.ply
+test_data/*.bat
+test_data/*.bmp
+test_data/structure*
+
+# outputs
+test_data/LastRun*
+test_data/LeaveOut/
+test_data/D*
+test_data/final*
+test_data/Save*
+
+# dependencies
+dependencies/DLib/
+dependencies/WildMagic5p13/
+
+# backup
+cisstICP/backup/
+cisstICP_App/backup/
+
+# old
+cisstICP/CMakeLists_old.txt
