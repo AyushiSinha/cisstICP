@@ -133,7 +133,7 @@ This library provides a Matlab interface to the C++ code of the cisstICP Library
     > configure again and Generate
  - Build matlabICP library in Visual Studio <br />
     > open the `matlabICP_build/matlabICP.sln` file in Visual Studio, set the build options to 'Release' and 'x64', and build the solution.
- - Add to Matlab
+ - Add to Matlab <br />
     > extract the `/cisstICP/dependencies/MatlabDependencies/mtimesx.zip` and add it to your Matlab path. <br />
     > add `/cisstICP/dependencies/MatlabDependencies/PLY_IO` to your Matlab path.  Note that the [PLY_IO library code](http://people.sc.fsu.edu/~jburkardt/m_src/ply_io/ply_io.html) included here containes a bug fix for `ply_read.m`, changing line 571 from
 
