@@ -157,7 +157,7 @@ This library provides a Matlab interface to the C++ code of the cisstICP Library
 
  - Create a `matlabICP_build` folder alongside the `matlabICP` folder in the cloned repo
 
-    > set CMake's source and build locations to these folders 
+    > set CMake's source and build locations to these folders (`matlabICP` and `matlabICP_build`)
  - run CMake on source directory `matlabICP` and configure <br />
     > set `cisst_DIR` to the path to the `cisst/cisst_build` folder and configure again. If the compiled CISST libraries were found correctly by CMake, then `CISST_USE_FILE` should now automatically contain a path to the file `Usecisst.cmake`. 
     
