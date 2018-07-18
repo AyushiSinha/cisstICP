@@ -32,6 +32,8 @@ NOTE: This repository also contains an implementation of ICP, directional ICP an
 
     > see IMLP paper for minor modifications required for termination condition
 
+NOTE: To run experiments described in the IMLP paper, go to https://github.com/sbillin/IMLP. Compile the source code following instructions there (or here) and run the experiments in the `PLOSONE` folder.
+
 ## Required Software Dependencies
 
  - CMake (http://www.cmake.org)
