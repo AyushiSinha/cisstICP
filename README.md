@@ -24,24 +24,28 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
 ## Required Software Dependencies
 
  - CMake (http://www.cmake.org)
- - Visual Studio for Windows: http://www.visualstudio.com/downloads/download-visual-studio-vs
+
+ - Visual Studio for Windows (http://www.visualstudio.com/downloads/download-visual-studio-vs)
     > application was developed in Visual Studio 2013
+
  - CISST Libraries (https://trac.lcsr.jhu.edu/cisst)
     > must compile this from source (instructions below)
- - WildMagic5 Libraries: http://www.geometrictools.com/Downloads/Downloads.html
+
+ - WildMagic5 Libraries (http://www.geometrictools.com/Downloads/Downloads.html)
     > requires: Wm5Core.lib, Wm5Mathematics.lib
     > must compile these from source
- - DLib: 
-http://dlib.net/
+
+ - DLib (http://dlib.net/)
     > for iterative solutions to our minimization problems
- - Numerical Recipes: 
-http://numerical.recipes/
+
+ - Numerical Recipes (http://numerical.recipes/)
     > needed only for G-IMLOP and GD-IMLOP algorithm; other algorithms don't use it and the code can be built without it
+
  - RPly Library
     > for reading/writing PLY files
+
  - PLY_IO Library (if using Matlab)
     > for reading/writing PLY files in Matlab
-
 
 ## Instructions for Compiling Dependencies
  
