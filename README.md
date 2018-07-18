@@ -1,5 +1,4 @@
-Most-Likely Point Paradigm
-==========================
+# Most-Likely Point Paradigm
 
 This repository provides data and source code for algorithms developed within the Most-Likely Point and Deformable Most-Likely Point paradigms described in the following papers:
 
