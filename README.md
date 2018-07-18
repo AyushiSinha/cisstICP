@@ -178,27 +178,32 @@ This library provides a Matlab interface to the C++ code of the cisstICP Library
     > extract the `/cisstICP/dependencies/MatlabDependencies/mtimesx.zip` and add it to your Matlab path. 
     
     > add `/cisstICP/dependencies/MatlabDependencies/PLY_IO` to your Matlab path.  Note that the [PLY_IO library code](http://people.sc.fsu.edu/~jburkardt/m_src/ply_io/ply_io.html) included here containes a bug fix for `ply_read.m`, changing line 571 from
-
+```matlab
         if ( ( nargin > 1 & strcmpi(Str,'Tri') ) || nargout > 2 )
-        to
+```
+to
+```matlab
         if ( ( nargin > 1 && strcmpi(Str,'Tri') ) || nargout > 2 )
+```
 
 NOTE: If you do not have the Numerical Recipes code, then the Matlab interface for GIMLOP will fail to compile (since GIMLOP will not have been compiled in the C++ library), giving an error. This is not a problem, as the Matlab interfaces for the other algorithms won't be affected and can still be used. 
 
 ## Test Run
- - `cd` to 'cisstICP_App/cisstICP_App_build/Release/' and run `ICP_App` via command line
+ - `cd` to `cisstICP_App/cisstICP_App_build/Release/` and run `ICP_App` via command line
 
     > this should run the executable with default settings
  - Test whether everything is running correctly <br />
-    > run the following commands: <br />
-    > - ICP_App --alg IMLP --out testingforrelease <br />
-    > - ICP_App --alg DIMLP --out testingforrelease <br />
-    > - ICP_App --alg IMLOP --out testingforrelease <br />
-    > - ICP_App --alg DIMLOP --out testingforrelease <br />
-    > - ICP_App --alg GIMLOP --out testingforrelease <br />
-    > - ICP_App --alg GDIMLOP --out testingforrelease <br />
-    > - ICP_App --alg PIMLOP --out testingforrelease <br />
-    
-    > `cd` into `cisstICP_App/tests` and run `compare_outputs_script.m` in Matlab. If all algorithms `pass`, then everything is running correctly. This is a good test to run when developing to make sure changes to the code have not broken anything
+    > run the following commands: 
+```cmd
+    ICP_App --alg IMLP --out testingforrelease
+    ICP_App --alg DIMLP --out testingforrelease
+    ICP_App --alg IMLOP --out testingforrelease
+    ICP_App --alg DIMLOP --out testingforrelease
+    ICP_App --alg GIMLOP --out testingforrelease
+    ICP_App --alg GDIMLOP --out testingforrelease
+    ICP_App --alg PIMLOP --out testingforrelease 
+```
+ - `cd` into `cisstICP_App/tests` and run `compare_outputs_script.m` in Matlab. If all algorithms `pass`, then everything is running correctly. This is a good test to run when developing to make sure changes to the code have not broken anything
+
  - Test if the matlabICP libraries are working
     > `cd` to `matlabICP/TestApps/` and run `App_Test_IMLOP.m` in Matlab (not maintained)
