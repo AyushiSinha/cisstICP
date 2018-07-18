@@ -133,7 +133,7 @@ This library provides a Matlab interface to the C++ code of the cisstICP Library
     > configure again and Generate
  - Build matlabICP library in Visual Studio <br />
     > open the `matlabICP_build/matlabICP.sln` file in Visual Studio, set the build options to 'Release' and 'x64', and build the solution.
- - Add to Matlab <br />
+ - Add to Matlab
     > extract the `/cisstICP/dependencies/MatlabDependencies/mtimesx.zip` and add it to your Matlab path. <br />
     > add `/cisstICP/dependencies/MatlabDependencies/PLY_IO` to your Matlab path.  Note that the [PLY_IO library code](http://people.sc.fsu.edu/~jburkardt/m_src/ply_io/ply_io.html) included here containes a bug fix for `ply_read.m`, changing line 571 from
 
@@ -151,13 +151,13 @@ NOTE: If you do not have the Numerical Recipes code, then the Matlab interface f
     > this should run the executable with default settings
  - Test whether everything is running correctly
     > run the following commands: <br />
-    > * ICP_App --alg IMLP --out testingforrelease <br />
-    > * ICP_App --alg DIMLP --out testingforrelease <br />
-    > * ICP_App --alg IMLOP --out testingforrelease <br />
-    > * ICP_App --alg DIMLOP --out testingforrelease <br />
-    > * ICP_App --alg GIMLOP --out testingforrelease <br />
-    > * ICP_App --alg GDIMLOP --out testingforrelease <br />
-    > * ICP_App --alg PIMLOP --out testingforrelease <br />
+    > - ICP_App --alg IMLP --out testingforrelease <br />
+    > - ICP_App --alg DIMLP --out testingforrelease <br />
+    > - ICP_App --alg IMLOP --out testingforrelease <br />
+    > - ICP_App --alg DIMLOP --out testingforrelease <br />
+    > - ICP_App --alg GIMLOP --out testingforrelease <br />
+    > - ICP_App --alg GDIMLOP --out testingforrelease <br />
+    > - ICP_App --alg PIMLOP --out testingforrelease <br />
     > `cd` into `cisstICP_App/tests` and run `compare_outputs_script.m` in Matlab. If all algorithms pass, then everything is running correctly. This is a good test to run when developing to make sure changes to the code have not broken anything
  - Test if the matlabICP libraries are working
     > `cd` to `matlabICP/TestApps/` and run `App_Test_IMLOP.m` in Matlab
