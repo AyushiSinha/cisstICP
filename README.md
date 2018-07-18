@@ -10,7 +10,7 @@ This repository provides data and source code for algorithms developed within th
 
 **P-IMLOP**: Seth D. Billings, Hyun J. Kang, Alexis Cheng, Emad M. Boctor, Peter Kazanzides, Russell H. Taylor, "Minimally invasive registration for computer-assisted orthopedic surgery: combining tracked ultrasound and bone surface points via the P-IMLOP algorithm", International Journal of Computer Assisted Radiology and Surgery 10 (6): 761--771 (2015)
 
-**V-IMLOP**: Seth D. Billings, Ayushi Sinha, Austin Reiter, Simon Leonard, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "Anatomically Constrained Video-CT Registration via the V-IMLOP Algorithm", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science 9902: 133--141 (2016)
+<!-- **V-IMLOP**: Seth D. Billings, Ayushi Sinha, Austin Reiter, Simon Leonard, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "Anatomically Constrained Video-CT Registration via the V-IMLOP Algorithm", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science 9902: 133--141 (2016) -->
 
 **D-IMLP**: Ayushi Sinha, Seth D. Billings, Austin Reiter, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "The deformable most likely point paradigm", TBP
 
