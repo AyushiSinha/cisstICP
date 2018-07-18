@@ -33,10 +33,15 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
 
  - WildMagic5 Libraries (http://www.geometrictools.com/Downloads/Downloads.html)
     > requires: Wm5Core.lib, Wm5Mathematics.lib
-    > must compile these from source
+
+    > must compile these from source (instructions below)
+
+    > included in `dependencies` folder
 
  - DLib (http://dlib.net/)
     > for iterative solutions to our minimization problems
+
+    > included in `dependencies` folder
 
  - Numerical Recipes (http://numerical.recipes/)
     > needed only for G-IMLOP and GD-IMLOP algorithm; other algorithms don't use it and the code can be built without it
@@ -44,8 +49,12 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
  - RPly Library
     > for reading/writing PLY files
 
+    > included in `dependencies` folder
+
  - PLY_IO Library (if using Matlab)
     > for reading/writing PLY files in Matlab
+
+    > included in `dependencies/Matlab Dependencies` folder
 
 ## Instructions for Compiling Dependencies
  
@@ -179,7 +188,7 @@ NOTE: If you do not have the Numerical Recipes code, then the Matlab interface f
 
 ## Test Run
  - `cd` to 'cisstICP_App/cisstICP_App_build/Release/' and run `ICP_App` via command line
- 
+
     > this should run the executable with default settings
  - Test whether everything is running correctly <br />
     > run the following commands: <br />
