@@ -51,7 +51,8 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
  
 ### CISST Libraries: 
 https://github.com/jhu-cisst/cisst/
- - Clone `cisst` repository from github <br />
+ - Clone `cisst` repository from github
+
     > git clone https://github.com/jhu-cisst/cisst/ 
     
     > only jhu-cisst/cisst required (not cisst-saw, etc.)
@@ -98,10 +99,12 @@ If using Matlab
 These instructions are based on the Windows platform with VisualStudio 2013. The output is a static library (cisstICP.lib).
  
 ### Compile cisstICP Library:
- - Clone `cisstICP` repository from github <br />
+ - Clone `cisstICP` repository from github
+
     > git clone https://github.com/AyushiSinha/cisstICP
  - Create a build directory `cisstICP_build` within the `cisstICP` directory that was cloned from git
- - run CMake on source directory `cisstICP` <br />
+ - run CMake on source directory `cisstICP`
+
     > specify paths to cisstICP source code and build directories (`cisstICP` and `cisstICP_build`) and configure
     
     > set cisst_DIR to location of CISST Library build `cisst/cisst_build` and configure again. If the compiled CISST libraries were found correctly by CMake, then `CISST_USE_FILE` should now automatically contain a path to the file `Usecisst.cmake` 
@@ -176,6 +179,7 @@ NOTE: If you do not have the Numerical Recipes code, then the Matlab interface f
 
 ## Test Run
  - `cd` to 'cisstICP_App/cisstICP_App_build/Release/' and run `ICP_App` via command line
+ 
     > this should run the executable with default settings
  - Test whether everything is running correctly <br />
     > run the following commands: <br />
