@@ -205,5 +205,5 @@ NOTE: If you do not have the Numerical Recipes code, then the Matlab interface f
 ```
  - `cd` into `cisstICP_App/tests` and run `compare_outputs_script.m` in Matlab. If all algorithms `pass`, then everything is running correctly. This is a good test to run when developing to make sure changes to the code have not broken anything
 
- - Test if the matlabICP libraries are working
+ - Test if the matlabICP libraries are working (if using Matlab)
     > `cd` to `matlabICP/TestApps/` and run `App_Test_IMLOP.m` in Matlab (not maintained)
