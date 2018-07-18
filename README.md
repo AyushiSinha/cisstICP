@@ -18,7 +18,19 @@ This repository provides data and source code for algorithms developed within th
 
 **GD-IMLOP**: Ayushi Sinha, Xington Liu, Austin Reiter, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "Endoscopic navigation in the absence of CT imaging", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science (2018)
 
-NOTE: This repository also contains an implementation of ICP, directional ICP, robust ICP.
+NOTE: This repository also contains an implementation of ICP, directional ICP and robust ICP. Other algorithms evaluated in these papers, for which source code is not included in this repository, include:
+
+ - GICP
+
+    > downloaded from http://www.robots.ox.ac.uk/~avsegal/generalized_icp.html
+
+    > see IMLP paper for minor modifications required for termination condition and to set covariance matrices
+
+ - CPD
+
+    > downloaded from https://sites.google.com/site/myronenko/research/cpd
+
+    > see IMLP paper for minor modifications required for termination condition
 
 ## Required Software Dependencies
 
@@ -54,6 +66,8 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
     > for reading/writing PLY files in Matlab
 
     > included in `dependencies/Matlab Dependencies` folder
+
+NOTE: Visual Studio 12 2013 Win64 was used successfully when creating this `README`. Visual Stuido 14 2015 Win64 did not work due to errors such as `cisstNetlib_f2c.lib(endfile.obj) : error LNK2001: unresolved external symbol __imp_sprintf`. This issue has not been solved and it is recommended to build the `cisstICP` application using Visual Studio 2013.
 
 ## Instructions for Compiling Dependencies
  
