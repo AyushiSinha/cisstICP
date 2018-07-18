@@ -27,7 +27,7 @@ NOTE: This repository also contains an implementation of ICP, directional ICP, r
  - Visual Studio for Windows (http://www.visualstudio.com/downloads/download-visual-studio-vs)
     > application was developed in Visual Studio 2013
 
- - CISST Libraries (https://trac.lcsr.jhu.edu/cisst)
+ - CISST Libraries (https://github.com/jhu-cisst/cisst/)
     > must compile this from source (instructions below)
 
  - WildMagic5 Libraries (http://www.geometrictools.com/Downloads/Downloads.html)
