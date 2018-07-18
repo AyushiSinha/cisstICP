@@ -83,8 +83,11 @@ https://github.com/jhu-cisst/cisst/
  - Create a build directory `cisst_build` alongside (not inside) the `cisst` directory that was cloned from git
  - Create Visual Studio solution for CISST Libraries using CMake <br />
     > run CMake on `cisst` source directory with build directory set to `cisst_build`
+
        -- check boxes for libraries: CISST_cisstCommon, CISST_cisstVector, CISST_cisstNumerical, CISST_cisstOSAbstraction
+
        -- uncheck boxes for cisstMultitask, cisstMutliTask_, cisstParameterTypes, cisstRobot_ 
+
        -- check box for CISST_HAS_CISSTNETLIB 
 
     > configure with `Visual Studio 12 2013 Win64` as the compiler 
