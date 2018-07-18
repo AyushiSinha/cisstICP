@@ -6,17 +6,17 @@ This repository provides data and source code for algorithms developed within th
 
 **IMLOP**: Seth D. Billings, Russell H. Taylor, "Iterative most likely oriented point registration", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science 8673: 178--185 (2014)
 
-**G-IMLOP**: Seth Billings, Russell Taylor, "Generalized iterative most likely oriented-point (G-IMLOP) registration", International Journal of Computer Assisted Radiology and Surgery 10 (8): 1213--1226 (2015)
+**G-IMLOP**: Seth D. Billings, Russell H. Taylor, "Generalized iterative most likely oriented-point (G-IMLOP) registration", International Journal of Computer Assisted Radiology and Surgery 10 (8): 1213--1226 (2015)
 
-**P-IMLOP**: Seth Billings, Hyun Kang, Alexis Cheng, Emad Boctor, Peter Kazanzides, Russell Taylor, "Minimally invasive registration for computer-assisted orthopedic surgery: combining tracked ultrasound and bone surface points via the P-IMLOP algorithm", International Journal of Computer Assisted Radiology and Surgery 10 (6): 761--771 (2015)
+**P-IMLOP**: Seth D. Billings, Hyun J. Kang, Alexis Cheng, Emad M. Boctor, Peter Kazanzides, Russell H. Taylor, "Minimally invasive registration for computer-assisted orthopedic surgery: combining tracked ultrasound and bone surface points via the P-IMLOP algorithm", International Journal of Computer Assisted Radiology and Surgery 10 (6): 761--771 (2015)
 
-**V-IMLOP**: Seth Billings, Ayushi Sinha, Austin Reiter, Simon Leonard, Masaru Ishii, Gregory Hager, Russell Taylor, "Anatomically Constrained Video-CT Registration via the V-IMLOP Algorithm", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science 9902: 133--141 (2016)
+**V-IMLOP**: Seth D. Billings, Ayushi Sinha, Austin Reiter, Simon Leonard, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "Anatomically Constrained Video-CT Registration via the V-IMLOP Algorithm", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science 9902: 133--141 (2016)
 
-**D-IMLP**: Ayushi Sinha, Seth Billings, Austin Reiter, Masaru Ishii, Gregory Hager, Russell Taylor, "The deformable most likely point paradigm", TBP
+**D-IMLP**: Ayushi Sinha, Seth D. Billings, Austin Reiter, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "The deformable most likely point paradigm", TBP
 
-**D-IMLOP**: Ayushi Sinha, Seth Billings, Austin Reiter, Masaru Ishii, Gregory Hager, Russell Taylor, "The deformable most likely point paradigm", TBP
+**D-IMLOP**: Ayushi Sinha, Seth D. Billings, Austin Reiter, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "The deformable most likely point paradigm", TBP
 
-**GD-IMLOP**: Ayushi Sinha, Xington Liu, Austin Reiter, Masaru Ishii, Gregory Hager, Russell Taylor, "Endoscopic navigation in the absence of CT imaging", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science (2018)
+**GD-IMLOP**: Ayushi Sinha, Xington Liu, Austin Reiter, Masaru Ishii, Gregory D. Hager, Russell H. Taylor, "Endoscopic navigation in the absence of CT imaging", Medical Image Computing and Computer-Assisted Intervention, Lecture Notes in Computer Science (2018)
 
 NOTE: This repository also contains an implementation of ICP, directional ICP, robust ICP.
 
