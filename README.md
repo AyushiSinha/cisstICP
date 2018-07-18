@@ -117,7 +117,8 @@ These instructions are based on the Windows platform with VisualStudio 2013. The
     > build with build mode set to `Release` and `x64`
 
 ### Compile cisstICP_App:
- - Create a build directory `cisstICP_App_build` within the `cisstICP_App` directory <br />
+ - Create a build directory `cisstICP_App_build` within the `cisstICP_App` directory
+
     > specify paths to cisstICP source code and build directories (`cisstICP_App` and `cisstICP_App_build`) 
  - run CMake on source directory `cisstICP_App` and configure <br />
     > set `cisst_DIR` to the path to the `cisst/cisst_build` folder and configure again. If the compiled CISST libraries were found correctly by CMake, then `CISST_USE_FILE` should now automatically contain a path to the file `Usecisst.cmake`
@@ -139,7 +140,8 @@ These instructions are based on the Windows platform with VisualStudio 2013. The
 ### Compile matlabICP Library:
 This library provides a Matlab interface to the C++ code of the cisstICP Library. This library is not maintained by me.
 
- - Create a `matlabICP_build` folder alongside the `matlabICP` folder in the cloned repo <br />
+ - Create a `matlabICP_build` folder alongside the `matlabICP` folder in the cloned repo
+
     > set CMake's source and build locations to these folders 
  - run CMake on source directory `matlabICP` and configure <br />
     > set `cisst_DIR` to the path to the `cisst/cisst_build` folder and configure again. If the compiled CISST libraries were found correctly by CMake, then `CISST_USE_FILE` should now automatically contain a path to the file `Usecisst.cmake`. 
