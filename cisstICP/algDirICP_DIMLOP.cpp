@@ -342,6 +342,12 @@ double algDirICP_DIMLOP::ICP_EvaluateErrorFunction()
   costFuncValue = /*logExp +*/ k*(nSamples - sumNormProducts) /*- nlogkappa*/ + (nklog2PI + expCost + logCost + ssmCost) / 2.0;
   // ^ add logExp back if you can make sure it is stable - can be unstable if k is big => exp(k) blows up
 
+#if 0
+  std::fstream dist_file("distance_DIMLOP.csv", std::ios::in | std::ios::out | std::ios::app);
+  dist_file << expCost / nSamples << "\n";
+  dist_file.close();
+#endif
+
   //-- Test for algorithm-specific termination --//
 
   // remove last iteration from monitoring variable

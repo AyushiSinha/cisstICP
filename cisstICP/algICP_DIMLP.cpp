@@ -388,6 +388,12 @@ double algICP_DIMLP::ICP_EvaluateErrorFunction()
 
 	prevCostFuncValue = costFuncValue;
 	costFuncValue = nklog2PI + (logCost + expCost + ssmCost) / 2.0;
+
+#if 0
+	std::fstream dist_file("distance_DIMLP.csv", std::ios::in | std::ios::out | std::ios::app);
+	dist_file << expCost / nSamples << "\n";
+	dist_file.close();
+#endif
 	
 	//-- Test for algorithm-specific termination --//
 

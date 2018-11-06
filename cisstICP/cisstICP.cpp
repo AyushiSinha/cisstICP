@@ -266,8 +266,8 @@ cisstICP::ReturnType cisstICP::IterateICP()
     Freg2 = Freg;
 
 	pAlgorithm->ReturnScale(scale);
-
 	pAlgorithm->ReturnShapeParam(sp); 
+
 	prevShapeNorm = ShapeNorm;
 	ShapeNorm = sp.Norm();
 

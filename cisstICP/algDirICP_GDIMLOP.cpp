@@ -123,9 +123,9 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		sqrMahalDist = residual*invM[i]*residual;
 		totalSumSqrMahalDist += sqrMahalDist;
 
-		matchAngle = acos(std::fmod(matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
-		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
-		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
+		matchAngle = acos(std::fmod( matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
+		axisAngle1 = asin(std::fmod(L[i].Column(0) * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
+		axisAngle2 = asin(std::fmod(L[i].Column(1) * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
 		
 		totalSumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 
@@ -170,6 +170,7 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
   double Error		= 0.0;
   double nklog2PI	= 0.0;
   double logCost	= 0.0;
+  double expCost	= 0.0;
   double ssmCost	= 0.0;
   double normCost	= 0.0;	// for debugging only
   double normCost1	= 0.0;	// for debugging only
@@ -179,6 +180,9 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
 	ComputeCovDecomposition_NonIter(Mi[i], inv_Mi[i], det_Mi[i]);
 
 	if (outlierFlags[i])	continue;	// skip outliers
+
+	vct3 residual = samplePtsXfmd.Element(i) - Tssm_Y.Element(i);	// matchPts.Element(s);
+	expCost += residual * inv_Mi[i] * residual;
 
     Error += MatchError(samplePtsXfmd[i], sampleNormsXfmd[i],
       Tssm_Y[i], matchNorms[i],
@@ -196,6 +200,12 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
 
   prevCostFuncValue = costFuncValue;
   costFuncValue = Error;
+
+#if 0
+  fstream dist_file("distance_GDIMLOP.csv", ios::in | ios::out | ios::app);
+  dist_file << expCost / nSamples << "\n";
+  dist_file.close();
+#endif
 
   //-- Test for algorithm-specific termination --//
 
@@ -1379,14 +1389,14 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, 
   for (j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
-	if (outlierFlags[j])	continue;
+	//if (outlierFlags[j])	continue;
 
     //--- Kent term ---//   (orientations)        
     for (unsigned int i = 0; i < 3; i++)
     {
       //  rotational effect
 		ga[i] += 
-			-k[j] * (Xn[j] * dRa[i] * Yn[j])
+			-k[j] * (Xn[j] * dRa[i].TransposeRef() * Yn[j])
 				- 2.0 * B[j] * ((dRa[i] * L[j].Column(0) * Yn[j]) * (Yn[j] * RaRL[j].Column(0))
 				- (dRa[i] * L[j].Column(1) * Yn[j]) * (Yn[j] * RaRL[j].Column(1)));
 
