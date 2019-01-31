@@ -1,42 +1,42 @@
-iter=0  E=67.294  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.4607  NOut=297/
+iter=0  E=67.294  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.4821  NOut=297/
 iter=1  E=40.823  tolE=0.3934  (dAng/dPos)= 11.71/2.02  t=0.0010  NOut=297/
-iter=2  E=29.733  tolE=0.2717  (dAng/dPos)= 5.25/1.18  t=0.2820  NOut=293/
-iter=3  E=42.207  tolE=0.4196  (dAng/dPos)= 5.61/1.15  t=0.2596  NOut=292/
-iter=4  E=59.557  tolE=0.4111  (dAng/dPos)= 1.83/0.77  t=0.2653  NOut=289/
-iter=5  E=63.949  tolE=0.0737  (dAng/dPos)= 1.34/0.54  t=0.2560  NOut=286/
-iter=6  E=75.200  tolE=0.1759  (dAng/dPos)= 2.48/0.39  t=0.2551  NOut=284/
-iter=7  E=60.349  tolE=0.1975  (dAng/dPos)= 2.41/0.25  t=0.2560  NOut=284/
-iter=8  E=58.910  tolE=0.0238  (dAng/dPos)= 1.73/0.32  t=0.2589  NOut=284/
-iter=9  E=63.066  tolE=0.0705  (dAng/dPos)= 1.54/0.27  t=0.2559  NOut=282/
-iter=10  E=103.175  tolE=0.6360  (dAng/dPos)= 0.82/0.65  t=0.2542  NOut=279/
-iter=11  E=126.383  tolE=0.2249  (dAng/dPos)= 1.58/0.57  t=0.2573  NOut=278/
-iter=12  E=144.961  tolE=0.1470  (dAng/dPos)= 2.24/0.85  t=0.2592  NOut=278/
-iter=13  E=145.799  tolE=0.0058  (dAng/dPos)= 1.79/1.23  t=0.2731  NOut=280/
-iter=14  E=139.806  tolE=0.0411  (dAng/dPos)= 2.67/0.85  t=0.2709  NOut=278/
-iter=15  E=120.136  tolE=0.1407  (dAng/dPos)= 1.71/0.53  t=0.2718  NOut=278/
-iter=16  E=104.079  tolE=0.1337  (dAng/dPos)= 0.76/0.33  t=0.2704  NOut=278/
-iter=17  E=114.455  tolE=0.0997  (dAng/dPos)= 1.26/0.36  t=0.2674  NOut=278/
-iter=18  E=123.314  tolE=0.0774  (dAng/dPos)= 0.79/0.13  t=0.2687  NOut=278/
-iter=19  E=122.776  tolE=0.0044  (dAng/dPos)= 0.26/0.14  t=0.2661  NOut=278/
-iter=20  E=115.537  tolE=0.0590  (dAng/dPos)= 0.97/0.14  t=0.2670  NOut=278/
-iter=21  E=126.429  tolE=0.0943  (dAng/dPos)= 0.52/0.25  t=0.2661  NOut=278/
-iter=22  E=116.136  tolE=0.0814  (dAng/dPos)= 0.88/0.13  t=0.2662  NOut=279/
-iter=23  E=115.149  tolE=0.0085  (dAng/dPos)= 0.57/0.09  t=0.2629  NOut=279/
-iter=24  E=123.721  tolE=0.0744  (dAng/dPos)= 0.51/0.19  t=0.2635  NOut=278/
-iter=25  E=106.282  tolE=0.1410  (dAng/dPos)= 0.53/0.05  t=0.2623  NOut=278/
-iter=26  E=102.935  tolE=0.0315  (dAng/dPos)= 1.16/0.10  t=0.2632  NOut=278/
-iter=27  E=104.491  tolE=0.0151  (dAng/dPos)= 0.46/0.12  t=0.2641  NOut=277/
-iter=28  E=104.431  tolE=0.0006  (dAng/dPos)= 0.01/0.03  t=0.2635  NOut=277/
-iter=29  E=104.427  tolE=0.0000  (dAng/dPos)= 0.01/0.01  t=0.2641  NOut=277/
-iter=30  E=104.426  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.2620  NOut=277/
-iter=31  E=194.813  tolE=0.8656  (dAng/dPos)= 2.94/0.67  t=0.2632  NOut=276/
-iter=32  E=100.460  tolE=0.4843  (dAng/dPos)= 1.32/0.41  t=0.2689  NOut=278/
-iter=33  E=99.980  tolE=0.0048  (dAng/dPos)= 0.33/0.10  t=0.2677  NOut=278/
-iter=34  E=99.898  tolE=0.0008  (dAng/dPos)= 0.16/0.03  t=0.2649  NOut=278/
-iter=35  E=99.878  tolE=0.0002  (dAng/dPos)= 0.06/0.02  t=0.2625  NOut=278/
-iter=36  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2624  NOut=278/
-iter=37  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2636  NOut=278/
-iter=38  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2630  NOut=278/
+iter=2  E=29.733  tolE=0.2717  (dAng/dPos)= 5.25/1.18  t=0.2915  NOut=293/
+iter=3  E=42.207  tolE=0.4196  (dAng/dPos)= 5.61/1.15  t=0.2722  NOut=292/
+iter=4  E=59.557  tolE=0.4111  (dAng/dPos)= 1.83/0.77  t=0.2762  NOut=289/
+iter=5  E=63.949  tolE=0.0737  (dAng/dPos)= 1.34/0.54  t=0.2828  NOut=286/
+iter=6  E=75.200  tolE=0.1759  (dAng/dPos)= 2.48/0.39  t=0.2665  NOut=284/
+iter=7  E=60.349  tolE=0.1975  (dAng/dPos)= 2.41/0.25  t=0.2679  NOut=284/
+iter=8  E=58.910  tolE=0.0238  (dAng/dPos)= 1.73/0.32  t=0.2657  NOut=284/
+iter=9  E=63.066  tolE=0.0705  (dAng/dPos)= 1.54/0.27  t=0.2650  NOut=282/
+iter=10  E=103.175  tolE=0.6360  (dAng/dPos)= 0.82/0.65  t=0.2664  NOut=279/
+iter=11  E=126.383  tolE=0.2249  (dAng/dPos)= 1.58/0.57  t=0.2683  NOut=278/
+iter=12  E=144.961  tolE=0.1470  (dAng/dPos)= 2.24/0.85  t=0.2770  NOut=278/
+iter=13  E=145.799  tolE=0.0058  (dAng/dPos)= 1.79/1.23  t=0.2825  NOut=280/
+iter=14  E=139.806  tolE=0.0411  (dAng/dPos)= 2.67/0.85  t=0.2836  NOut=278/
+iter=15  E=120.136  tolE=0.1407  (dAng/dPos)= 1.71/0.53  t=0.2840  NOut=278/
+iter=16  E=104.079  tolE=0.1337  (dAng/dPos)= 0.76/0.33  t=0.2861  NOut=278/
+iter=17  E=114.455  tolE=0.0997  (dAng/dPos)= 1.26/0.36  t=0.2792  NOut=278/
+iter=18  E=123.314  tolE=0.0774  (dAng/dPos)= 0.79/0.13  t=0.2784  NOut=278/
+iter=19  E=122.776  tolE=0.0044  (dAng/dPos)= 0.26/0.14  t=0.2774  NOut=278/
+iter=20  E=115.537  tolE=0.0590  (dAng/dPos)= 0.97/0.14  t=0.2772  NOut=278/
+iter=21  E=126.429  tolE=0.0943  (dAng/dPos)= 0.52/0.25  t=0.2790  NOut=278/
+iter=22  E=116.136  tolE=0.0814  (dAng/dPos)= 0.88/0.13  t=0.2740  NOut=279/
+iter=23  E=115.149  tolE=0.0085  (dAng/dPos)= 0.57/0.09  t=0.2760  NOut=279/
+iter=24  E=123.721  tolE=0.0744  (dAng/dPos)= 0.51/0.19  t=0.2755  NOut=278/
+iter=25  E=106.282  tolE=0.1410  (dAng/dPos)= 0.53/0.05  t=0.2754  NOut=278/
+iter=26  E=102.935  tolE=0.0315  (dAng/dPos)= 1.16/0.10  t=0.2786  NOut=278/
+iter=27  E=104.491  tolE=0.0151  (dAng/dPos)= 0.46/0.12  t=0.2817  NOut=277/
+iter=28  E=104.431  tolE=0.0006  (dAng/dPos)= 0.01/0.03  t=0.2749  NOut=277/
+iter=29  E=104.427  tolE=0.0000  (dAng/dPos)= 0.01/0.01  t=0.2755  NOut=277/
+iter=30  E=104.426  tolE=0.0000  (dAng/dPos)= 0.01/0.00  t=0.2842  NOut=277/
+iter=31  E=194.813  tolE=0.8656  (dAng/dPos)= 2.94/0.67  t=0.2765  NOut=276/
+iter=32  E=100.460  tolE=0.4843  (dAng/dPos)= 1.32/0.41  t=0.2796  NOut=278/
+iter=33  E=99.980  tolE=0.0048  (dAng/dPos)= 0.33/0.10  t=0.2791  NOut=278/
+iter=34  E=99.898  tolE=0.0008  (dAng/dPos)= 0.16/0.03  t=0.2737  NOut=278/
+iter=35  E=99.878  tolE=0.0002  (dAng/dPos)= 0.06/0.02  t=0.2755  NOut=278/
+iter=36  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2746  NOut=278/
+iter=37  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2743  NOut=278/
+iter=38  E=99.877  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.2755  NOut=278/
 
 Termination Condition satisfied for 2 iterations: 
 reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
@@ -46,7 +46,7 @@ reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
  dPos: 2.99531e-005 0.000203994
  dShp: 0 0
  iter: 38
- runtime: 10.3657
+ runtime: 10.9134
 
 translation: 
      9.13107     -6.18737      15.6846

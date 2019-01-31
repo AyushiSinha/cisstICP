@@ -124,8 +124,8 @@ void algDirICP_GDIMLOP::ComputeMatchStatistics(double &Avg, double &StdDev) //go
 		totalSumSqrMahalDist += sqrMahalDist;
 
 		matchAngle = acos(std::fmod( matchNorms[i] * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
-		axisAngle1 = asin(std::fmod(L[i].Column(0) * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
-		axisAngle2 = asin(std::fmod(L[i].Column(1) * (Freg.Rotation() * sampleNorms[i]), 2 * cmnPI));
+		axisAngle1 = asin(std::fmod(R_L[i].Column(0) * matchNorms[i], 2 * cmnPI));
+		axisAngle2 = asin(std::fmod(R_L[i].Column(1) * matchNorms[i], 2 * cmnPI));
 		
 		totalSumSqrMatchAngle += (k[i] * matchAngle * matchAngle) + ( (k[i] - 2*B[i]) * axisAngle1 * axisAngle1 ) + ( (k[i] + 2*B[i]) * axisAngle2 * axisAngle2 ) ;
 
@@ -1321,6 +1321,7 @@ double algDirICP_GDIMLOP::CostFunctionValue(const vctDynamicVector<double> &x)
     UpdateOptimizerCalculations(x);
   }
   vctDynamicVectorRef<vct3>   Yn(matchNorms);
+  vctDynamicVectorRef<vct3>   Xn(sampleNorms);
 
   double f = 0.0;
   unsigned int i;
@@ -1331,11 +1332,11 @@ double algDirICP_GDIMLOP::CostFunctionValue(const vctDynamicVector<double> &x)
   {
 	if (outlierFlags[i])	continue;
 
-	double major = RaRL[i].Column(0) * Yn[i];
-	double minor = RaRL[i].Column(1) * Yn[i];
+	double major = RaRL[i].Column(0) * Xn[i];
+	double minor = RaRL[i].Column(1) * Xn[i];
     // add extra k[i] * 1.0 to make cost function > 0
 	f += k[i] * (1.0 - RaXn[i]*Yn[i]) - B[i] * (major*major - minor*minor)
-		+ (Rat_Tssm_Y_t_x[i] * Rat_Tssm_Y_t_x_invMx[i]) / 2.0;
+		+ (Rat_Tssm_Y_t_x_invMx[i] * Rat_Tssm_Y_t_x[i]) / 2.0;
   }
 
 #ifdef NOREGULARIZER
@@ -1389,7 +1390,7 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, 
   for (j = 0; j < nSamples; j++)
   {
     // TODO: vectorize Kent term better
-	//if (outlierFlags[j])	continue;
+	if (outlierFlags[j])	continue;
 
     //--- Kent term ---//   (orientations)        
     for (unsigned int i = 0; i < 3; i++)
@@ -1397,8 +1398,8 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, 
       //  rotational effect
 		ga[i] += 
 			-k[j] * (Xn[j] * dRa[i].TransposeRef() * Yn[j])
-				- 2.0 * B[j] * ((dRa[i] * L[j].Column(0) * Yn[j]) * (Yn[j] * RaRL[j].Column(0))
-				- (dRa[i] * L[j].Column(1) * Yn[j]) * (Yn[j] * RaRL[j].Column(1)));
+				- 2.0 * B[j] * ((dRa[i] * L[j].Column(0) * Xn[j]) * (Yn[j] * RaRL[j].Column(0))
+				- (dRa[i] * L[j].Column(1) * Xn[j]) * (Yn[j] * RaRL[j].Column(1)));
 
 		//--- Gaussian term ---//   (positions)
 		//  rotational effect

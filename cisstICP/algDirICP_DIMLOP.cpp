@@ -565,7 +565,7 @@ void algDirICP_DIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, v
 		for (unsigned int c = 0; c < 3; c++)
 		{
 			Jz_a.Column(c) = dRa[c].TransposeRef() * Tssm_Y_t[j]; 
-			k_Yn_dRa_Xn.Element(c) = -k*sampleNorms[j] * dRa[c] * matchNorms[j];
+			k_Yn_dRa_Xn.Element(c) = -k*sampleNorms[j] * dRa[c].TransposeRef() * matchNorms[j];
 		}
 
 		ga += Rat_Tssm_Y_t_x_invMx[j] * Jz_a + k_Yn_dRa_Xn;

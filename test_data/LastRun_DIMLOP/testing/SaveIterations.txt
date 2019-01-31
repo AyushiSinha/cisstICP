@@ -1,40 +1,63 @@
-iter=0  E=14412.337  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.0667  NOut=0/
-iter=1  E=7028.713  tolE=0.5123  (dAng/dPos)= 13.69/5.61  t=0.0895  NOut=0/
-iter=2  E=4138.705  tolE=0.4112  (dAng/dPos)= 7.10/5.19  t=0.0944  NOut=0/
-iter=3  E=2973.684  tolE=0.2815  (dAng/dPos)= 0.39/2.30  t=0.0838  NOut=0/
-iter=4  E=2648.381  tolE=0.1094  (dAng/dPos)= 2.69/1.52  t=0.0770  NOut=0/
-iter=5  E=2319.708  tolE=0.1241  (dAng/dPos)= 0.91/1.50  t=0.0757  NOut=0/
-iter=6  E=2275.653  tolE=0.0190  (dAng/dPos)= 0.00/0.00  t=0.0832  NOut=0/
-iter=7  E=2275.464  tolE=0.0001  (dAng/dPos)= 0.00/0.00  t=0.0916  NOut=0/
+iter=0  E=14412.337  tolE=0.0000  (dAng/dPos)= 9.79/17.14  t=0.0788  NOut=0/
+iter=1  E=6235.271  tolE=0.5674  (dAng/dPos)= 2.27/7.84  t=0.0424  NOut=0/
+iter=2  E=3292.586  tolE=0.4719  (dAng/dPos)= 2.73/3.96  t=0.0725  NOut=0/
+iter=3  E=2767.617  tolE=0.1594  (dAng/dPos)= 1.52/1.64  t=0.0590  NOut=1/
+iter=4  E=2502.065  tolE=0.0959  (dAng/dPos)= 1.87/1.30  t=0.0566  NOut=0/
+iter=5  E=2292.684  tolE=0.0837  (dAng/dPos)= 2.17/1.15  t=0.0533  NOut=0/
+iter=6  E=2190.084  tolE=0.0448  (dAng/dPos)= 1.01/0.79  t=0.0513  NOut=0/
+iter=7  E=2125.749  tolE=0.0294  (dAng/dPos)= 0.77/0.61  t=0.0561  NOut=0/
+iter=8  E=2090.104  tolE=0.0168  (dAng/dPos)= 0.61/0.54  t=0.0498  NOut=0/
+iter=9  E=2063.502  tolE=0.0127  (dAng/dPos)= 0.39/0.40  t=0.0471  NOut=0/
+iter=10  E=2038.152  tolE=0.0123  (dAng/dPos)= 0.30/0.28  t=0.0430  NOut=0/
+iter=11  E=2034.001  tolE=0.0020  (dAng/dPos)= 0.23/0.19  t=0.0529  NOut=0/
+iter=12  E=2031.077  tolE=0.0014  (dAng/dPos)= 0.16/0.12  t=0.0506  NOut=0/
+iter=13  E=2028.263  tolE=0.0014  (dAng/dPos)= 0.15/0.08  t=0.0442  NOut=0/
+iter=14  E=2028.860  tolE=0.0003  (dAng/dPos)= 0.18/0.07  t=0.0456  NOut=0/
+iter=15  E=2029.043  tolE=0.0001  (dAng/dPos)= 0.04/0.04  t=0.0428  NOut=0/
+iter=16  E=2029.136  tolE=0.0000  (dAng/dPos)= 0.04/0.03  t=0.0444  NOut=0/
+iter=17  E=2028.511  tolE=0.0003  (dAng/dPos)= 0.05/0.02  t=0.0418  NOut=0/
+iter=18  E=2027.156  tolE=0.0007  (dAng/dPos)= 0.03/0.01  t=0.0425  NOut=0/
+iter=19  E=2026.533  tolE=0.0003  (dAng/dPos)= 0.03/0.01  t=0.0456  NOut=0/
+iter=20  E=2026.052  tolE=0.0002  (dAng/dPos)= 0.02/0.02  t=0.0426  NOut=0/
+iter=21  E=2027.364  tolE=0.0006  (dAng/dPos)= 0.01/0.01  t=0.0464  NOut=0/
+iter=22  E=2027.483  tolE=0.0001  (dAng/dPos)= 0.02/0.01  t=0.0433  NOut=0/
+iter=23  E=2027.822  tolE=0.0002  (dAng/dPos)= 0.01/0.01  t=0.0455  NOut=0/
+iter=24  E=2027.833  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0411  NOut=0/
+iter=25  E=2027.615  tolE=0.0001  (dAng/dPos)= 0.00/0.01  t=0.0430  NOut=0/
+iter=26  E=2027.612  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0413  NOut=0/
+iter=27  E=2027.614  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0432  NOut=0/
+iter=28  E=2027.615  tolE=0.0000  (dAng/dPos)= 0.00/0.00  t=0.0398  NOut=0/
 
 Termination Condition satisfied for 2 iterations: 
 reached min dAngle & dTrans & dShape (0.001/0.001/0.001)
- E: 2275.46
- dE/E: 8.28864e-005
+ E: 2027.62
+ dE/E: 4.98889e-007
  dAng: 0 0 (deg)
- dPos: 1.33342e-015 4.44089e-016
- dShp: 2.28192 2.28192
- iter: 7
- runtime: 0.689578
+ dPos: 0.000147074 0.000464109
+ dShp: 1.07863 1.07861
+ iter: 28
+ runtime: 1.61503
 
 translation: 
-    0.267757     -2.97805      2.21367
+    0.119811    0.0422813   -0.0834769
 rotation: 
-    0.999985  -0.00458533   0.00305651
-  0.00450636     0.999668    0.0253593
- -0.00317178   -0.0253452     0.999674
+    0.999977  -0.00587323  -0.00339458
+  0.00587123     0.999983 -0.000600097
+  0.00339804  0.000580153     0.999994
 scale:
    1
 shape parameters:
-     1.58031     0.531220      1.55808
+    0.835535     0.626634     0.269460
 
-Sum square mahalanobis distance = 1584.44 over 300 samples
-Sum square match angle = 989.916 over 300 samples
-Sum square mahalanobis distance = 1584.44 over 300 inliers
-Sum square match angle = 989.916 over 300 inliers
+WARNING: best iteration (20) is not the final iteration
+
+Sum square mahalanobis distance = 513.498 over 300 samples
+Sum square match angle = 529.748 over 300 samples
+Sum square mahalanobis distance = 513.498 over 300 inliers
+Sum square match angle = 529.748 over 300 inliers
 
 Starting Offset:   	dAng: 9.78918	dPos: 17.1429	dShp:      1.08435     0.542175     0.271088
-Registration Error:	dAng: 1.48666	dPos: 3.72032	dShp:    -0.495960    0.0109551     -1.28699
+Registration Error:	dAng: 0.390146	dPos: 0.152023	dShp:     0.248816   -0.0844582   0.00162732
 
-Average Match Error (Mahalanobis):	2.03957 (+/-3.07267)
+Average Match Error (Mahalanobis):	1.16594 (+/-1.75245)
 
