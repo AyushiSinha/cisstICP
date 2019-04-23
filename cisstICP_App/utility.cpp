@@ -43,7 +43,7 @@
 #include "cisstPointCloud.h"
 #include "utilities.h"
 
-void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath)
+void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath, int nmodes)
 {
 	unsigned int itemsRead = 0;
 	std::string line;
@@ -58,16 +58,19 @@ void shapeparam_read(vctDynamicVector<double> &S, std::string &filepath)
 	}
 
 	std::getline(fs, line, ' ');
-	nsp = std::stoi(line);
+	if (nmodes < 0)
+		nsp = std::stoi(line);
+	else
+		nsp = nmodes;
 	S.SetSize(nsp);
-	std::cout << "Number of mode weights = " << nsp << std::endl;
+	//std::cout << "Number of mode weights = " << nsp << std::endl;
 
 	for (int i = 0; i < nsp; i++)
 	{
 		std::getline(fs, line, ' ');
 		S[i] = std::stof(line);
 
-		std::cout << "shape parameter = " << S[i] << std::endl;
+		//std::cout << "shape parameter = " << S[i] << std::endl;
 		itemsRead++;
 	}
 
@@ -275,6 +278,38 @@ void cov_write(vctDynamicVector<vct3x3> &cov, std::string &filename)
     assert(0);
   }
   out.close();
+}
+
+// Flattens a nx3 vector of (x,y,z) positions into a long 3nx1 vector
+void Flatten(vctDynamicVector<vct3> &a, vctDynamicVector<double> &b)
+{
+	int s = a.size();
+	b.SetSize(s * 3);
+	for (int i = 0; i < s; i++)
+	{
+		b[i + (s * 0)] = a[i][0];
+		b[i + (s * 1)] = a[i][1];
+		b[i + (s * 2)] = a[i][2];
+	}
+}
+
+// Projects target on to model and returns weights (w) produced for m number of modes
+void ComputeModeWeights(cisstMesh target, cisstMesh model, int m, vctDynamicVector<double> &w)
+{
+	vctDynamicVector<double> diff_flat;
+	vctDynamicVector<double> mode_flat;
+	vctDynamicVector<vct3> diff;
+
+	diff.resize(target.vertices.size());
+	diff = target.vertices - model.meanShape;
+
+	w.resize(m);
+	Flatten(diff, diff_flat);
+	for (int j = 0; j < m; j++)
+	{
+		Flatten(model.mode[j], mode_flat);
+		w[j] = vctDotProduct(diff_flat, mode_flat) / std::sqrt(model.modeWeight[j]);
+	}
 }
 
 void ReadFromFile_Cov(vctDynamicVector<vct3x3> &cov,
@@ -624,7 +659,7 @@ void GenerateRandomShapeParams(unsigned int randSeed, unsigned int &randSeqPos, 
 	for (int i = 0; i < numModes; i++)
 	{
 		if (i == 0)
-			S[i] = cisstRandomSeq.ExtractRandomDouble(-3.0, 3.0);
+			S[i] = cisstRandomSeq.ExtractRandomDouble(stdDevLim_lower, stdDevLim_upper);
 		else
 			S[i] = S[i - 1] / 2;
 	}
@@ -978,12 +1013,25 @@ void GenerateSamples(cisstMesh &mesh,
 
 	// generating samples
 	int m;
+	double mu0, mu1, mu2;
 	// initialize samples
+	int Nv = mesh.NumVertices();
 	for (unsigned int s = 0; s < nSamps; s++) {
 		// sampling the object surface and generating second pointcloud from it
-		m = cisstRandomSeq.ExtractRandomInt(0, nSamps);
+		m = cisstRandomSeq.ExtractRandomInt(0, Nv-1);
+		mu0 = cisstRandomSeq.ExtractRandomDouble(-0.1, 0.1);
+		mu1 = cisstRandomSeq.ExtractRandomDouble(-0.1, 0.1);
+		mu2 = cisstRandomSeq.ExtractRandomDouble(-0.1, 0.1);
 		samples.at(s) = mesh.vertices(m);
-		sampleNorms.at(s) = mesh.vertexNormals(m);
+		if (mesh.vertexNormals(m) == 0)
+		{
+			sampleNorms[s][0] = mu0;
+			sampleNorms[s][1] = mu1;
+			sampleNorms[s][2] = mu2;
+			sampleNorms.at(s).NormalizedSelf();
+		}
+		else
+			sampleNorms.at(s) = mesh.vertexNormals(m);
 	}
 	randSeqPos = cisstRandomSeq.GetSequencePosition();
 
@@ -1037,6 +1085,22 @@ void GenerateSamples(cisstMesh &mesh,
     samples.at(s) = lam0*v0 + lam1*v1 + lam2*v2;
     sampleNorms.at(s) = mesh.faceNormals(Fx);
     sampleDatums.at(s) = Fx;
+#if 1												// sample from visible portion of right nostril
+	if (v0[0] < 5.00	&& v0[0] > -3.00	&&		// right to left
+		v0[1] < 18.00	&& v0[1] > -22.00	&&		// back to front
+		v0[2] < 15.00	&& v0[2] > -15.00)			// top to bottom
+		continue;
+	else
+		s--;
+#endif
+#if 0												// sample from visible portion of pelvis
+	if (v0[0] < 5.50	&& v0[0] > -1.00	&&		// right to left
+		v0[1] < 0.00	&& v0[1] > -30.00	&&		// back to front
+		v0[2] < 35.00	&& v0[2] > -50.00)			// top to bottom
+		continue;
+	else
+		s--;
+#endif
   }
   randSeqPos = cisstRandomSeq.GetSequencePosition();
 

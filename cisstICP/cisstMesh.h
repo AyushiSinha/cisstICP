@@ -61,8 +61,8 @@ public:
 	vctDynamicVector<vctDynamicVector<vct3>>	mode;					// the modes per vertex 
 	vctDynamicVector<double>					modeWeight;				// weights per mode
 
-	vctDynamicVector<vctDynamicVector<vct3>>	wi;
-	vctDynamicVector<double>					Si;						// shape parameter
+	vctDynamicVector<vctDynamicVector<vct3>>	wi;						// weighted modes per vertex
+	vctDynamicVector<double>					Si;						// shape parameter per mode
 
 	// mesh noise model
 	//  NOTE: if used, this must be set manually by the user AFTER loading the mesh file

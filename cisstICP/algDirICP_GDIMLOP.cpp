@@ -189,13 +189,13 @@ double algDirICP_GDIMLOP::ICP_EvaluateErrorFunction()
 	  k[i], B[i], R_L[i], inv_Mi[i]);
 
 	// match covariance
-	nklog2PI += 5.0*log(2.0*cmnPI); // 1/2
-	logCost += log(det_Mi[i]);		// 1/2
+	nklog2PI += 5.0*log(2.0*cmnPI);			// 1/2
+	logCost += log(det_Mi[i]);				// 1/2
 	normCost += L[i].Norm();
   }
   vctRot3 R(Freg.Rotation());
   normCost1 += R.Norm();
-  ssmCost += Si.NormSquare();		// 1/2
+  ssmCost += (Si-Si_mean).NormSquare();		// 1/2 (Si_mean is 0 when the most likely shape is the mean shape)
   Error += (nklog2PI + logCost + ssmCost) / 2.0;
 
   prevCostFuncValue = costFuncValue;
@@ -303,7 +303,7 @@ vctFrm3 algDirICP_GDIMLOP::ICP_RegisterMatches()
   Freg = F ;
   if (bScale)
 	  sc = scale;
-  Si = s;
+  Si = s + Si_mean;
 
   pMesh->Si = Si;
 
@@ -315,6 +315,7 @@ void algDirICP_GDIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
   // initialize base class
   algDirICP::ICP_InitializeParameters(FGuess);
   this->FGuess = FGuess;
+  Si_mean.SetAll(0.0);			// TODO: Change this to be a parameter that must be set
 
   bFirstIter_Matches = true;
   nOutliers = 0;
@@ -360,7 +361,7 @@ void algDirICP_GDIMLOP::ICP_InitializeParameters(vctFrm3 &FGuess)
 	  x_prev[6] = scale;
 
   for (unsigned int i = 0; i < nModes; i++)
-	  x_prev[nTrans + i] = Si[i];
+	  x_prev[nTrans + i] = Si[i] - Si_mean[i];
 
   mu.SetAll(vct3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0));
 
@@ -1080,6 +1081,7 @@ void algDirICP_GDIMLOP::SetSamples(
   mu.SetSize(nSamples);
   f.SetSize(nSamples);
   s.SetSize(nModes);
+  Si_mean.SetSize(nModes);
 }
 
 
@@ -1342,7 +1344,7 @@ double algDirICP_GDIMLOP::CostFunctionValue(const vctDynamicVector<double> &x)
 #ifdef NOREGULARIZER
   f += 0;
 #else
-  f += (s.DotProduct(s)) / 2.0;
+  f += ((s-Si_mean).DotProduct(s-Si_mean)) / 2.0;
 #endif
 
   return f;
@@ -1422,7 +1424,7 @@ void algDirICP_GDIMLOP::CostFunctionGradient(const vctDynamicVector<double> &x, 
 #ifdef NOREGULARIZER
   gs += 0;
 #else
-  gs += s;	// Cshape component 
+  gs += s - Si_mean;	// Cshape component 
 #endif
 }
 
@@ -1507,4 +1509,12 @@ void algDirICP_GDIMLOP::ReturnScale(double &scale)
 void algDirICP_GDIMLOP::ReturnShapeParam(vctDynamicVector<double> &shapeParam)
 {
 	shapeParam = Si;
+}
+
+void algDirICP_GDIMLOP::ReturnMatchPts(vctDynamicVector<vct3> &rMatchPts, vctDynamicVector<vct3> &rMatchNorms)
+{
+	rMatchPts.resize(Tssm_matchPts.size());
+	rMatchNorms.resize(matchNorms.size());
+	rMatchPts = matchPts;
+	rMatchNorms = matchNorms;
 }

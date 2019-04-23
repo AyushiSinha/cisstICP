@@ -479,6 +479,14 @@ void algICP_DIMLP::ReturnShapeParam(vctDynamicVector<double> &shapeParam)
 	shapeParam = Si;
 }
 
+void algICP_DIMLP::ReturnMatchPts(vctDynamicVector<vct3> &rMatchPts, vctDynamicVector<vct3> &rMatchNorms)
+{
+	rMatchPts.resize(Tssm_matchPts.size());
+	rMatchNorms.resize(Tssm_matchPts.size());
+	rMatchPts = matchPts;
+	rMatchNorms = matchPts;
+}
+
 vctFrm3 algICP_DIMLP::ICP_RegisterMatches()
 {
 	vctFrm3 F;

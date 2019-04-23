@@ -552,6 +552,7 @@ function [ Elements, varargout ] = ply_read ( Path, Str )
     for k = 1 : NumProperties
 
       if ( ( ~Format & ~Type(k) ) || (Format & isempty(Type2{k})) )
+%       if ( ( ~Format ) || (Format & isempty(Type2{k})) )
         eval(['Elements.',ElementNames{i},'.',CurPropertyNames{k},'=Data(:,k);']);
       else
         eval(['Elements.',ElementNames{i},'.',CurPropertyNames{k},'=ListData{k};']);

@@ -192,7 +192,8 @@ protected:
   //vctDynamicVector<vct3>	sampleModes;
   //vctDynamicVector<double> sampleModeWts;	
   vctDynamicVector<vctDynamicVector<vct3>>	wi;
-  vctDynamicVector<double>					Si;		// shape parameter
+  vctDynamicVector<double>					Si;			// shape parameter
+  vctDynamicVector<double>					Si_mean;	// shape parameter of the most likely shape - fixed
 
   vctDynamicVector<vct3>		Tssm_matchPts;
   vctDynamicVector<vct3>		mu;
@@ -247,6 +248,7 @@ public:
 
   virtual void ReturnScale(double &scale);
   virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam);
+  virtual void ReturnMatchPts(vctDynamicVector<vct3> &matchPts, vctDynamicVector<vct3> &matchNorms);
 
   void	UpdateShape(vctDynamicVector<double> &si);
   void	UpdateTree();
@@ -286,6 +288,12 @@ public:
 						double argScalebounds = 0.3,
 						double argSPbounds = 3.0);
 
+  void SetMeanShapeParam(vctDynamicVector<double> meanSi)
+  {
+	  Si_mean.resize(nModes);
+	  Si_mean = meanSi;
+  };
+  
   void UpdateNoiseModel_DynamicEstimates();
   void UpdateNoiseModel_SamplesXfmd(vctFrm3 &Freg);
 

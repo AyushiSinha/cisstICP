@@ -40,6 +40,7 @@
 
 #include <cisstOSAbstraction.h>
 
+#include "cisstMesh.h"
 #include "cisstICP.h"
 #include "algICP.h"
 
@@ -382,15 +383,28 @@ cisstICP::ReturnType cisstICP::IterateICP()
     std::cout << "Termination Test" << std::endl;
 #endif
 
+#if 1
+	vctDynamicVector<vct3> matchPts;
+	vctDynamicVector<vct3> matchNorms;
+	pAlgorithm->ReturnMatchPts(matchPts, matchNorms);
+
+	cisstMesh samplePts;
+	samplePts.vertices.SetSize(matchPts.size());
+	samplePts.vertexNormals.SetSize(matchNorms.size());
+	samplePts.vertices = matchPts;
+	samplePts.vertexNormals = matchNorms;
+	samplePts.SavePLY(std::to_string(iter) + ".ply");
+#endif
+
     //-- Termination Test --//
 
     dR.From(dF.Rotation());   // convert rotation to Rodrigues form
-    dAng = dR.Norm();
-    dPos = dF.Translation().Norm();
     dAng01 = dAng12;
     dAng12 = dAng;
+    dAng = dR.Norm();
     dPos01 = dPos12;
     dPos12 = dPos;
+    dPos = dF.Translation().Norm();
 
     // Algorithm specific termination
     //  also enables algorithm to update the registration
@@ -424,6 +438,18 @@ cisstICP::ReturnType cisstICP::IterateICP()
           break;  // exit iteration loop
         }
       }
+	  else if ( (E == E0) && /*(dAng == dAng01) &&*/ (dPos == dPos01) )
+	  {
+		  terminateIter++;
+		  if (terminateIter > opt.termHoldIter)
+		  {
+			  // prepare termination message
+			  totalTimer.Stop();
+			  termMsg << std::endl << "Termination Condition satisfied for " << opt.termHoldIter << " iterations: " << std::endl;
+			  termMsg << "oscilating between " << E << "/" << E1 << ";" << dAng << "/" << dAng12 << ";" << dPos << "/" << dPos12 << std::endl;
+			  break;  // exit iteration loop
+		  }
+	  }
       else
       {
         terminateIter = 0;

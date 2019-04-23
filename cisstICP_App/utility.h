@@ -40,7 +40,7 @@
 #include "cisstMesh.h"
 #include "cisstICP.h"
 
-void shapeparam_read(vctDynamicVector<double> &s, std::string &filename);
+void shapeparam_read(vctDynamicVector<double> &s, std::string &filename, int modes=-1);
 void shapeparam_write(vctDynamicVector<double> &s, std::string &filename);
 
 void transform_read(vctFrm3 &t, std::string &filename);
@@ -356,6 +356,11 @@ void WriteToFile_L(
 
 vctRot3 XProdRotation(const vct3 &a, const vct3 &b);
 
+// Flattens a nx3 vector of (x,y,z) positions into a long 3nx1 vector
+void Flatten(vctDynamicVector<vct3> &a, vctDynamicVector<double> &b);
+
+// Projects target on to model and returns weights (w) produced for m number of modes
+void ComputeModeWeights(cisstMesh target, cisstMesh model, int m, vctDynamicVector<double> &w);
 
 double  ComputeAvgNeighborDistance(std::string meshFile);
 double  ComputeAvgNeighborDistance(cisstMesh mesh);

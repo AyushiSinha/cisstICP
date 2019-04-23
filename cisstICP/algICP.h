@@ -111,6 +111,7 @@ public:
 
   virtual void ReturnScale(double &scale){};
   virtual void ReturnShapeParam(vctDynamicVector<double> &shapeParam) {};
+  virtual void ReturnMatchPts(vctDynamicVector<vct3> &matchPts, vctDynamicVector<vct3> &matchNorms){};
 
 protected:
 

@@ -56,7 +56,7 @@
 
 // disable for run-time tests
 #define ENABLE_CALLBACKS
-
+//#define TARGET_MEANSHAPE
 
 enum ICPDirAlgType { DirAlgType_StdICP, DirAlgType_IMLOP, DirAlgType_DIMLOP, DirAlgType_GIMLOP, DirAlgType_GDIMLOP, DirAlgType_PIMLOP };
 
@@ -175,6 +175,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	DirPDTreeBase*					pTree;
 
 	vctDynamicVector<unsigned int>  sampleDatums;
+	vctDynamicVector<double>		weight_init;
 	vctDynamicVector<double>		weight;
 
 	vctDynamicVector<vct3>			samples,		sampleNorms,
@@ -257,12 +258,17 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	{
 		// read mode weights
 		if (cmdOpts.readModeWeights) {
-			shapeparam_read(weight, cmdOpts.modeweights);
+			if (cmdOpts.useDefaultNumModes)
+				shapeparam_read(weight, cmdOpts.modeweights);
+			else
+				shapeparam_read(weight, cmdOpts.modeweights, cmdOpts.modes);
 			modes += weight.size();
 		}
-		else
+		else {
 			modes += cmdOpts.modes;
 			weight.SetSize(modes - 1);
+			weight.SetAll(0.0);
+		}
 		std::cout << "\nNumber of modes = " << modes - 1 ;
 
 		// read ssm
@@ -279,26 +285,48 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 				algType = DirAlgType_GIMLOP;
 			}
 		}
+		weight_init.resize(modes - 1);
+		
+#ifdef TARGET_MEANSHAPE
 		mesh_ssm_target.vertices = mesh_target.meanShape;
+		weight_init.SetAll(0.0);
+#else
+		std::cout << "Computing mode weights...\n";
+		ComputeModeWeights(mesh_ssm_target, mesh_target, modes - 1, weight_init);
+		mesh_target.vertices = mesh_ssm_target.vertices;
+		//mesh_ssm_target.vertices = mesh_target.meanShape; // Only for testing, comment out later
+		//weight_init.SetAll(0.0);
+		//std::cout << "Patient Weights: " << weight_init << std::endl;
+#endif
 		mesh_ssm_target.SavePLY("currentMesh0.ply");
 
 		// if using default input (i.e., mean shape), 
 		// create an instance of the shape model to estimate
 		if (cmdOpts.useDefaultInput)
 		{
+#ifdef TARGET_MEANSHAPE
 			GenerateRandomShapeParams(randSeed3, randSeqPos3, modes - 1, weight);
+#else //TARGET_PATIENT
+			GenerateRandomShapeParams(randSeed3, randSeqPos3, modes - 1, weight, -1, 1);
+#endif
 			// add deformation to mean shape
 			for (int j = 0; j < modes - 1; j++)
 				for (int i = 0; i < mesh_target.NumVertices(); i++)
 					mesh_ssm_target.vertices[i] += weight[j] * mesh_target.wi[j][i];
 			mesh_ssm_target.SavePLY(meshDir);
+			//std::cout << "Difference: " << weight << std::endl;
+			ComputeModeWeights(mesh_ssm_target, mesh_target, modes - 1, weight);
 			shapeparam_write(weight, saveModeWeightsPath);
+			//std::cout << "New Patient Weights: " << weight << std::endl;
 		}
 		// TODO: if reading in an instance of the shape model,
 		// compute weights by projecting instance onto shape model
-		else if (!cmdOpts.readModeWeights)
-				weight.SetAll(0.0);
+		//else if (!cmdOpts.readModeWeights)
+		//{
+		//	weight.SetAll(0.0);
+		//}
 	}
+	//std::cout << weight << std::endl;
 
 	// Create target shape from mesh (as a PD tree)
 	if (TargetShapeAsMesh)
@@ -627,6 +655,7 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 			argK, argB, sampleNoiseL, sampleNoiseCov,
 			sampleNoiseCov, mesh_target.meanShape, 1, bScale);
 		pAlg->SetConstraints(rotbounds, transbounds, scalebounds, shapeparambounds);
+		pAlg->SetMeanShapeParam(weight_init);
 		//pAlg->SetNoiseModel(argK, argB, sampleNoiseL, sampleNoiseInvCov);
 		pICPAlg = pAlg;
 		break;
@@ -766,12 +795,18 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 
 	if (cmdOpts.deformable)
 	{
+		//mesh_target.vertices = mesh_target.meanShape;
+		//for (int s = 0; s < mesh_target.NumVertices(); s++)
+		//	for (unsigned int i = 0; i < (unsigned int)(modes - 1); i++)
+		//		mesh_target.vertices(s) += (weight[i] * mesh_target.wi[i].Element(s));
+		//mesh_ssm_target.SavePLY(outputDir + "/estMesh.ply");
+
 		mesh_target.vertices = mesh_target.meanShape;
 		for (int s = 0; s < mesh_target.NumVertices(); s++)
 			for (unsigned int i = 0; i < (unsigned int)(modes - 1); i++)
 				mesh_target.vertices(s) += (mesh_target.Si[i] * mesh_target.wi[i].Element(s));
+		mesh_target.SavePLY(outputDir + "/finalMesh.ply");
 	}
-	mesh_target.SavePLY(outputDir + "/finalMesh.ply");
 
 	for (int i = 0; i < mesh_target.NumVertices(); i++)
 		mesh_target.vertices(i) = Freg * mesh_target.vertices(i);
@@ -809,6 +844,13 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 		}
 		samplePts.SavePLY(outputDir + "/finalPts.ply");
 	}
+
+	vctDynamicVector<vct3> matchPts;
+	vctDynamicVector<vct3> matchNorms;
+	pICPAlg->ReturnMatchPts(matchPts, matchNorms);
+	samplePts.vertices = matchPts;
+	samplePts.vertexNormals = matchNorms;
+	samplePts.SavePLY(outputDir + "/finalMatchPts.ply");
 
 	if (pICPAlg) delete pICPAlg;
 }
