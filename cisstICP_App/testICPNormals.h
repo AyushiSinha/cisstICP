@@ -149,7 +149,13 @@ void testICPNormals(bool TargetShapeAsMesh, ICPDirAlgType algType, cisstICP::Cmd
 	// Create directories
 	workingDir	= cmdOpts.workingdir;
 	outputDir	= workingDir + algDir + cmdOpts.output + "/";
-	CreateDirectory(outputDir.c_str(), NULL);
+	if (CreateDirectory(outputDir.c_str(), NULL))
+		std::cout << "Directory created... \n" << std::endl;
+	else if (ERROR_ALREADY_EXISTS == GetLastError())
+		std::cout << "Directory already exists... \n" << std::endl;
+	else
+		std::cout << "Directory failed to be created... \n" << std::endl;
+
 
 	// input files
 	std::string normRVFile				= workingDir + "GaussianValues.txt";	// Random Numbers: Normal RV's

@@ -64,7 +64,7 @@ public:
   // destructor
   virtual ~alg2D_DirPDTree() {}
 
-  virtual void SetSamples(const vctDynamicVector<vct2> &argSamplePts);
+  virtual void SetSamples(const vctDynamicVector<vct2> &argSamplePts) = 0;
 
 
   //--- PD Tree Interface Methods ---//

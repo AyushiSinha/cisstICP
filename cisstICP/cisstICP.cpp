@@ -383,7 +383,7 @@ cisstICP::ReturnType cisstICP::IterateICP()
     std::cout << "Termination Test" << std::endl;
 #endif
 
-#if 1
+#if 0
 	vctDynamicVector<vct3> matchPts;
 	vctDynamicVector<vct3> matchNorms;
 	pAlgorithm->ReturnMatchPts(matchPts, matchNorms);
